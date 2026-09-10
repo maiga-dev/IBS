@@ -1,0 +1,298 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ * @var array $equipements
+ */
+
+$equipements = $equipements ?? [];
+
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <h1>
+                Équipements
+            </h1>
+
+            <p>
+                Gestion des équipements biomédicaux.
+            </p>
+
+        </div>
+
+        <div>
+
+            <a
+                href="<?= $this->url(
+                    'equipement',
+                    ['action' => 'add']
+                ) ?>"
+                class="btn-ibs"
+            >
+                + Ajouter un équipement
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="dashboard-panel">
+
+        <?php if (empty($equipements)): ?>
+
+            <div class="empty-state">
+
+                <h3>
+                    Aucun équipement
+                </h3>
+
+                <p>
+                    Aucun équipement n'est actuellement enregistré.
+                </p>
+
+                <a
+                    href="<?= $this->url(
+                        'equipement',
+                        ['action' => 'add']
+                    ) ?>"
+                    class="btn-ibs"
+                >
+                    Ajouter le premier équipement
+                </a>
+
+            </div>
+
+        <?php else: ?>
+
+            <div class="table-responsive">
+
+                <table class="ibs-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Désignation
+                            </th>
+
+                            <th>
+                                Type
+                            </th>
+
+                            <th>
+                                N° série
+                            </th>
+
+                            <th>
+                                Marque
+                            </th>
+
+                            <th>
+                                Modèle
+                            </th>
+
+                            <th>
+                                Site
+                            </th>
+
+                            <th>
+                                Centrale
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <?php foreach (
+                            $equipements
+                            as $equipement
+                        ): ?>
+
+                            <?php
+
+                            $id = (int) (
+                                $equipement[
+                                    'id_equipement'
+                                ] ?? 0
+                            );
+
+                            ?>
+
+                            <tr>
+
+                                <td>
+
+                                    <strong>
+                                        <?= $this->escapeHtml(
+                                            $equipement[
+                                                'designation'
+                                            ] ?? '-'
+                                        ) ?>
+                                    </strong>
+
+                                </td>
+
+                                <td>
+
+                                    <?= $this->escapeHtml(
+                                        $equipement[
+                                            'nom_type'
+                                        ] ?? '-'
+                                    ) ?>
+
+                                </td>
+
+                                <td>
+
+                                    <?= $this->escapeHtml(
+                                        $equipement[
+                                            'numero_serie'
+                                        ] ?? '-'
+                                    ) ?>
+
+                                </td>
+
+                                <td>
+
+                                    <?= $this->escapeHtml(
+                                        $equipement[
+                                            'marque'
+                                        ] ?? '-'
+                                    ) ?>
+
+                                </td>
+
+                                <td>
+
+                                    <?= $this->escapeHtml(
+                                        $equipement[
+                                            'modele'
+                                        ] ?? '-'
+                                    ) ?>
+
+                                </td>
+
+                                <td>
+
+                                    <?= $this->escapeHtml(
+                                        $equipement[
+                                            'nom_site'
+                                        ] ?? '-'
+                                    ) ?>
+
+                                </td>
+
+                                <td>
+
+                                    <?= $this->escapeHtml(
+                                        $equipement[
+                                            'type_centrale'
+                                        ] ?? '-'
+                                    ) ?>
+
+                                </td>
+
+                                <td>
+
+                                    <div class="action-buttons">
+
+                                        <!-- DÉTAIL -->
+
+                                        <a
+                                            href="<?= $this->url(
+                                                'equipement',
+                                                [
+                                                    'action' => 'view',
+                                                    'id' => $id,
+                                                ]
+                                            ) ?>"
+                                            class="btn-secondary"
+                                        >
+                                            Détail
+                                        </a>
+
+
+                                        <!-- HISTORIQUE -->
+
+                                        <a
+                                            href="<?= $this->url(
+                                                'equipement',
+                                                [
+                                                    'action' => 'historique',
+                                                    'id' => $id,
+                                                ]
+                                            ) ?>"
+                                            class="btn-secondary"
+                                        >
+                                            Historique
+                                        </a>
+
+
+                                        <!-- MODIFIER -->
+
+                                        <a
+                                            href="<?= $this->url(
+                                                'equipement',
+                                                [
+                                                    'action' => 'edit',
+                                                    'id' => $id,
+                                                ]
+                                            ) ?>"
+                                            class="btn-secondary"
+                                        >
+                                            Modifier
+                                        </a>
+
+
+                                        <!-- SUPPRIMER -->
+
+                                        <a
+                                            href="<?= $this->url(
+                                                'equipement',
+                                                [
+                                                    'action' => 'delete',
+                                                    'id' => $id,
+                                                ]
+                                            ) ?>"
+                                            class="btn-danger"
+                                            onclick="return confirm(
+                                                'Voulez-vous vraiment supprimer cet équipement ?'
+                                            );"
+                                        >
+                                            Supprimer
+                                        </a>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        <?php endif; ?>
+
+    </div>
+
+</div>

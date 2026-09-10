@@ -1,0 +1,147 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$session = $session ?? [];
+$equipements = $equipements ?? [];
+$techniciens = $techniciens ?? [];
+$csrfToken = $csrf_token ?? '';
+$idSession = (int) $session['id_session'];
+
+$libellesStatut = [
+    'planifiee' => 'Planifiée', 'en_cours' => 'En cours', 'suspendue' => 'Suspendue',
+    'arretee' => 'Arrêtée', 'terminee' => 'Terminée',
+];
+$selectStyle = "padding:6px 8px;border:1px solid #E7E9EC;border-radius:6px;font-family:'Inter',sans-serif;font-size:13px;";
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <a href="<?= $this->url('maintenance') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
+            <h1>Session #<?= $idSession ?> — <?= $this->escapeHtml((string) ($session['type_centrale'] ?? '—')) ?></h1>
+            <p>
+                <?= $session['nom_site'] ? $this->escapeHtml($session['nom_site']) . ' · ' : '' ?>
+                <?= $this->escapeHtml(date('d/m/Y', strtotime($session['date_session']))) ?>
+                · <span class="status"><?= $this->escapeHtml($libellesStatut[$session['statut']] ?? $session['statut']) ?></span>
+            </p>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <a href="<?= $this->url('maintenance', ['action' => 'rapport', 'id' => $idSession]) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+                Voir le rapport
+            </a>
+            <form method="post" action="<?= $this->url('maintenance', ['action' => 'delete', 'id' => $idSession]) ?>"
+                  onsubmit="return confirm('Supprimer définitivement cette session et toutes ses maintenances ? Cette action est irréversible.');">
+                <input type="hidden" name="csrf_token" value="<?= $this->escapeHtmlAttr($csrfToken) ?>">
+                <button type="submit" class="auth-submit" style="width:auto;padding:10px 18px;background:#E94C3C;">
+                    Supprimer la session
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <?php if (empty($equipements)): ?>
+        <div class="dashboard-panel">
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">✓</div>
+                <strong>Aucun équipement sur cette centrale</strong>
+                <p>Ajoute des équipements à la centrale avant de créer une session.</p>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?php foreach ($equipements as $eq): ?>
+        <?php
+        $idMaintenance = (int) $eq['id_maintenance'];
+        $estTerminee = $eq['statut'] === 'terminee';
+        $nomEquipement = trim(($eq['marque'] ?? '') . ' ' . ($eq['modele'] ?? '')) ?: $eq['type_equipement'];
+        ?>
+        <div class="dashboard-panel" style="margin-bottom:16px;">
+            <div class="panel-title">
+                <h2><?= $this->escapeHtml($nomEquipement) ?></h2>
+                <span class="status"><?= $this->escapeHtml($libellesStatut[$eq['statut']] ?? $eq['statut']) ?></span>
+            </div>
+            <p class="stat-description">
+                N° série : <?= $this->escapeHtml((string) ($eq['numero_serie'] ?? '—')) ?>
+            </p>
+
+            <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-top:10px;">
+
+                <!-- AFFECTATION -->
+                <form method="post" action="<?= $this->url('maintenance', ['action' => 'affecterTechnicien']) ?>" style="display:flex;gap:8px;align-items:end;">
+                    <input type="hidden" name="csrf_token" value="<?= $this->escapeHtmlAttr($csrfToken) ?>">
+                    <input type="hidden" name="id_maintenance" value="<?= $idMaintenance ?>">
+                    <input type="hidden" name="id_session" value="<?= $idSession ?>">
+                    <div class="auth-field" style="margin:0;flex:1;">
+                        <label>Technicien</label>
+                        <select name="id_technicien" style="<?= $selectStyle ?>width:100%;">
+                            <option value="">— Non affecté —</option>
+                            <?php foreach ($techniciens as $t): ?>
+                                <option value="<?= (int) $t['id'] ?>"
+                                    <?= (int) ($eq['id_technicien'] ?? 0) === (int) $t['id'] ? 'selected' : '' ?>>
+                                    <?= $this->escapeHtml($t['prenom'] . ' ' . $t['nom']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <button type="submit" class="auth-submit" style="width:auto;padding:8px 14px;">Affecter</button>
+                </form>
+
+                <!-- STATUT + DIAGNOSTIC + COMPTE RENDU -->
+                <form method="post" action="<?= $this->url('maintenance', ['action' => 'updateItem']) ?>">
+                    <input type="hidden" name="csrf_token" value="<?= $this->escapeHtmlAttr($csrfToken) ?>">
+                    <input type="hidden" name="id_maintenance" value="<?= $idMaintenance ?>">
+                    <input type="hidden" name="id_session" value="<?= $idSession ?>">
+
+                    <div style="display:flex;gap:10px;margin-bottom:8px;">
+                        <select name="statut" style="<?= $selectStyle ?>">
+                            <?php foreach (\Application\Model\MaintenanceTable::STATUTS as $st): ?>
+                                <option value="<?= $st ?>" <?= $eq['statut'] === $st ? 'selected' : '' ?>>
+                                    <?= $this->escapeHtml($libellesStatut[$st] ?? $st) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="date" name="date_fin" value="<?= $this->escapeHtmlAttr((string) ($eq['date_fin'] ?? '')) ?>" style="<?= $selectStyle ?>">
+                    </div>
+
+                    <textarea name="diagnostic" rows="2" placeholder="Diagnostic après intervention..."
+                              style="width:100%;padding:8px;border:1px solid #E7E9EC;border-radius:6px;margin-bottom:8px;font-family:'Inter',sans-serif;font-size:13px;"><?= $this->escapeHtml((string) ($eq['diagnostic'] ?? '')) ?></textarea>
+
+                    <textarea name="compte_rendu" rows="2" placeholder="Compte-rendu final..."
+                              style="width:100%;padding:8px;border:1px solid #E7E9EC;border-radius:6px;margin-bottom:8px;font-family:'Inter',sans-serif;font-size:13px;"><?= $this->escapeHtml((string) ($eq['compte_rendu'] ?? '')) ?></textarea>
+
+                    <button type="submit" class="auth-submit" style="width:auto;padding:8px 14px;">Enregistrer</button>
+                </form>
+
+            </div>
+
+            <!-- PIECES JOINTES -->
+            <div style="margin-top:14px;border-top:1px solid #E7E9EC;padding-top:12px;">
+                <p class="stat-description" style="margin-bottom:8px;"><b>Pièces jointes</b></p>
+
+                <?php if (empty($eq['pieces_jointes'])): ?>
+                    <p class="stat-description">Aucune pièce jointe.</p>
+                <?php else: ?>
+                    <ul style="padding-left:18px;margin:0 0 10px 0;">
+                        <?php foreach ($eq['pieces_jointes'] as $p): ?>
+                            <li>
+                                <a href="<?= $this->escapeHtmlAttr($p['url_fichier']) ?>" target="_blank">
+                                    <?= $this->escapeHtml($p['legende'] ?: basename($p['url_fichier'])) ?>
+                                </a>
+                                <span class="stat-description">(<?= $this->escapeHtml($p['type_fichier']) ?>)</span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+
+                <form method="post" action="<?= $this->url('maintenance', ['action' => 'ajouterPieceJointe']) ?>"
+                      enctype="multipart/form-data" style="display:flex;gap:8px;align-items:end;">
+                    <input type="hidden" name="csrf_token" value="<?= $this->escapeHtmlAttr($csrfToken) ?>">
+                    <input type="hidden" name="id_maintenance" value="<?= $idMaintenance ?>">
+                    <input type="hidden" name="id_session" value="<?= $idSession ?>">
+                    <input type="file" name="fichier" required style="flex:1;">
+                    <input type="text" name="legende" placeholder="Légende (optionnel)" style="<?= $selectStyle ?>flex:1;">
+                    <button type="submit" class="auth-submit" style="width:auto;padding:8px 14px;">Ajouter</button>
+                </form>
+            </div>
+        </div>
+    <?php endforeach; ?>
+
+</div>

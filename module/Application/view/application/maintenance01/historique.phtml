@@ -1,0 +1,265 @@
+<?php
+
+declare(strict_types=1);
+
+$maintenances = $maintenances ?? [];
+
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <h1>Historique des maintenances</h1>
+
+            <p>
+                Historique des interventions réalisées et planifiées.
+            </p>
+
+        </div>
+
+        <div class="dashboard-header-actions">
+
+            <a
+                href="<?= $this->url('maintenance') ?>"
+                class="btn-ibs btn-secondary"
+            >
+                ← Maintenance
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="dashboard-panel">
+
+        <?php if (empty($maintenances)): ?>
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    📋
+                </div>
+
+                <h3>Aucun historique</h3>
+
+                <p>
+                    Aucune maintenance n'est enregistrée.
+                </p>
+
+            </div>
+
+        <?php else: ?>
+
+            <div class="table-responsive">
+
+                <table class="ibs-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Équipement</th>
+
+                            <th>Site</th>
+
+                            <th>Type</th>
+
+                            <th>Date</th>
+
+                            <th>Technicien</th>
+
+                            <th>Statut</th>
+
+                            <th></th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    <?php foreach ($maintenances as $maintenance): ?>
+
+                        <?php
+
+                        $nomEquipement = trim(
+                            ($maintenance['marque'] ?? '') .
+                            ' ' .
+                            ($maintenance['modele'] ?? '')
+                        );
+
+                        $technicien = trim(
+                            ($maintenance[
+                                'prenom_technicien'
+                            ] ?? '') .
+                            ' ' .
+                            ($maintenance[
+                                'nom_technicien'
+                            ] ?? '')
+                        );
+
+                        $statut = (
+                            $maintenance['statut']
+                            ?? ''
+                        );
+
+                        ?>
+
+                        <tr>
+
+                            <td>
+
+                                <strong>
+                                    <?= $this->escapeHtml(
+                                        $nomEquipement
+                                        ?: 'Équipement'
+                                    ) ?>
+                                </strong>
+
+                                <?php if (!empty(
+                                    $maintenance[
+                                        'numero_serie'
+                                    ]
+                                )): ?>
+
+                                    <small>
+                                        N° série :
+                                        <?= $this->escapeHtml(
+                                            (string) $maintenance[
+                                                'numero_serie'
+                                            ]
+                                        ) ?>
+                                    </small>
+
+                                <?php endif; ?>
+
+                            </td>
+
+
+                            <td>
+                                <?= $this->escapeHtml(
+                                    (string) (
+                                        $maintenance[
+                                            'nom_site'
+                                        ]
+                                        ?? 'Non renseigné'
+                                    )
+                                ) ?>
+                            </td>
+
+
+                            <td>
+                                <?= $this->escapeHtml(
+                                    (string) (
+                                        $maintenance[
+                                            'type_maintenance'
+                                        ]
+                                        ?? '—'
+                                    )
+                                ) ?>
+                            </td>
+
+
+                            <td>
+
+                                <?= !empty(
+                                    $maintenance[
+                                        'date_maintenance'
+                                    ]
+                                )
+                                    ? $this->escapeHtml(
+                                        date(
+                                            'd/m/Y',
+                                            strtotime(
+                                                (string)
+                                                $maintenance[
+                                                    'date_maintenance'
+                                                ]
+                                            )
+                                        )
+                                    )
+                                    : '—'
+                                ?>
+
+                            </td>
+
+
+                            <td>
+                                <?= $this->escapeHtml(
+                                    $technicien
+                                    ?: 'Non affecté'
+                                ) ?>
+                            </td>
+
+
+                            <td>
+
+                                <?php
+
+                                if ($statut === 'terminee') {
+                                    $classe = 'status-success';
+                                    $libelle = 'Terminée';
+                                }
+                                elseif ($statut === 'en_cours') {
+                                    $classe = 'status-warning';
+                                    $libelle = 'En cours';
+                                }
+                                else {
+                                    $classe = 'status-neutral';
+                                    $libelle = 'Planifiée';
+                                }
+
+                                ?>
+
+                                <span
+                                    class="status-badge <?= $classe ?>"
+                                >
+                                    <span class="status-dot"></span>
+                                    <?= $libelle ?>
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <a
+                                    href="<?= $this->url(
+                                        'maintenance',
+                                        [
+                                            'action' => 'view',
+                                            'id' => (
+                                                int
+                                                $maintenance[
+                                                    'id_maintenance'
+                                                ]
+                                            ),
+                                        ]
+                                    ) ?>"
+                                    class="action-btn"
+                                    title="Voir"
+                                >
+                                    👁
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        <?php endif; ?>
+
+    </div>
+
+</div>

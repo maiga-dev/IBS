@@ -1,0 +1,158 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$maintenance = $maintenance ?? [];
+$techniciens = $techniciens ?? [];
+$statuts = $statuts ?? [];
+$piecesJointes = $piecesJointes ?? [];
+
+$libellesStatut = [
+    'planifiee' => 'Planifiée', 'en_cours' => 'En cours', 'suspendue' => 'Suspendue',
+    'arretee' => 'Arrêtée', 'terminee' => 'Terminée',
+];
+$id = (int) $maintenance['id_maintenance'];
+$selectStyle = "width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;";
+$estTerminee = $maintenance['statut'] === 'terminee';
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <a href="<?= $this->url('maintenance') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
+            <h1>Maintenance #<?= $id ?></h1>
+            <p>
+                <?= $this->escapeHtml((string) ($maintenance['type_centrale'] ?? '—')) ?>
+                <?= $maintenance['nom_site'] ? ' — ' . $this->escapeHtml($maintenance['nom_site']) : '' ?>
+                · <?= $this->escapeHtml(ucfirst((string) $maintenance['type_maintenance'])) ?>
+                · <span class="status"><?= $this->escapeHtml($libellesStatut[$maintenance['statut']] ?? $maintenance['statut']) ?></span>
+            </p>
+        </div>
+    </div>
+
+    <!-- DIAGNOSTIC INITIAL -->
+    <div class="dashboard-panel" style="margin-bottom:16px;">
+        <div class="panel-title"><h2>1er diagnostic</h2></div>
+        <p><?= nl2br($this->escapeHtml((string) ($maintenance['diagnostic'] ?? '—'))) ?></p>
+        <p class="stat-description">
+            Créée le <?= $this->escapeHtml(date('d/m/Y', strtotime($maintenance['date_maintenance']))) ?>
+        </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+
+        <!-- AFFECTATION TECHNICIEN -->
+        <div class="dashboard-panel">
+            <div class="panel-title"><h2>Technicien affecté</h2></div>
+            <p>
+                <?= $maintenance['technicien_nom']
+                    ? $this->escapeHtml($maintenance['technicien_prenom'] . ' ' . $maintenance['technicien_nom'])
+                    : 'Non affecté' ?>
+            </p>
+            <form method="post" action="<?= $this->url('maintenance', ['action' => 'assignerTechnicien', 'id' => $id]) ?>">
+                <div class="auth-field">
+                    <select name="id_technicien" required style="<?= $selectStyle ?>">
+                        <option value="">— Choisir un technicien —</option>
+                        <?php foreach ($techniciens as $t): ?>
+                            <option value="<?= (int) $t['id'] ?>"
+                                <?= (int) ($maintenance['id_technicien'] ?? 0) === (int) $t['id'] ? 'selected' : '' ?>>
+                                <?= $this->escapeHtml($t['prenom'] . ' ' . $t['nom']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="auth-submit">Affecter</button>
+            </form>
+        </div>
+
+        <!-- STATUT -->
+        <div class="dashboard-panel">
+            <div class="panel-title"><h2>Statut</h2></div>
+            <form method="post" action="<?= $this->url('maintenance', ['action' => 'changerStatut', 'id' => $id]) ?>">
+                <div class="auth-field">
+                    <select name="statut" style="<?= $selectStyle ?>">
+                        <?php foreach ($statuts as $s): ?>
+                            <option value="<?= $s ?>" <?= $maintenance['statut'] === $s ? 'selected' : '' ?>>
+                                <?= $this->escapeHtml($libellesStatut[$s] ?? $s) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="auth-submit">Mettre à jour</button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- 2e DIAGNOSTIC -->
+    <div class="dashboard-panel" style="margin-bottom:16px;">
+        <div class="panel-title"><h2>Diagnostic après intervention</h2></div>
+        <?php if (! empty($maintenance['compte_rendu']) && ! $estTerminee): ?>
+            <p><?= nl2br($this->escapeHtml($maintenance['compte_rendu'])) ?></p>
+        <?php endif; ?>
+        <?php if (! $estTerminee): ?>
+            <form method="post" action="<?= $this->url('maintenance', ['action' => 'diagnosticFinal', 'id' => $id]) ?>">
+                <div class="auth-field">
+                    <textarea name="diagnostic_final" rows="3" placeholder="Constat après intervention sur place..."
+                              style="<?= $selectStyle ?>"><?= $this->escapeHtml((string) ($maintenance['compte_rendu'] ?? '')) ?></textarea>
+                </div>
+                <button type="submit" class="auth-submit">Enregistrer</button>
+            </form>
+        <?php endif; ?>
+    </div>
+
+    <!-- PIECES JOINTES -->
+    <div class="dashboard-panel" style="margin-bottom:16px;">
+        <div class="panel-title"><h2>Pièces jointes (photos, documents)</h2></div>
+
+        <?php if (empty($piecesJointes)): ?>
+            <p class="stat-description">Aucune pièce jointe pour l'instant.</p>
+        <?php else: ?>
+            <ul style="padding-left:18px;">
+                <?php foreach ($piecesJointes as $p): ?>
+                    <li>
+                        <a href="<?= $this->escapeHtmlAttr($p['url_fichier']) ?>" target="_blank">
+                            <?= $this->escapeHtml($p['legende'] ?: basename($p['url_fichier'])) ?>
+                        </a>
+                        <span class="stat-description">(<?= $this->escapeHtml($p['type_fichier']) ?>)</span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+
+        <form method="post" action="<?= $this->url('maintenance', ['action' => 'ajouterPieceJointe', 'id' => $id]) ?>"
+              enctype="multipart/form-data" style="margin-top:12px;">
+            <div class="auth-row">
+                <div class="auth-field">
+                    <input type="file" name="fichier" required>
+                </div>
+                <div class="auth-field">
+                    <input type="text" name="legende" placeholder="Légende (optionnel)">
+                </div>
+            </div>
+            <button type="submit" class="auth-submit">Ajouter le fichier</button>
+        </form>
+    </div>
+
+    <!-- CLOTURE -->
+    <?php if (! $estTerminee): ?>
+        <div class="dashboard-panel">
+            <div class="panel-title"><h2>Clôturer la maintenance</h2></div>
+            <form method="post" action="<?= $this->url('maintenance', ['action' => 'cloturer', 'id' => $id]) ?>"
+                  onsubmit="return confirm('Clôturer cette maintenance ? Cette action passe le statut à Terminée.');">
+                <div class="auth-field">
+                    <label for="compte_rendu">Compte-rendu final</label>
+                    <textarea id="compte_rendu" name="compte_rendu" rows="4" required
+                              style="<?= $selectStyle ?>"></textarea>
+                </div>
+                <button type="submit" class="auth-submit">Clôturer</button>
+            </form>
+        </div>
+    <?php else: ?>
+        <div class="dashboard-panel">
+            <div class="panel-title"><h2>Compte-rendu final</h2></div>
+            <p><?= nl2br($this->escapeHtml((string) ($maintenance['compte_rendu'] ?? ''))) ?></p>
+            <p class="stat-description">
+                Clôturée le <?= $this->escapeHtml(date('d/m/Y', strtotime($maintenance['date_fin']))) ?>
+            </p>
+        </div>
+    <?php endif; ?>
+
+</div>

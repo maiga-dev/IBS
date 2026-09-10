@@ -1,0 +1,375 @@
+<?php
+
+declare(strict_types=1);
+
+$maintenance = $maintenance ?? [];
+$equipements = $equipements ?? [];
+$techniciens = $techniciens ?? [];
+
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-header">
+
+        <div>
+            <h1>Modifier la maintenance</h1>
+
+            <p>
+                Modifier les informations de l'intervention.
+            </p>
+        </div>
+
+        <div class="dashboard-header-actions">
+
+            <a
+                href="<?= $this->url('maintenance') ?>"
+                class="btn-ibs btn-secondary"
+            >
+                ← Retour
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="dashboard-panel">
+
+        <form
+            method="post"
+            action="<?= $this->url(
+                'maintenance',
+                [
+                    'action' => 'edit',
+                    'id' => (int) $maintenance[
+                        'id_maintenance'
+                    ],
+                ]
+            ) ?>"
+        >
+
+            <div class="form-grid">
+
+
+                <div class="form-group">
+
+                    <label for="id_equipement">
+                        Équipement *
+                    </label>
+
+                    <select
+                        name="id_equipement"
+                        id="id_equipement"
+                        class="ibs-input"
+                        required
+                    >
+
+                        <?php foreach ($equipements as $equipement): ?>
+
+                            <?php
+
+                            $nom = trim(
+                                ($equipement['marque'] ?? '') .
+                                ' ' .
+                                ($equipement['modele'] ?? '')
+                            );
+
+                            $serie = trim(
+                                (string) (
+                                    $equipement['numero_serie']
+                                    ?? ''
+                                )
+                            );
+
+                            $site = trim(
+                                (string) (
+                                    $equipement['nom_site']
+                                    ?? ''
+                                )
+                            );
+
+                            ?>
+
+                            <option
+                                value="<?= (int) $equipement[
+                                    'id_equipement'
+                                ] ?>"
+                                <?= (
+                                    (int) $maintenance[
+                                        'id_equipement'
+                                    ] ===
+                                    (int) $equipement[
+                                        'id_equipement'
+                                    ]
+                                )
+                                    ? 'selected'
+                                    : ''
+                                ?>
+                            >
+
+                                <?= $this->escapeHtml(
+                                    $nom ?: 'Équipement'
+                                ) ?>
+
+                                <?php if ($serie): ?>
+                                    — N° série :
+                                    <?= $this->escapeHtml($serie) ?>
+                                <?php endif; ?>
+
+                                <?php if ($site): ?>
+                                    — <?= $this->escapeHtml($site) ?>
+                                <?php endif; ?>
+
+                            </option>
+
+                        <?php endforeach; ?>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="date_maintenance">
+                        Date *
+                    </label>
+
+                    <input
+                        type="date"
+                        name="date_maintenance"
+                        id="date_maintenance"
+                        class="ibs-input"
+                        value="<?= $this->escapeHtmlAttr(
+                            (string) $maintenance[
+                                'date_maintenance'
+                            ]
+                        ) ?>"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="type_maintenance">
+                        Type de maintenance
+                    </label>
+
+                    <select
+                        name="type_maintenance"
+                        id="type_maintenance"
+                        class="ibs-input"
+                    >
+
+                        <option value="">
+                            Sélectionner
+                        </option>
+
+                        <option
+                            value="préventive"
+                            <?= (
+                                $maintenance[
+                                    'type_maintenance'
+                                ] === 'préventive'
+                            )
+                                ? 'selected'
+                                : ''
+                            ?>
+                        >
+                            Préventive
+                        </option>
+
+                        <option
+                            value="corrective"
+                            <?= (
+                                $maintenance[
+                                    'type_maintenance'
+                                ] === 'corrective'
+                            )
+                                ? 'selected'
+                                : ''
+                            ?>
+                        >
+                            Corrective
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="id_technicien">
+                        Technicien
+                    </label>
+
+                    <select
+                        name="id_technicien"
+                        id="id_technicien"
+                        class="ibs-input"
+                    >
+
+                        <option value="">
+                            Non affecté
+                        </option>
+
+                        <?php foreach ($techniciens as $technicien): ?>
+
+                            <option
+                                value="<?= (int) $technicien['id'] ?>"
+                                <?= (
+                                    (int) (
+                                        $maintenance[
+                                            'id_technicien'
+                                        ] ?? 0
+                                    ) ===
+                                    (int) $technicien['id']
+                                )
+                                    ? 'selected'
+                                    : ''
+                                ?>
+                            >
+                                <?= $this->escapeHtml(
+                                    trim(
+                                        ($technicien['prenom'] ?? '') .
+                                        ' ' .
+                                        ($technicien['nom'] ?? '')
+                                    )
+                                ) ?>
+                            </option>
+
+                        <?php endforeach; ?>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="statut">
+                        Statut
+                    </label>
+
+                    <select
+                        name="statut"
+                        id="statut"
+                        class="ibs-input"
+                    >
+
+                        <option
+                            value="planifiee"
+                            <?= (
+                                $maintenance['statut']
+                                === 'planifiee'
+                            )
+                                ? 'selected'
+                                : ''
+                            ?>
+                        >
+                            Planifiée
+                        </option>
+
+                        <option
+                            value="en_cours"
+                            <?= (
+                                $maintenance['statut']
+                                === 'en_cours'
+                            )
+                                ? 'selected'
+                                : ''
+                            ?>
+                        >
+                            En cours
+                        </option>
+
+                        <option
+                            value="terminee"
+                            <?= (
+                                $maintenance['statut']
+                                === 'terminee'
+                            )
+                                ? 'selected'
+                                : ''
+                            ?>
+                        >
+                            Terminée
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="date_fin">
+                        Date de fin
+                    </label>
+
+                    <input
+                        type="date"
+                        name="date_fin"
+                        id="date_fin"
+                        class="ibs-input"
+                        value="<?= $this->escapeHtmlAttr(
+                            (string) (
+                                $maintenance['date_fin']
+                                ?? ''
+                            )
+                        ) ?>"
+                    >
+
+                </div>
+
+
+                <div class="form-group form-group-full">
+
+                    <label for="compte_rendu">
+                        Compte rendu
+                    </label>
+
+                    <textarea
+                        name="compte_rendu"
+                        id="compte_rendu"
+                        class="ibs-input"
+                        rows="6"
+                    ><?= $this->escapeHtml(
+                        (string) (
+                            $maintenance['compte_rendu']
+                            ?? ''
+                        )
+                    ) ?></textarea>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-actions">
+
+                <a
+                    href="<?= $this->url('maintenance') ?>"
+                    class="btn-ibs btn-secondary"
+                >
+                    Annuler
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn-ibs"
+                >
+                    Enregistrer les modifications
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>

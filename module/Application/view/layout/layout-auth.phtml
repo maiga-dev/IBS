@@ -1,0 +1,92 @@
+<?php
+/** IBS Pulse — Layout des pages d'authentification */
+$this->headTitle()->setSeparator(' — ')->setAutoEscape(false);
+?>
+<?= $this->doctype() ?>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <?= $this->headTitle('IBS Pulse') ?>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="<?= $this->basePath('css/ibs-pulse.css') ?>">
+
+    <style>
+        body.auth-body{
+            margin:0;
+            min-height:100vh;
+            display:flex;align-items:center;justify-content:center;
+            background:#F7F8F9;
+            font-family:'Inter',sans-serif;
+        }
+        .auth-card{
+            width:100%;max-width:400px;
+            background:#fff;border:1px solid #E7E9EC;border-radius:16px;
+            padding:32px;
+        }
+        .auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+        .auth-brand-badge{
+            width:38px;height:38px;border-radius:11px;background:#2E6A50;
+            display:flex;align-items:center;justify-content:center;
+        }
+        .auth-brand-name{font-family:'Space Grotesk',sans-serif;font-size:18px;}
+        .auth-brand-name b{color:#000;}
+        .auth-brand-name span{color:#E94C3C;font-weight:500;}
+        .auth-card h1{font-family:'Space Grotesk',sans-serif;font-size:20px;margin:0 0 6px 0;}
+        .auth-card p.subtitle{color:#64748B;font-size:14px;margin:0 0 22px 0;}
+        .auth-field{margin-bottom:16px;}
+        .auth-field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+        .auth-field input{
+            width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;
+            font-size:14px;font-family:'Inter',sans-serif;box-sizing:border-box;
+        }
+        .auth-field input:focus{outline:2px solid #2E6A50;outline-offset:1px;}
+        .auth-row{display:flex;gap:12px;}
+        .auth-row .auth-field{flex:1;}
+        .auth-error{
+            background:#FDEDEB;color:#E94C3C;font-size:13px;
+            padding:10px 12px;border-radius:8px;margin-bottom:16px;
+        }
+        .auth-submit{
+            width:100%;padding:11px;border:none;border-radius:8px;
+            background:#2E6A50;color:#fff;font-weight:600;font-size:14px;
+            cursor:pointer;font-family:'Inter',sans-serif;
+        }
+        .auth-submit:hover{background:#234f3c;}
+        .auth-switch{text-align:center;font-size:13px;color:#64748B;margin-top:18px;}
+        .auth-switch a{color:#2E6A50;font-weight:600;text-decoration:none;}
+    </style>
+</head>
+<body class="auth-body">
+
+    <div class="auth-card">
+        <div class="auth-brand">
+           
+             <!-- LOGO -->
+
+        <div class="ibs-brand">
+
+            <a
+                href="<?= $this->url('home') ?>"
+                class="ibs-brand-link"
+            >
+                <img
+                    src="<?= $this->basePath('img/ibs-pulse-logo.svg') ?>"
+                    alt="IBS Pulse"
+                    class="ibs-logo"
+                >
+            </a>
+
+        </div>
+            
+        </div>
+
+        <?= $this->content ?>
+    </div>
+
+</body>
+</html>

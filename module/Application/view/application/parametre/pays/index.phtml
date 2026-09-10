@@ -1,0 +1,43 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$paysListe = $paysListe ?? [];
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <h1>Pays</h1>
+            <p>Pays couverts par IBS.</p>
+        </div>
+        <a href="<?= $this->url('pays', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+            + Ajouter
+        </a>
+    </div>
+
+    <div class="dashboard-panel">
+        <?php if (empty($paysListe)): ?>
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">✓</div>
+                <strong>Aucun pays enregistré</strong>
+            </div>
+        <?php else: ?>
+            <div class="table-wrapper">
+                <table class="ibs-table">
+                    <thead><tr><th>Nom</th><th></th></tr></thead>
+                    <tbody>
+                    <?php foreach ($paysListe as $p): ?>
+                        <tr>
+                            <td><?= $this->escapeHtml($p['nom_pays']) ?></td>
+                            <td style="text-align:right;">
+                                <a href="<?= $this->url('pays', ['action' => 'edit', 'id' => $p['id_pays']]) ?>">Modifier</a>
+                                &nbsp;·&nbsp;
+                                <a href="<?= $this->url('pays', ['action' => 'delete', 'id' => $p['id_pays']]) ?>"
+                                   onclick="return confirm('Supprimer ce pays ?');">Supprimer</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>

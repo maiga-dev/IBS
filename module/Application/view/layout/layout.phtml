@@ -1,0 +1,212 @@
+<?php
+
+$title = $this->headTitle()
+    ->setSeparator(' — ')
+    ->setAutoEscape(false);
+?>
+
+<?= $this->doctype() ?>
+
+<html lang="fr">
+
+<head>
+
+    <meta charset="utf-8">
+
+    <?= $this->headTitle('IBS Pulse') ?>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="<?= $this->basePath('css/ibs-pulse.css') ?>"
+    >
+
+    <?= $this->headLink() ?>
+    <?= $this->headStyle() ?>
+    <?= $this->headScript() ?>
+
+</head>
+
+<body>
+
+<div class="ibs-app">
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="ibs-sidebar">
+
+        <!-- LOGO -->
+
+        <div class="ibs-brand">
+
+            <a
+                href="<?= $this->url('home') ?>"
+                class="ibs-brand-link"
+            >
+                <img
+                    src="<?= $this->basePath('img/ibs-pulse-logo.svg') ?>"
+                    alt="IBS Pulse"
+                    class="ibs-logo"
+                >
+            </a>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="ibs-navigation">
+
+            <a
+                href="<?= $this->url('home') ?>"
+                class="ibs-nav-item"
+            >
+                <span class="nav-icon">▦</span>
+                <span>Tableau de bord</span>
+            </a>
+
+
+           <a
+                href="<?= $this->url('maintenance') ?>"
+                class="ibs-nav-item"
+            >
+                <span class="nav-icon">⌕</span>
+                <span>Maintenance</span>
+            </a>
+
+
+            <a
+                href="<?= $this->url('rapport') ?>"
+                class="ibs-nav-item"
+            >
+                <span class="nav-icon">▥</span>
+                <span>Rapports</span>
+            </a>
+
+
+           <a
+                href="<?= $this->url('parametre') ?>"
+                class="ibs-nav-item"
+            >
+                <span class="nav-icon">⚙</span>
+                <span>Paramètres</span>
+            </a>
+
+
+            <!-- =================================================
+                 DECONNEXION
+            ================================================== -->
+            <a href="<?= $this->url('auth', ['action' => 'logout']) ?>" class="ibs-nav-item logout-nav-item">
+                <span class="nav-icon">🚪</span>
+                <span>Déconnexion</span>
+            </a>
+           
+
+        </nav>
+
+       
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="ibs-main">
+
+
+        <!-- HEADER -->
+
+        <header class="ibs-header">
+
+           
+            <div></div>
+
+
+            <div class="header-right">
+
+                <!-- ALERTE -->
+
+                <a
+                    href="<?= $this->basePath('/alertes') ?>"
+                    class="notification-button"
+                    aria-label="Alertes"
+                    title="Alertes"
+                >
+                    <span class="notification-icon">🔔</span>
+                   
+                </a>
+
+
+                <!-- UTILISATEUR -->
+
+               <?php $identite = $this->identity(); ?>
+
+            <!-- UTILISATEUR -->
+            <div class="user-menu">
+
+                <div class="user-avatar">
+                    👤
+                </div>
+
+                <div class="user-information">
+
+                    <strong>
+                        <?= $identite
+                            ? $this->escapeHtml($identite['prenom'] . ' ' . $identite['nom'])
+                            : 'Utilisateur' ?>
+                    </strong>
+
+                    <small>
+                        <?= $identite
+                            ? $this->escapeHtml(ucfirst((string) $identite['role']))
+                            : 'Compte' ?>
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+
+        <div class="ibs-content">
+
+            <?= $this->content ?>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>

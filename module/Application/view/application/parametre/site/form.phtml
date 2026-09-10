@@ -1,0 +1,63 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$erreur = $erreur ?? null;
+$item = $item ?? ['nom_site' => '', 'adresse' => '', 'id_ville' => null, 'latitude' => '', 'longitude' => ''];
+$villes = $villes ?? [];
+$mode = $mode ?? 'ajout';
+$action = $mode === 'modification'
+    ? $this->url('site', ['action' => 'edit', 'id' => $item['id_site'] ?? null])
+    : $this->url('site', ['action' => 'add']);
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <a href="<?= $this->url('site') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
+            <h1><?= $mode === 'modification' ? 'Modifier le site' : 'Ajouter un site' ?></h1>
+        </div>
+    </div>
+
+    <div class="dashboard-panel" style="max-width:520px;">
+        <?php if ($erreur): ?>
+            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
+        <?php endif; ?>
+
+        <form method="post" action="<?= $action ?>">
+            <div class="auth-field">
+                <label for="nom_site">Nom du site</label>
+                <input type="text" id="nom_site" name="nom_site"
+                       value="<?= $this->escapeHtmlAttr($item['nom_site'] ?? '') ?>" required autofocus>
+            </div>
+            <div class="auth-field">
+                <label for="adresse">Adresse</label>
+                <input type="text" id="adresse" name="adresse"
+                       value="<?= $this->escapeHtmlAttr($item['adresse'] ?? '') ?>">
+            </div>
+            <div class="auth-field">
+                <label for="id_ville">Ville</label>
+                <select id="id_ville" name="id_ville" required
+                        style="width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;">
+                    <option value="">— Sélectionner —</option>
+                    <?php foreach ($villes as $v): ?>
+                        <option value="<?= (int) $v['id_ville'] ?>"
+                            <?= ((int) ($item['id_ville'] ?? 0) === (int) $v['id_ville']) ? 'selected' : '' ?>>
+                            <?= $this->escapeHtml($v['nom_ville']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="auth-row">
+                <div class="auth-field">
+                    <label for="latitude">Latitude</label>
+                    <input type="text" id="latitude" name="latitude"
+                           value="<?= $this->escapeHtmlAttr((string) ($item['latitude'] ?? '')) ?>">
+                </div>
+                <div class="auth-field">
+                    <label for="longitude">Longitude</label>
+                    <input type="text" id="longitude" name="longitude"
+                           value="<?= $this->escapeHtmlAttr((string) ($item['longitude'] ?? '')) ?>">
+                </div>
+            </div>
+            <button type="submit" class="auth-submit">Enregistrer</button>
+        </form>
+    </div>
+</div>

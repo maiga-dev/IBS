@@ -1,0 +1,46 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$erreur = $erreur ?? null;
+$item = $item ?? ['nom_ville' => '', 'id_pays' => null];
+$paysListe = $paysListe ?? [];
+$mode = $mode ?? 'ajout';
+$action = $mode === 'modification'
+    ? $this->url('ville', ['action' => 'edit', 'id' => $item['id_ville'] ?? null])
+    : $this->url('ville', ['action' => 'add']);
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+                        <a href="<?= $this->url('ville') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
+            <h1><?= $mode === 'modification' ? 'Modifier la ville' : 'Ajouter une ville' ?></h1>
+        </div>
+    </div>
+
+    <div class="dashboard-panel" style="max-width:480px;">
+        <?php if ($erreur): ?>
+            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
+        <?php endif; ?>
+
+        <form method="post" action="<?= $action ?>">
+            <div class="auth-field">
+                <label for="nom_ville">Nom de la ville</label>
+                <input type="text" id="nom_ville" name="nom_ville"
+                       value="<?= $this->escapeHtmlAttr($item['nom_ville'] ?? '') ?>" required autofocus>
+            </div>
+            <div class="auth-field">
+                <label for="id_pays">Pays</label>
+                <select id="id_pays" name="id_pays" required
+                        style="width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;">
+                    <option value="">— Sélectionner —</option>
+                    <?php foreach ($paysListe as $p): ?>
+                        <option value="<?= (int) $p['id_pays'] ?>"
+                            <?= ((int) ($item['id_pays'] ?? 0) === (int) $p['id_pays']) ? 'selected' : '' ?>>
+                            <?= $this->escapeHtml($p['nom_pays']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <button type="submit" class="auth-submit">Enregistrer</button>
+        </form>
+    </div>
+</div>

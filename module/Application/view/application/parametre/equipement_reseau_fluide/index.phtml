@@ -1,0 +1,50 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$equipements = $equipements ?? [];
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <h1>Réseau fluide médical</h1>
+            <p>Unités de détente, alarmes, prises — par réseau de distribution.</p>
+        </div>
+        <a href="<?= $this->url('equipement_reseau_fluide', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+            + Ajouter
+        </a>
+    </div>
+
+    <div class="dashboard-panel">
+        <?php if (empty($equipements)): ?>
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">✓</div>
+                <strong>Aucun équipement de réseau enregistré</strong>
+            </div>
+        <?php else: ?>
+            <div class="table-wrapper">
+                <table class="ibs-table">
+                    <thead>
+                        <tr><th>Désignation</th><th>Type</th><th>Réseau</th><th>Nombre</th><th>P. entrée</th><th>P. sortie</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($equipements as $e): ?>
+                        <tr>
+                            <td><?= $this->escapeHtml($e['designation']) ?></td>
+                            <td><?= $this->escapeHtml((string) ($e['nom_type'] ?? '—')) ?></td>
+                            <td><?= $this->escapeHtml((string) ($e['type_centrale'] ?? '—')) ?></td>
+                            <td><?= $this->escapeHtml((string) ($e['nombre'] ?? '—')) ?></td>
+                            <td><?= $e['pression_entree'] !== null ? $this->escapeHtml((string) $e['pression_entree']) : '—' ?></td>
+                            <td><?= $e['pression_sortie'] !== null ? $this->escapeHtml((string) $e['pression_sortie']) : '—' ?></td>
+                            <td style="text-align:right;white-space:nowrap;">
+                                <a href="<?= $this->url('equipement_reseau_fluide', ['action' => 'edit', 'id' => $e['id_equipement_reseau_fluide']]) ?>">Modifier</a>
+                                &nbsp;·&nbsp;
+                                <a href="<?= $this->url('equipement_reseau_fluide', ['action' => 'delete', 'id' => $e['id_equipement_reseau_fluide']]) ?>"
+                                   onclick="return confirm('Supprimer cet équipement de réseau ?');">Supprimer</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>

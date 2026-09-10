@@ -1,0 +1,45 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$centrales = $centrales ?? [];
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <h1>Centrales</h1>
+            <p>Centrales installées par site.</p>
+        </div>
+        <a href="<?= $this->url('centrale', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+            + Ajouter
+        </a>
+    </div>
+
+    <div class="dashboard-panel">
+        <?php if (empty($centrales)): ?>
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">✓</div>
+                <strong>Aucune centrale enregistrée</strong>
+            </div>
+        <?php else: ?>
+            <div class="table-wrapper">
+                <table class="ibs-table">
+                    <thead><tr><th>Type</th><th>Site</th><th>Famille</th><th></th></tr></thead>
+                    <tbody>
+                    <?php foreach ($centrales as $c): ?>
+                        <tr>
+                            <td><?= $this->escapeHtml((string) ($c['type_centrale'] ?? '—')) ?></td>
+                            <td><?= $this->escapeHtml((string) ($c['nom_site'] ?? '—')) ?></td>
+                            <td><?= $this->escapeHtml((string) ($c['nom_famille'] ?? '—')) ?></td>
+                            <td style="text-align:right;">
+                                <a href="<?= $this->url('centrale', ['action' => 'edit', 'id' => $c['id_centrale']]) ?>">Modifier</a>
+                                &nbsp;·&nbsp;
+                                <a href="<?= $this->url('centrale', ['action' => 'delete', 'id' => $c['id_centrale']]) ?>"
+                                   onclick="return confirm('Supprimer cette centrale ?');">Supprimer</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>

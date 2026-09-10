@@ -1,0 +1,273 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ * @var array $equipement
+ */
+
+$equipement = $equipement ?? [];
+
+$id = (int) (
+    $equipement['id_equipement'] ?? 0
+);
+
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <h1>
+                Détail de l'équipement
+            </h1>
+
+            <p>
+                Informations détaillées de l'équipement.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="dashboard-panel">
+
+        <div class="form-grid">
+
+            <div class="form-group">
+
+                <label>
+                    Désignation
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'designation'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Type d'équipement
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'nom_type'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Numéro de série
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'numero_serie'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Marque
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'marque'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Modèle
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'modele'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Site
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'nom_site'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Adresse du site
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'adresse'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Centrale
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'type_centrale'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Date de mise en service
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'date_mise_en_service'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Périodicité de maintenance
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'periodicite'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Prochaine maintenance
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $equipement[
+                            'date_prochaine_maintenance'
+                        ] ?? '-'
+                    ) ?>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-actions">
+
+            <a
+                href="<?= $this->url(
+                    'equipement'
+                ) ?>"
+                class="btn-secondary"
+            >
+                Retour à la liste
+            </a>
+
+
+            <a
+                href="<?= $this->url(
+                    'equipement',
+                    [
+                        'action' => 'historique',
+                        'id' => $id,
+                    ]
+                ) ?>"
+                class="btn-secondary"
+            >
+                Historique
+            </a>
+
+
+            <a
+                href="<?= $this->url(
+                    'equipement',
+                    [
+                        'action' => 'edit',
+                        'id' => $id,
+                    ]
+                ) ?>"
+                class="btn-ibs"
+            >
+                Modifier
+            </a>
+
+        </div>
+
+    </div>
+
+</div>

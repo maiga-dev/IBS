@@ -1,0 +1,52 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+
+<svg width="640" height="192" viewBox="0 0 640 192" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+
+    <title id="title">IBS Pulse</title>
+
+    <desc id="desc">
+        Logo IBS Pulse avec symbole électrocardiogramme, IBS en noir et Pulse en orange.
+    </desc>
+
+
+    <!-- =====================================
+         ICÔNE VERTE
+    ====================================== -->
+
+    <rect x="0" y="0" width="160" height="180" rx="30" fill="#2E6B54"></rect>
+
+
+    <!-- =====================================
+         TRACÉ ECG BLANC
+    ====================================== -->
+
+    <polyline points="
+            0,96
+            32,96
+            48,96
+            62,54
+            84,145
+            103,96
+            127,96
+            160,96
+        " fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></polyline>
+
+
+    <!-- =====================================
+         IBS
+    ====================================== -->
+
+    <text x="215" y="135" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="700" fill="#1A1A1A">
+        IBS
+    </text>
+
+
+    <!-- =====================================
+         PULSE
+    ====================================== -->
+
+    <text x="414" y="135" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="400" fill="#E05A3C">
+        Pulse
+    </text>
+
+</svg>

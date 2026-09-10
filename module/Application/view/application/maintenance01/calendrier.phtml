@@ -1,0 +1,183 @@
+<?php
+
+declare(strict_types=1);
+
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+
+$maintenances = $maintenances ?? [];
+
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <h1>Calendrier des maintenances</h1>
+
+            <p>
+                Vue chronologique des opérations planifiées.
+            </p>
+
+        </div>
+
+        <div class="dashboard-header-actions">
+
+            <a
+                href="<?= $this->url('maintenance') ?>"
+                class="btn-ibs-secondary"
+            >
+                Liste
+            </a>
+
+            <a
+                href="<?= $this->url(
+                    'maintenance',
+                    ['action' => 'add']
+                ) ?>"
+                class="btn-ibs"
+            >
+                + Planifier
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="dashboard-panel">
+
+        <?php if (empty($maintenances)): ?>
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    📅
+                </div>
+
+                <h3>Aucune maintenance planifiée</h3>
+
+                <p>
+                    Le calendrier ne contient actuellement aucune opération.
+                </p>
+
+            </div>
+
+        <?php else: ?>
+
+            <div class="maintenance-calendar">
+
+                <?php foreach ($maintenances as $maintenance): ?>
+
+                    <?php
+
+                    $id = (int) $maintenance['id_maintenance'];
+
+                    $statut = strtolower(
+                        trim(
+                            (string)
+                            ($maintenance['statut'] ?? '')
+                        )
+                    );
+
+                    $classe = 'calendar-item-neutral';
+
+                    if ($statut === 'planifiee') {
+                        $classe = 'calendar-item-warning';
+                    }
+
+                    elseif ($statut === 'en_cours') {
+                        $classe = 'calendar-item-orange';
+                    }
+
+                    elseif ($statut === 'terminee') {
+                        $classe = 'calendar-item-success';
+                    }
+
+                    ?>
+
+                    <a
+                        href="<?= $this->url(
+                            'maintenance',
+                            [
+                                'action' => 'view',
+                                'id' => $id,
+                            ]
+                        ) ?>"
+                        class="calendar-item <?= $classe ?>"
+                    >
+
+                        <div class="calendar-date">
+
+                            <?php if (!empty(
+                                $maintenance['date_maintenance']
+                            )): ?>
+
+                                <strong>
+                                    <?= $this->escapeHtml(
+                                        date(
+                                            'd',
+                                            strtotime(
+                                                (string)
+                                                $maintenance[
+                                                    'date_maintenance'
+                                                ]
+                                            )
+                                        )
+                                    ) ?>
+                                </strong>
+
+                                <span>
+                                    <?= $this->escapeHtml(
+                                        date(
+                                            'M Y',
+                                            strtotime(
+                                                (string)
+                                                $maintenance[
+                                                    'date_maintenance'
+                                                ]
+                                            )
+                                        )
+                                    ) ?>
+                                </span>
+
+                            <?php endif; ?>
+
+                        </div>
+
+
+                        <div class="calendar-information">
+
+                            <strong>
+                                <?= $this->escapeHtml(
+                                    (string) (
+                                        $maintenance[
+                                            'type_maintenance'
+                                        ] ?? 'Maintenance'
+                                    )
+                                ) ?>
+                            </strong>
+
+                            <span>
+                                Équipement #
+                                <?= (int) (
+                                    $maintenance[
+                                        'id_equipement'
+                                    ] ?? 0
+                                ) ?>
+                            </span>
+
+                        </div>
+
+                    </a>
+
+                <?php endforeach; ?>
+
+            </div>
+
+        <?php endif; ?>
+
+    </div>
+
+</div>

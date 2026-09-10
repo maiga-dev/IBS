@@ -1,0 +1,74 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$erreur = $erreur ?? null;
+$item = $item ?? ['nom' => '', 'prenom' => '', 'telephone' => '', 'email' => '', 'role' => 'technicien'];
+$roles = $roles ?? [];
+$mode = $mode ?? 'ajout';
+$action = $mode === 'modification'
+    ? $this->url('utilisateur', ['action' => 'edit', 'id' => $item['id'] ?? null])
+    : $this->url('utilisateur', ['action' => 'add']);
+$selectStyle = "width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;";
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <h1><?= $mode === 'modification' ? "Modifier l'utilisateur" : 'Ajouter un utilisateur' ?></h1>
+        </div>
+    </div>
+
+    <div class="dashboard-panel" style="max-width:520px;">
+        <?php if ($erreur): ?>
+            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
+        <?php endif; ?>
+
+        <form method="post" action="<?= $action ?>">
+
+            <div class="auth-row">
+                <div class="auth-field">
+                    <label for="prenom">Prénom</label>
+                    <input type="text" id="prenom" name="prenom"
+                           value="<?= $this->escapeHtmlAttr((string) ($item['prenom'] ?? '')) ?>" required autofocus>
+                </div>
+                <div class="auth-field">
+                    <label for="nom">Nom</label>
+                    <input type="text" id="nom" name="nom"
+                           value="<?= $this->escapeHtmlAttr((string) ($item['nom'] ?? '')) ?>" required>
+                </div>
+            </div>
+
+            <div class="auth-field">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email"
+                       value="<?= $this->escapeHtmlAttr((string) ($item['email'] ?? '')) ?>" required>
+            </div>
+
+            <div class="auth-field">
+                <label for="telephone">Téléphone</label>
+                <input type="tel" id="telephone" name="telephone"
+                       value="<?= $this->escapeHtmlAttr((string) ($item['telephone'] ?? '')) ?>">
+            </div>
+
+            <div class="auth-field">
+                <label for="role">Rôle</label>
+                <select id="role" name="role" style="<?= $selectStyle ?>">
+                    <?php foreach ($roles as $r): ?>
+                        <option value="<?= $r ?>" <?= ($item['role'] ?? 'technicien') === $r ? 'selected' : '' ?>>
+                            <?= $this->escapeHtml(ucfirst($r)) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="auth-field">
+                <label for="mot_de_passe">
+                    Mot de passe
+                    <?= $mode === 'modification' ? '(laisser vide pour ne pas changer)' : '' ?>
+                </label>
+                <input type="password" id="mot_de_passe" name="mot_de_passe"
+                       minlength="8" <?= $mode === 'ajout' ? 'required' : '' ?>>
+            </div>
+
+            <button type="submit" class="auth-submit">Enregistrer</button>
+        </form>
+    </div>
+</div>

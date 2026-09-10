@@ -1,0 +1,45 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$sites = $sites ?? [];
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <h1>Sites</h1>
+            <p>Établissements de santé.</p>
+        </div>
+        <a href="<?= $this->url('site', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+            + Ajouter
+        </a>
+    </div>
+
+    <div class="dashboard-panel">
+        <?php if (empty($sites)): ?>
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">✓</div>
+                <strong>Aucun site enregistré</strong>
+            </div>
+        <?php else: ?>
+            <div class="table-wrapper">
+                <table class="ibs-table">
+                    <thead><tr><th>Nom</th><th>Adresse</th><th>Ville</th><th></th></tr></thead>
+                    <tbody>
+                    <?php foreach ($sites as $s): ?>
+                        <tr>
+                            <td><?= $this->escapeHtml($s['nom_site']) ?></td>
+                            <td><?= $this->escapeHtml((string) ($s['adresse'] ?? '—')) ?></td>
+                            <td><?= $this->escapeHtml((string) ($s['nom_ville'] ?? '—')) ?></td>
+                            <td style="text-align:right;">
+                                <a href="<?= $this->url('site', ['action' => 'edit', 'id' => $s['id_site']]) ?>">Modifier</a>
+                                &nbsp;·&nbsp;
+                                <a href="<?= $this->url('site', ['action' => 'delete', 'id' => $s['id_site']]) ?>"
+                                   onclick="return confirm('Supprimer ce site ?');">Supprimer</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>

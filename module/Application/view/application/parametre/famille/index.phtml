@@ -1,0 +1,43 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$familles = $familles ?? [];
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <h1>Familles</h1>
+            <p>Familles de centrales biomédicales.</p>
+        </div>
+        <a href="<?= $this->url('famille', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+            + Ajouter
+        </a>
+    </div>
+
+    <div class="dashboard-panel">
+        <?php if (empty($familles)): ?>
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">✓</div>
+                <strong>Aucune famille enregistrée</strong>
+            </div>
+        <?php else: ?>
+            <div class="table-wrapper">
+                <table class="ibs-table">
+                    <thead><tr><th>Nom</th><th></th></tr></thead>
+                    <tbody>
+                    <?php foreach ($familles as $f): ?>
+                        <tr>
+                            <td><?= $this->escapeHtml($f['nom_famille']) ?></td>
+                            <td style="text-align:right;">
+                                <a href="<?= $this->url('famille', ['action' => 'edit', 'id' => $f['id_famille']]) ?>">Modifier</a>
+                                &nbsp;·&nbsp;
+                                <a href="<?= $this->url('famille', ['action' => 'delete', 'id' => $f['id_famille']]) ?>"
+                                   onclick="return confirm('Supprimer cette famille ?');">Supprimer</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>

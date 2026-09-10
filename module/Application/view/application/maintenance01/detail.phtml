@@ -1,0 +1,853 @@
+<?php
+
+$session = $session ?? [];
+$equipements = $equipements ?? [];
+$techniciens = $techniciens ?? [];
+$csrfToken = (string) ($csrf_token ?? '');
+
+$this->headTitle('Détail de la maintenance');
+?>
+
+<div class="dashboard">
+
+<div
+    class="dashboard-title"
+    style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:20px;
+    "
+>
+
+    <div>
+
+        <h1>
+            Maintenance
+        </h1>
+
+        <p>
+            <?= $this->escapeHtml(
+                (string) (
+                    $session['type_centrale']
+                    ?? 'Centrale'
+                )
+            ) ?>
+
+            —
+            <?= $this->escapeHtml(
+                (string) (
+                    $session['nom_site']
+                    ?? ''
+                )
+            ) ?>
+        </p>
+
+    </div>
+
+   
+
+</div>
+
+<div
+    style="
+        display:grid;
+        gap:16px;
+    "
+>
+
+    <?php if (empty($equipements)): ?>
+
+        <div
+            class="dashboard-panel"
+            style="
+                padding:30px;
+                color:#64748B;
+            "
+        >
+            Aucun équipement n'est associé à cette session.
+        </div>
+
+    <?php endif; ?>
+
+    <?php foreach ($equipements as $maintenance): ?>
+
+        <?php
+        $idMaintenance =
+            (int) (
+                $maintenance[
+                    'id_maintenance'
+                ] ?? 0
+            );
+
+        $statut = strtolower(
+            trim(
+                (string) (
+                    $maintenance['statut']
+                    ?? 'planifiee'
+                )
+            )
+        );
+
+        $statutLabel = match ($statut) {
+            'en_cours' => 'En cours',
+            'suspendue' => 'Suspendue',
+            'terminee', 'terminée' => 'Terminée',
+            'arretee' => 'Arrêtée',
+            default => 'Planifiée',
+        };
+
+        $technicienNom = trim(
+            (string) (
+                $maintenance[
+                    'technicien_prenom'
+                ] ?? ''
+            )
+            . ' '
+            . (string) (
+                $maintenance[
+                    'technicien_nom'
+                ] ?? ''
+            )
+        );
+        ?>
+
+        <div
+            class="dashboard-panel"
+            style="
+                padding:20px;
+                border:1px solid #E2E8F0;
+                border-radius:14px;
+                background:#FFFFFF;
+            "
+        >
+
+            <div
+                style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:flex-start;
+                    gap:20px;
+                "
+            >
+
+                <div>
+
+                    <h2
+                        style="
+                            margin:0 0 5px;
+                            font-size:18px;
+                        "
+                    >
+                        <?= $this->escapeHtml(
+                            trim(
+                                (string) (
+                                    $maintenance['type']
+                                    ?? 'Équipement'
+                                )
+                            )
+                        ) ?>
+
+                        <?php if (!empty(
+                            $maintenance['numero_serie']
+                        )): ?>
+
+                            —
+                            <?= $this->escapeHtml(
+                                (string)
+                                $maintenance[
+                                    'numero_serie'
+                                ]
+                            ) ?>
+
+                        <?php endif; ?>
+
+                    </h2>
+
+                    <div
+                        style="
+                            color:#64748B;
+                            font-size:14px;
+                        "
+                    >
+                        <?= $this->escapeHtml(
+                            trim(
+                                (string) (
+                                    $maintenance['marque']
+                                    ?? ''
+                                )
+                                . ' '
+                                . (string) (
+                                    $maintenance['modele']
+                                    ?? ''
+                                )
+                            )
+                        ) ?>
+                    </div>
+
+                </div>
+
+                <span
+                    style="
+                        padding:6px 11px;
+                        border-radius:999px;
+                        background:#F1F5F9;
+                        color:#334155;
+                        font-size:13px;
+                        font-weight:700;
+                        white-space:nowrap;
+                    "
+                >
+                    <?= $statutLabel ?>
+                </span>
+
+            </div>
+
+            <!-- TECHNICIEN -->
+
+            <div
+                style="
+                    margin-top:18px;
+                    padding:15px;
+                    background:#F8FAFC;
+                    border-radius:10px;
+                "
+            >
+
+                <div
+                    style="
+                        font-size:13px;
+                        color:#64748B;
+                        margin-bottom:8px;
+                    "
+                >
+                    Technicien affecté
+                </div>
+
+                <div
+                    style="
+                        display:flex;
+                        align-items:center;
+                        gap:10px;
+                        flex-wrap:wrap;
+                    "
+                >
+
+                    <strong>
+                        <?= $this->escapeHtml(
+                            $technicienNom !== ''
+                                ? $technicienNom
+                                : 'Aucun technicien'
+                        ) ?>
+                    </strong>
+
+                    <form
+                        method="post"
+                        action="<?= $this->url(
+                            'maintenance',
+                            [
+                                'action' =>
+                                    'affecter-technicien',
+                            ]
+                        ) ?>"
+                        style="
+                            display:flex;
+                            gap:8px;
+                            align-items:center;
+                        "
+                    >
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="<?= $this->escapeHtmlAttr(
+                                $csrfToken
+                            ) ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="id_session"
+                            value="<?= (int) (
+                                $session[
+                                    'id_session'
+                                ] ?? 0
+                            ) ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="id_maintenance"
+                            value="<?= $idMaintenance ?>"
+                        >
+
+                        <select
+                            name="id_technicien"
+                            style="
+                                padding:9px 12px;
+                                border:1px solid #CBD5E1;
+                                border-radius:8px;
+                                background:#FFFFFF;
+                            "
+                        >
+
+                            <option value="">
+                                — Aucun —
+                            </option>
+
+                            <?php foreach (
+                                $techniciens
+                                as $technicien
+                            ): ?>
+
+                                <?php
+                                $idTechnicien =
+                                    (int) (
+                                        $technicien[
+                                            'id_utilisateur'
+                                        ] ?? 0
+                                    );
+
+                                $nom =
+                                    trim(
+                                        (string) (
+                                            $technicien[
+                                                'prenom'
+                                            ] ?? ''
+                                        )
+                                        . ' '
+                                        . (string) (
+                                            $technicien[
+                                                'nom'
+                                            ] ?? ''
+                                        )
+                                    );
+
+                                $selected =
+                                    $idTechnicien
+                                    === (int) (
+                                        $maintenance[
+                                            'id_technicien'
+                                        ] ?? 0
+                                    );
+                                ?>
+
+                                <option
+                                    value="<?= $idTechnicien ?>"
+                                    <?= $selected
+                                        ? 'selected'
+                                        : '' ?>
+                                >
+                                    <?= $this->escapeHtml(
+                                        $nom
+                                    ) ?>
+                                </option>
+
+                            <?php endforeach; ?>
+
+                        </select>
+
+                        <button
+                            type="submit"
+                            class="ibs-button ibs-button-secondary"
+                        >
+                            <?= $technicienNom !== ''
+                                ? 'Changer'
+                                : 'Affecter' ?>
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            <!-- DIAGNOSTIC / RAPPORT -->
+
+            <?php if (
+                !empty($maintenance['diagnostic'])
+                || !empty($maintenance['compte_rendu'])
+            ): ?>
+
+                <div
+                    style="
+                        margin-top:16px;
+                        display:grid;
+                        gap:10px;
+                    "
+                >
+
+                    <?php if (!empty(
+                        $maintenance['diagnostic']
+                    )): ?>
+
+                        <div>
+
+                            <strong>
+                                Diagnostic
+                            </strong>
+
+                            <div
+                                style="
+                                    margin-top:5px;
+                                    color:#475569;
+                                "
+                            >
+                                <?= nl2br(
+                                    $this->escapeHtml(
+                                        (string)
+                                        $maintenance[
+                                            'diagnostic'
+                                        ]
+                                    )
+                                ) ?>
+                            </div>
+
+                        </div>
+
+                    <?php endif; ?>
+
+                    <?php if (!empty(
+                        $maintenance['compte_rendu']
+                    )): ?>
+
+                        <div>
+
+                            <strong>
+                                Rapport
+                            </strong>
+
+                            <div
+                                style="
+                                    margin-top:5px;
+                                    color:#475569;
+                                "
+                            >
+                                <?= nl2br(
+                                    $this->escapeHtml(
+                                        (string)
+                                        $maintenance[
+                                            'compte_rendu'
+                                        ]
+                                    )
+                                ) ?>
+                            </div>
+
+                        </div>
+
+                    <?php endif; ?>
+
+                </div>
+
+            <?php endif; ?>
+
+            <!-- ACTIONS -->
+
+            <div
+                style="
+                    margin-top:20px;
+                    display:flex;
+                    gap:8px;
+                    flex-wrap:wrap;
+                "
+            >
+
+                <?php if (
+                    $statut === 'planifiee'
+                    || $statut === 'suspendue'
+                ): ?>
+
+                    <form
+                        method="post"
+                        action="<?= $this->url(
+                            'maintenance',
+                            [
+                                'action' =>
+                                    'update-item',
+                            ]
+                        ) ?>"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="<?= $this->escapeHtmlAttr(
+                                $csrfToken
+                            ) ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="id_session"
+                            value="<?= (int) (
+                                $session[
+                                    'id_session'
+                                ] ?? 0
+                            ) ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="id_maintenance"
+                            value="<?= $idMaintenance ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="statut"
+                            value="en_cours"
+                        >
+
+                        <button
+                            type="submit"
+                            class="ibs-button ibs-button-primary"
+                        >
+                            ▶ Démarrer
+                        </button>
+
+                    </form>
+
+                <?php endif; ?>
+
+                <?php if (
+                    $statut === 'en_cours'
+                ): ?>
+
+                    <!-- SUSPENDRE -->
+
+                    <form
+                        method="post"
+                        action="<?= $this->url(
+                            'maintenance',
+                            [
+                                'action' =>
+                                    'update-item',
+                            ]
+                        ) ?>"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="<?= $this->escapeHtmlAttr(
+                                $csrfToken
+                            ) ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="id_session"
+                            value="<?= (int) (
+                                $session[
+                                    'id_session'
+                                ] ?? 0
+                            ) ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="id_maintenance"
+                            value="<?= $idMaintenance ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="statut"
+                            value="suspendue"
+                        >
+
+                        <button
+                            type="submit"
+                            class="ibs-button ibs-button-secondary"
+                        >
+                            ⏸ Suspendre
+                        </button>
+
+                    </form>
+
+                    <!-- ARRÊTER -->
+
+                    <form
+                        method="post"
+                        action="<?= $this->url(
+                            'maintenance',
+                            [
+                                'action' =>
+                                    'update-item',
+                            ]
+                        ) ?>"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="<?= $this->escapeHtmlAttr(
+                                $csrfToken
+                            ) ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="id_session"
+                            value="<?= (int) (
+                                $session[
+                                    'id_session'
+                                ] ?? 0
+                            ) ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="id_maintenance"
+                            value="<?= $idMaintenance ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="statut"
+                            value="arretee"
+                        >
+
+                        <button
+                            type="submit"
+                            class="ibs-button ibs-button-secondary"
+                            style="
+                                color:#991B1B;
+                            "
+                        >
+                            ■ Arrêter
+                        </button>
+
+                    </form>
+
+                    <!-- TERMINER AVEC RAPPORT -->
+
+                    <button
+                        type="button"
+                        class="ibs-button ibs-button-primary"
+                        onclick="ouvrirRapport(
+                            <?= $idMaintenance ?>
+                        )"
+                    >
+                        ✓ Terminer avec rapport
+                    </button>
+
+                <?php endif; ?>
+
+            </div>
+
+            <!-- FORMULAIRE TERMINAISON -->
+
+            <?php if ($statut === 'en_cours'): ?>
+
+                <div
+                    id="rapport-<?= $idMaintenance ?>"
+                    style="
+                        display:none;
+                        margin-top:18px;
+                        padding:18px;
+                        background:#F8FAFC;
+                        border:1px solid #E2E8F0;
+                        border-radius:12px;
+                    "
+                >
+
+                    <form
+                        method="post"
+                        action="<?= $this->url(
+                            'maintenance',
+                            [
+                                'action' =>
+                                    'update-item',
+                            ]
+                        ) ?>"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="<?= $this->escapeHtmlAttr(
+                                $csrfToken
+                            ) ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="id_session"
+                            value="<?= (int) (
+                                $session[
+                                    'id_session'
+                                ] ?? 0
+                            ) ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="id_maintenance"
+                            value="<?= $idMaintenance ?>"
+                        >
+
+                        <input
+                            type="hidden"
+                            name="statut"
+                            value="terminee"
+                        >
+
+                        <div
+                            style="
+                                display:grid;
+                                gap:14px;
+                            "
+                        >
+
+                            <div>
+
+                                <label
+                                    style="
+                                        display:block;
+                                        font-weight:600;
+                                        margin-bottom:7px;
+                                    "
+                                >
+                                    Diagnostic
+                                </label>
+
+                                <textarea
+                                    name="diagnostic"
+                                    rows="3"
+                                    style="
+                                        width:100%;
+                                        box-sizing:border-box;
+                                        padding:10px;
+                                        border:1px solid #CBD5E1;
+                                        border-radius:8px;
+                                        resize:vertical;
+                                    "
+                                ><?= $this->escapeHtml(
+                                    (string) (
+                                        $maintenance[
+                                            'diagnostic'
+                                        ] ?? ''
+                                    )
+                                ) ?></textarea>
+
+                            </div>
+
+                            <div>
+
+                                <label
+                                    style="
+                                        display:block;
+                                        font-weight:600;
+                                        margin-bottom:7px;
+                                    "
+                                >
+                                    Rapport de maintenance *
+                                </label>
+
+                                <textarea
+                                    name="compte_rendu"
+                                    rows="5"
+                                    required
+                                    style="
+                                        width:100%;
+                                        box-sizing:border-box;
+                                        padding:10px;
+                                        border:1px solid #CBD5E1;
+                                        border-radius:8px;
+                                        resize:vertical;
+                                    "
+                                    placeholder="Décrire les travaux réalisés, les problèmes constatés et les recommandations..."
+                                ></textarea>
+
+                            </div>
+
+                            <div>
+
+                                <label
+                                    style="
+                                        display:block;
+                                        font-weight:600;
+                                        margin-bottom:7px;
+                                    "
+                                >
+                                    Date de fin
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="date_fin"
+                                    value="<?= date(
+                                        'Y-m-d'
+                                    ) ?>"
+                                    style="
+                                        padding:10px;
+                                        border:1px solid #CBD5E1;
+                                        border-radius:8px;
+                                    "
+                                >
+
+                            </div>
+
+                            <div
+                                style="
+                                    display:flex;
+                                    justify-content:flex-end;
+                                    gap:8px;
+                                "
+                            >
+
+                                <button
+                                    type="button"
+                                    class="ibs-button ibs-button-secondary"
+                                    onclick="fermerRapport(
+                                        <?= $idMaintenance ?>
+                                    )"
+                                >
+                                    Annuler
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    class="ibs-button ibs-button-primary"
+                                >
+                                    Valider la fin de maintenance
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            <?php endif; ?>
+
+        </div>
+
+    <?php endforeach; ?>
+
+</div>
+
+</div>
+
+<script>
+function ouvrirRapport(id) {
+    const element =
+        document.getElementById('rapport-' + id);
+
+    if (element) {
+        element.style.display = 'block';
+    }
+}
+
+function fermerRapport(id) {
+    const element =
+        document.getElementById('rapport-' + id);
+
+    if (element) {
+        element.style.display = 'none';
+    }
+}
+</script>

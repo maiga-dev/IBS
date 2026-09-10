@@ -1,0 +1,43 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$types = $types ?? [];
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <h1>Types d'équipement</h1>
+            <p>Catalogue générique (Compresseur, Sécheur, Pompe, PSA, Station...).</p>
+        </div>
+        <a href="<?= $this->url('type_equipement', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+            + Ajouter
+        </a>
+    </div>
+
+    <div class="dashboard-panel">
+        <?php if (empty($types)): ?>
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">✓</div>
+                <strong>Aucun type d'équipement enregistré</strong>
+            </div>
+        <?php else: ?>
+            <div class="table-wrapper">
+                <table class="ibs-table">
+                    <thead><tr><th>Nom</th><th></th></tr></thead>
+                    <tbody>
+                    <?php foreach ($types as $t): ?>
+                        <tr>
+                            <td><?= $this->escapeHtml($t['nom_type']) ?></td>
+                            <td style="text-align:right;">
+                                <a href="<?= $this->url('type_equipement', ['action' => 'edit', 'id' => $t['id_type_equipement']]) ?>">Modifier</a>
+                                &nbsp;·&nbsp;
+                                <a href="<?= $this->url('type_equipement', ['action' => 'delete', 'id' => $t['id_type_equipement']]) ?>"
+                                   onclick="return confirm('Supprimer ce type d\'équipement ?');">Supprimer</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>

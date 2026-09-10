@@ -1,0 +1,12 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+?>
+<div class="dashboard">
+    <div class="dashboard-panel">
+        <div class="empty-dashboard">
+            <div class="empty-dashboard-icon">✕</div>
+            <strong><?= $this->escapeHtml((string) ($message ?? 'Introuvable.')) ?></strong>
+            <p><a href="<?= $this->url('maintenance') ?>">← Retour à la liste des sessions</a></p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,44 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$villes = $villes ?? [];
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <h1>Villes</h1>
+            <p>Villes rattachées à un pays.</p>
+        </div>
+        <a href="<?= $this->url('ville', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+            + Ajouter
+        </a>
+    </div>
+
+    <div class="dashboard-panel">
+        <?php if (empty($villes)): ?>
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">✓</div>
+                <strong>Aucune ville enregistrée</strong>
+            </div>
+        <?php else: ?>
+            <div class="table-wrapper">
+                <table class="ibs-table">
+                    <thead><tr><th>Nom</th><th>Pays</th><th></th></tr></thead>
+                    <tbody>
+                    <?php foreach ($villes as $v): ?>
+                        <tr>
+                            <td><?= $this->escapeHtml($v['nom_ville']) ?></td>
+                            <td><?= $this->escapeHtml((string) ($v['nom_pays'] ?? '—')) ?></td>
+                            <td style="text-align:right;">
+                                <a href="<?= $this->url('ville', ['action' => 'edit', 'id' => $v['id_ville']]) ?>">Modifier</a>
+                                &nbsp;·&nbsp;
+                                <a href="<?= $this->url('ville', ['action' => 'delete', 'id' => $v['id_ville']]) ?>"
+                                   onclick="return confirm('Supprimer cette ville ?');">Supprimer</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>

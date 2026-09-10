@@ -1,0 +1,78 @@
+<?php
+
+declare(strict_types=1);
+
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+
+$cases = [
+    [
+        'nom' => 'Famille',
+        'url' => $this->url('famille'),
+    ],
+    [
+        'nom' => 'Centrale',
+        'url' => $this->url('centrale'),
+    ],
+    [
+        'nom' => 'Pays',
+        'url' => $this->url('pays'),
+    ],
+    [
+        'nom' => 'Ville',
+        'url' => $this->url('ville'),
+    ],
+    [
+        'nom' => 'Site',
+        'url' => $this->url('site'),
+    ],
+  
+    [
+        'nom' => "Type d'équipement",
+        'url' => $this->url('type_equipement'),
+    ],
+      [
+        'nom' => 'Équipement',
+        'url' => $this->url('equipement'),
+    ],
+    [
+        'nom' => 'Utilisateurs',
+        'url' => $this->url('utilisateur'),
+    ],
+    [
+        'nom' => 'Réseau fluide médical',
+        'desc' => "Unités de détente, alarmes, prises",
+        'url' => $this->url('equipement_reseau_fluide'),
+    ],
+];
+
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-title">
+        <div>
+            <h1>Paramètres</h1>
+            <p>Gérez les données de référence de la plateforme.</p>
+        </div>
+    </div>
+
+    <div class="param-buttons">
+
+        <?php foreach ($cases as $case): ?>
+
+            <a
+                href="<?= $this->escapeHtmlAttr($case['url']) ?>"
+                class="param-button"
+            >
+                <span class="param-button-name">
+                    <?= $this->escapeHtml($case['nom']) ?>
+                </span>
+
+                <span class="param-button-arrow">→</span>
+            </a>
+
+        <?php endforeach; ?>
+
+    </div>
+
+</div>

@@ -1,0 +1,901 @@
+/* =========================================================
+   IBS PULSE
+   GLOBAL CSS
+========================================================= */
+
+:root {
+
+    --ibs-petrol: #2E6A50;
+    --ibs-petrol-dark: #23543F;
+    --ibs-petrol-light: #EAF4EF;
+
+    --ibs-corail: #E94C3C;
+    --ibs-corail-light: #FEF0EE;
+
+    --ibs-black: #000000;
+    --ibs-text: #1F2937;
+    --ibs-gray: #64748B;
+    --ibs-gray-light: #94A3B8;
+
+    --ibs-border: #E5E7EB;
+    --ibs-background: #F7F9F8;
+    --ibs-white: #FFFFFF;
+
+    --ibs-success: #2E8B57;
+    --ibs-warning: #F59E0B;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+
+    --shadow-sm:
+        0 2px 8px rgba(0, 0, 0, .04);
+
+    --shadow-md:
+        0 8px 25px rgba(0, 0, 0, .06);
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+
+    margin: 0;
+
+    font-family:
+        'Inter',
+        sans-serif;
+
+    color: var(--ibs-text);
+
+    background:
+        var(--ibs-background);
+
+    line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+
+    font-family:
+        'Inter',
+        sans-serif;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   APPLICATION
+========================================================= */
+
+.ibs-app {
+
+    min-height: 100vh;
+
+    display: flex;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.ibs-sidebar {
+
+    width: 250px;
+
+    min-height: 100vh;
+
+    background: var(--ibs-white);
+
+    border-right:
+        1px solid var(--ibs-border);
+
+    display: flex;
+
+    flex-direction: column;
+
+    position: fixed;
+
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    z-index: 100;
+}
+
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.ibs-logo {
+
+    height: 85px;
+
+    display: flex;
+
+    align-items: center;
+
+    padding: 0 25px;
+
+    border-bottom:
+        1px solid var(--ibs-border);
+}
+
+.ibs-logo a {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+.ibs-logo-badge {
+
+    width: 42px;
+    height: 42px;
+
+    background:
+        var(--ibs-petrol);
+
+    border-radius: 13px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+
+    font-size: 20px;
+}
+
+.ibs-logo-text {
+
+    display: flex;
+
+    align-items: baseline;
+
+    gap: 4px;
+
+    font-family:
+        'Space Grotesk',
+        sans-serif;
+
+    font-size: 22px;
+}
+
+.ibs-logo-text strong {
+
+    color: var(--ibs-black);
+
+    font-weight: 700;
+}
+
+.ibs-logo-text span {
+
+    color: var(--ibs-corail);
+
+    font-weight: 500;
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.ibs-navigation {
+
+    flex: 1;
+
+    padding: 25px 15px;
+
+    overflow-y: auto;
+}
+
+.nav-section {
+
+    margin-bottom: 30px;
+}
+
+.nav-section-title {
+
+    display: block;
+
+    padding:
+        0 12px 10px;
+
+    color:
+        var(--ibs-gray-light);
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: .08em;
+}
+
+.nav-link {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 12px;
+
+    margin-bottom: 4px;
+
+    color:
+        var(--ibs-gray);
+
+    font-size: 14px;
+
+    font-weight: 500;
+
+    border-radius:
+        var(--radius-md);
+
+    transition:
+        all .2s ease;
+}
+
+.nav-link:hover {
+
+    background:
+        var(--ibs-petrol-light);
+
+    color:
+        var(--ibs-petrol);
+}
+
+.nav-link.active {
+
+    background:
+        var(--ibs-petrol);
+
+    color:
+        white;
+}
+
+.nav-icon {
+
+    width: 28px;
+
+    height: 28px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 8px;
+
+    font-size: 16px;
+}
+
+
+/* =========================================================
+   SIDEBAR BAS
+========================================================= */
+
+.sidebar-bottom {
+
+    padding: 15px;
+
+    border-top:
+        1px solid var(--ibs-border);
+}
+
+.sidebar-help {
+
+    background:
+        var(--ibs-petrol-light);
+
+    padding: 12px;
+
+    border-radius:
+        var(--radius-md);
+
+    display: flex;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+}
+
+.help-icon {
+
+    width: 30px;
+    height: 30px;
+
+    border-radius: 50%;
+
+    background:
+        var(--ibs-petrol);
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 700;
+}
+
+.sidebar-help strong {
+
+    display: block;
+
+    font-size: 12px;
+}
+
+.sidebar-help small {
+
+    color:
+        var(--ibs-gray);
+
+    font-size: 10px;
+}
+
+.logout-link {
+
+    display: flex;
+
+    gap: 10px;
+
+    align-items: center;
+
+    padding: 10px 12px;
+
+    color:
+        var(--ibs-gray);
+
+    font-size: 13px;
+
+    border-radius:
+        var(--radius-md);
+}
+
+.logout-link:hover {
+
+    background:
+        var(--ibs-corail-light);
+
+    color:
+        var(--ibs-corail);
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.ibs-main {
+
+    margin-left: 250px;
+
+    width:
+        calc(100% - 250px);
+
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.ibs-header {
+
+    height: 85px;
+
+    background:
+        rgba(255,255,255,.96);
+
+    border-bottom:
+        1px solid var(--ibs-border);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding:
+        0 35px;
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 50;
+}
+
+.header-right {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 25px;
+}
+
+.notification-button {
+
+    position: relative;
+
+    border: 0;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    font-size: 23px;
+
+    color:
+        var(--ibs-gray);
+}
+
+.notification-button i {
+
+    position: absolute;
+
+    width: 7px;
+    height: 7px;
+
+    background:
+        var(--ibs-corail);
+
+    border-radius: 50%;
+
+    top: 1px;
+    right: 0;
+}
+
+.user-menu {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+.user-avatar {
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 50%;
+
+    background:
+        var(--ibs-petrol);
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 700;
+}
+
+.user-info strong {
+
+    display: block;
+
+    font-size: 13px;
+}
+
+.user-info small {
+
+    display: block;
+
+    font-size: 11px;
+
+    color:
+        var(--ibs-gray);
+}
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.ibs-content {
+
+    padding: 35px;
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+.dashboard-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+
+    margin: 0 0 5px;
+
+    font-family:
+        'Space Grotesk',
+        sans-serif;
+
+    font-size: 30px;
+
+    color:
+        var(--ibs-black);
+}
+
+.dashboard-header p {
+
+    margin: 0;
+
+    color:
+        var(--ibs-gray);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   BOUTONS
+========================================================= */
+
+.btn-ibs {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    padding:
+        11px 18px;
+
+    border: 0;
+
+    border-radius:
+        var(--radius-md);
+
+    background:
+        var(--ibs-petrol);
+
+    color: white;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        all .2s ease;
+}
+
+.btn-ibs:hover {
+
+    background:
+        var(--ibs-petrol-dark);
+
+    transform:
+        translateY(-1px);
+}
+
+.btn-secondary-ibs {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    padding:
+        10px 16px;
+
+    border:
+        1px solid var(--ibs-border);
+
+    border-radius:
+        var(--radius-md);
+
+    background:
+        white;
+
+    color:
+        var(--ibs-text);
+
+    font-size: 13px;
+
+    font-weight: 500;
+}
+
+.btn-secondary-ibs:hover {
+
+    border-color:
+        var(--ibs-petrol);
+
+    color:
+        var(--ibs-petrol);
+}
+
+
+/* =========================================================
+   PANELS
+========================================================= */
+
+.dashboard-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 22px;
+}
+
+.dashboard-panel {
+
+    background:
+        white;
+
+    border:
+        1px solid var(--ibs-border);
+
+    border-radius:
+        var(--radius-lg);
+
+    padding: 22px;
+
+    box-shadow:
+        var(--shadow-sm);
+}
+
+.panel-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+}
+
+.panel-header h2 {
+
+    margin: 0;
+
+    font-family:
+        'Space Grotesk',
+        sans-serif;
+
+    font-size: 18px;
+
+    color:
+        var(--ibs-black);
+}
+
+.panel-header p {
+
+    margin: 4px 0 0;
+
+    font-size: 12px;
+
+    color:
+        var(--ibs-gray);
+}
+
+
+/* =========================================================
+   TABLEAUX
+========================================================= */
+
+.table-responsive {
+
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+.ibs-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 13px;
+}
+
+.ibs-table th {
+
+    text-align: left;
+
+    padding:
+        12px 10px;
+
+    color:
+        var(--ibs-gray);
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    border-bottom:
+        1px solid var(--ibs-border);
+}
+
+.ibs-table td {
+
+    padding:
+        13px 10px;
+
+    border-bottom:
+        1px solid #F1F3F5;
+
+    color:
+        var(--ibs-text);
+}
+
+.ibs-table tr:last-child td {
+
+    border-bottom: 0;
+}
+
+.ibs-table tr:hover td {
+
+    background:
+        #FAFCFB;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-state {
+
+    padding: 30px 15px;
+
+    text-align: center;
+
+    color:
+        var(--ibs-gray);
+
+    font-size: 13px;
+
+    background:
+        #FAFAFA;
+
+    border-radius:
+        var(--radius-md);
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+.mobile-menu-button {
+
+    display: none;
+
+    border: 0;
+
+    background: transparent;
+
+    font-size: 22px;
+
+    cursor: pointer;
+}
+
+
+@media (max-width: 900px) {
+
+    .ibs-sidebar {
+
+        transform:
+            translateX(-100%);
+
+        transition:
+            transform .25s ease;
+    }
+
+    body.sidebar-open .ibs-sidebar {
+
+        transform:
+            translateX(0);
+    }
+
+    .ibs-main {
+
+        margin-left: 0;
+
+        width: 100%;
+    }
+
+    .mobile-menu-button {
+
+        display: block;
+    }
+
+    .dashboard-grid {
+
+        grid-template-columns:
+            1fr;
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .ibs-content {
+
+        padding: 20px 15px;
+    }
+
+    .ibs-header {
+
+        padding:
+            0 15px;
+
+        height: 70px;
+    }
+
+    .user-info {
+
+        display: none;
+    }
+
+    .dashboard-header {
+
+        align-items: flex-start;
+
+        gap: 15px;
+
+        flex-direction: column;
+    }
+
+    .dashboard-header h1 {
+
+        font-size: 25px;
+    }
+
+    .dashboard-panel {
+
+        padding: 15px;
+    }
+}

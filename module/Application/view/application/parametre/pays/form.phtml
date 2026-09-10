@@ -1,0 +1,32 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$erreur = $erreur ?? null;
+$item = $item ?? ['nom_pays' => ''];
+$mode = $mode ?? 'ajout';
+$action = $mode === 'modification'
+    ? $this->url('pays', ['action' => 'edit', 'id' => $item['id_pays'] ?? null])
+    : $this->url('pays', ['action' => 'add']);
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <a href="<?= $this->url('pays') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
+            <h1><?= $mode === 'modification' ? 'Modifier le pays' : 'Ajouter un pays' ?></h1>
+        </div>
+    </div>
+
+    <div class="dashboard-panel" style="max-width:480px;">
+        <?php if ($erreur): ?>
+            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
+        <?php endif; ?>
+
+        <form method="post" action="<?= $action ?>">
+            <div class="auth-field">
+                <label for="nom_pays">Nom du pays</label>
+                <input type="text" id="nom_pays" name="nom_pays"
+                       value="<?= $this->escapeHtmlAttr($item['nom_pays'] ?? '') ?>" required autofocus>
+            </div>
+            <button type="submit" class="auth-submit">Enregistrer</button>
+        </form>
+    </div>
+</div>

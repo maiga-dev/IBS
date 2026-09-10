@@ -1,0 +1,60 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$erreur = $erreur ?? null;
+$item = $item ?? ['type_centrale' => '', 'id_site' => null, 'id_famille' => null];
+$sites = $sites ?? [];
+$familles = $familles ?? [];
+$mode = $mode ?? 'ajout';
+$action = $mode === 'modification'
+    ? $this->url('centrale', ['action' => 'edit', 'id' => $item['id_centrale'] ?? null])
+    : $this->url('centrale', ['action' => 'add']);
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+             <a href="<?= $this->url('centrale') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
+            <h1><?= $mode === 'modification' ? 'Modifier la centrale' : 'Ajouter une centrale' ?></h1>
+        </div>
+    </div>
+
+    <div class="dashboard-panel" style="max-width:520px;">
+        <?php if ($erreur): ?>
+            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
+        <?php endif; ?>
+
+        <form method="post" action="<?= $action ?>">
+            <div class="auth-field">
+                <label for="type_centrale">Type de centrale</label>
+                <input type="text" id="type_centrale" name="type_centrale"
+                       value="<?= $this->escapeHtmlAttr($item['type_centrale'] ?? '') ?>" required autofocus>
+            </div>
+            <div class="auth-field">
+                <label for="id_site">Site</label>
+                <select id="id_site" name="id_site" required
+                        style="width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;">
+                    <option value="">— Sélectionner —</option>
+                    <?php foreach ($sites as $s): ?>
+                        <option value="<?= (int) $s['id_site'] ?>"
+                            <?= ((int) ($item['id_site'] ?? 0) === (int) $s['id_site']) ? 'selected' : '' ?>>
+                            <?= $this->escapeHtml($s['nom_site']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="auth-field">
+                <label for="id_famille">Famille</label>
+                <select id="id_famille" name="id_famille"
+                        style="width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;">
+                    <option value="">— Aucune —</option>
+                    <?php foreach ($familles as $f): ?>
+                        <option value="<?= (int) $f['id_famille'] ?>"
+                            <?= ((int) ($item['id_famille'] ?? 0) === (int) $f['id_famille']) ? 'selected' : '' ?>>
+                            <?= $this->escapeHtml($f['nom_famille']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <button type="submit" class="auth-submit">Enregistrer</button>
+        </form>
+    </div>
+</div>

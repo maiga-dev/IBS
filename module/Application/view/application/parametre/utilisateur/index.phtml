@@ -1,0 +1,120 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+
+$utilisateurs = $utilisateurs ?? [];
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-title">
+        <div>
+            <h1>Utilisateurs</h1>
+            <p>Équipes IBS et leurs rôles.</p>
+        </div>
+
+        <a
+            href="<?= $this->url('utilisateur', ['action' => 'add']) ?>"
+            class="auth-submit"
+            style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;"
+        >
+            + Ajouter
+        </a>
+    </div>
+
+    <div class="dashboard-panel">
+
+        <?php if (empty($utilisateurs)): ?>
+
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">✓</div>
+                <strong>Aucun utilisateur enregistré</strong>
+            </div>
+
+        <?php else: ?>
+
+            <div class="table-wrapper">
+
+                <table class="ibs-table">
+
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Rôle</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    <?php foreach ($utilisateurs as $u): ?>
+
+                        <tr>
+
+                            <td>
+                                <?= $this->escapeHtml(
+                                    $u['prenom'] . ' ' . $u['nom']
+                                ) ?>
+                            </td>
+
+                            <td>
+                                <?= $this->escapeHtml($u['email']) ?>
+                            </td>
+
+                            <td>
+                                <?= $this->escapeHtml(
+                                    (string) ($u['telephone'] ?? '—')
+                                ) ?>
+                            </td>
+
+                            <td>
+                                <?= $this->escapeHtml(
+                                    ucfirst((string) $u['role'])
+                                ) ?>
+                            </td>
+
+                            <td style="text-align:right;">
+
+                                <a href="<?= $this->url(
+                                    'utilisateur',
+                                    [
+                                        'action' => 'edit',
+                                        'id' => $u['id']
+                                    ]
+                                ) ?>">
+                                    Modifier
+                                </a>
+
+                                &nbsp;·&nbsp;
+
+                                <a
+                                    href="<?= $this->url(
+                                        'utilisateur',
+                                        [
+                                            'action' => 'delete',
+                                            'id' => $u['id']
+                                        ]
+                                    ) ?>"
+                                    onclick="return confirm('Supprimer cet utilisateur ?');"
+                                >
+                                    Supprimer
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        <?php endif; ?>
+
+    </div>
+
+</div>

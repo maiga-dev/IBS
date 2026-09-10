@@ -1,0 +1,81 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$erreur = $erreur ?? null;
+$item = $item ?? [];
+$centrales = $centrales ?? [];
+$types = $types ?? [];
+$mode = $mode ?? 'ajout';
+$action = $mode === 'modification'
+    ? $this->url('equipement_reseau_fluide', ['action' => 'edit', 'id' => $item['id_equipement_reseau_fluide'] ?? null])
+    : $this->url('equipement_reseau_fluide', ['action' => 'add']);
+$selectStyle = "width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;";
+?>
+<div class="dashboard">
+    <div class="dashboard-title">
+        <div>
+            <a href="<?= $this->url('equipement_reseau_fluide') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
+            <h1><?= $mode === 'modification' ? "Modifier l'équipement de réseau" : 'Ajouter un équipement de réseau' ?></h1>
+        </div>
+    </div>
+
+    <div class="dashboard-panel" style="max-width:560px;">
+        <?php if ($erreur): ?>
+            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
+        <?php endif; ?>
+
+        <form method="post" action="<?= $action ?>">
+
+            <div class="auth-field">
+                <label for="designation">Désignation</label>
+                <input type="text" id="designation" name="designation" placeholder="ex : Unité de détente O2 n°1"
+                       value="<?= $this->escapeHtmlAttr((string) ($item['designation'] ?? '')) ?>" required autofocus>
+            </div>
+
+            <div class="auth-field">
+                <label for="id_type_equipement">Type</label>
+                <select id="id_type_equipement" name="id_type_equipement" required style="<?= $selectStyle ?>">
+                    <option value="">— Sélectionner —</option>
+                    <?php foreach ($types as $t): ?>
+                        <option value="<?= (int) $t['id_type_equipement'] ?>"
+                            <?= ((int) ($item['id_type_equipement'] ?? 0) === (int) $t['id_type_equipement']) ? 'selected' : '' ?>>
+                            <?= $this->escapeHtml($t['nom_type']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="auth-field">
+                <label for="id_centrale">Réseau (centrale)</label>
+                <select id="id_centrale" name="id_centrale" required style="<?= $selectStyle ?>">
+                    <option value="">— Sélectionner —</option>
+                    <?php foreach ($centrales as $c): ?>
+                        <option value="<?= (int) $c['id_centrale'] ?>"
+                            <?= ((int) ($item['id_centrale'] ?? 0) === (int) $c['id_centrale']) ? 'selected' : '' ?>>
+                            <?= $this->escapeHtml((string) ($c['type_centrale'] ?? ('Centrale #' . $c['id_centrale']))) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="auth-row">
+                <div class="auth-field">
+                    <label for="nombre">Nombre</label>
+                    <input type="number" id="nombre" name="nombre" min="1"
+                           value="<?= $this->escapeHtmlAttr((string) ($item['nombre'] ?? '1')) ?>">
+                </div>
+                <div class="auth-field">
+                    <label for="pression_entree">Pression d'entrée</label>
+                    <input type="number" step="0.01" id="pression_entree" name="pression_entree"
+                           value="<?= $this->escapeHtmlAttr((string) ($item['pression_entree'] ?? '')) ?>">
+                </div>
+                <div class="auth-field">
+                    <label for="pression_sortie">Pression de sortie</label>
+                    <input type="number" step="0.01" id="pression_sortie" name="pression_sortie"
+                           value="<?= $this->escapeHtmlAttr((string) ($item['pression_sortie'] ?? '')) ?>">
+                </div>
+            </div>
+
+            <button type="submit" class="auth-submit">Enregistrer</button>
+        </form>
+    </div>
+</div>

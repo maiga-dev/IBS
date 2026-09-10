@@ -1,0 +1,91 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+$erreur  = $erreur ?? null;
+$valeurs = $valeurs ?? ['nom' => '', 'prenom' => '', 'email' => '', 'telephone' => ''];
+?>
+
+<h1>Créer un compte</h1>
+<p class="subtitle">Réservé aux équipes IBS.</p>
+
+<?php if ($erreur): ?>
+    <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
+<?php endif; ?>
+
+<form method="post" action="<?= $this->url('auth', ['action' => 'register']) ?>">
+
+    <div class="auth-row">
+        <div class="auth-field">
+            <label for="prenom">Prénom</label>
+            <input
+                type="text"
+                id="prenom"
+                name="prenom"
+                value="<?= $this->escapeHtmlAttr($valeurs['prenom']) ?>"
+                required
+                autofocus
+            >
+        </div>
+        <div class="auth-field">
+            <label for="nom">Nom</label>
+            <input
+                type="text"
+                id="nom"
+                name="nom"
+                value="<?= $this->escapeHtmlAttr($valeurs['nom']) ?>"
+                required
+            >
+        </div>
+    </div>
+
+    <div class="auth-field">
+        <label for="email">Email</label>
+        <input
+            type="email"
+            id="email"
+            name="email"
+            value="<?= $this->escapeHtmlAttr($valeurs['email']) ?>"
+            required
+        >
+    </div>
+
+    <div class="auth-field">
+        <label for="telephone">Téléphone</label>
+        <input
+            type="tel"
+            id="telephone"
+            name="telephone"
+            value="<?= $this->escapeHtmlAttr($valeurs['telephone']) ?>"
+        >
+    </div>
+
+    <div class="auth-row">
+        <div class="auth-field">
+            <label for="mot_de_passe">Mot de passe</label>
+            <input
+                type="password"
+                id="mot_de_passe"
+                name="mot_de_passe"
+                minlength="8"
+                required
+            >
+        </div>
+        <div class="auth-field">
+            <label for="confirmation">Confirmation</label>
+            <input
+                type="password"
+                id="confirmation"
+                name="confirmation"
+                minlength="8"
+                required
+            >
+        </div>
+    </div>
+
+    <button type="submit" class="auth-submit">Créer mon compte</button>
+
+</form>
+
+<div class="auth-switch">
+    Déjà un compte ?
+    <a href="<?= $this->url('auth', ['action' => 'login']) ?>">Se connecter</a>
+</div>

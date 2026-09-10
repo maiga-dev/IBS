@@ -1,0 +1,331 @@
+<?php
+/**
+ * IBS Pulse
+ * Tableau de bord
+ *
+ * IMPORTANT :
+ * Aucune donnée fictive n'est créée ici.
+ *
+ * Les variables doivent venir du contrôleur.
+ */
+
+$equipmentCount = isset($equipmentCount) ? (int) $equipmentCount : 0;
+$maintenanceCount = isset($maintenanceCount) ? (int) $maintenanceCount : 0;
+$pendingCount = isset($pendingCount) ? (int) $pendingCount : 0;
+$completedCount = isset($completedCount) ? (int) $completedCount : 0;
+
+$recentInterventions = isset($recentInterventions)
+    ? $recentInterventions
+    : [];
+?>
+
+<!-- =========================================================
+     DASHBOARD HEADER
+========================================================== -->
+
+<div class="dashboard-title">
+
+    <div>
+        <h1>Tableau de bord</h1>
+
+        <p>
+            Bon retour ! Voici l'état de vos équipements.
+        </p>
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     STATISTIQUES
+========================================================== -->
+
+<div class="stats-grid">
+
+    <!-- ÉQUIPEMENTS -->
+    <div class="stat-card">
+
+        <div class="stat-icon green">
+            ♡
+        </div>
+
+        <div>
+
+            <div class="stat-label">
+                Équipements actifs
+            </div>
+
+            <div class="stat-value">
+                <?= $equipmentCount ?>
+            </div>
+
+            <?php if ($equipmentCount > 0): ?>
+                <div class="stat-description">
+                    Équipements enregistrés
+                </div>
+            <?php else: ?>
+                <div class="stat-description">
+                    Aucun équipement
+                </div>
+            <?php endif; ?>
+
+        </div>
+
+    </div>
+
+
+    <!-- MAINTENANCES -->
+    <div class="stat-card">
+
+        <div class="stat-icon red">
+            ▣
+        </div>
+
+        <div>
+
+            <div class="stat-label">
+                Maintenances en attente
+            </div>
+
+            <div class="stat-value">
+                <?= $maintenanceCount ?>
+            </div>
+
+            <?php if ($maintenanceCount > 0): ?>
+                <div class="stat-description">
+                    Maintenance à traiter
+                </div>
+            <?php else: ?>
+                <div class="stat-description good">
+                    Aucune maintenance en attente
+                </div>
+            <?php endif; ?>
+
+        </div>
+
+    </div>
+
+
+    <!-- PLANIFIÉES -->
+    <div class="stat-card">
+
+        <div class="stat-icon orange">
+            ◷
+        </div>
+
+        <div>
+
+            <div class="stat-label">
+                Maintenances planifiées
+            </div>
+
+            <div class="stat-value">
+                <?= $pendingCount ?>
+            </div>
+
+            <div class="stat-description">
+                Maintenance planifiée
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- TERMINÉES -->
+    <div class="stat-card">
+
+        <div class="stat-icon green">
+            ✓
+        </div>
+
+        <div>
+
+            <div class="stat-label">
+                Maintenances terminées
+            </div>
+
+            <div class="stat-value">
+                <?= $completedCount ?>
+            </div>
+
+            <div class="stat-description">
+                Interventions terminées
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     INTERVENTIONS RÉCENTES
+========================================================== -->
+
+<div class="dashboard-panel">
+
+    <div class="panel-title">
+
+        <h2>
+            Interventions récentes
+        </h2>
+
+    </div>
+
+
+    <?php if (!empty($recentInterventions)): ?>
+
+        <div class="table-wrapper">
+
+            <table class="ibs-table">
+
+                <thead>
+                    <tr>
+                        <th>ÉQUIPEMENT</th>
+                        <th>STATUT</th>
+                        <th>DATE</th>
+                        <th>TYPE</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                <?php foreach ($recentInterventions as $intervention): ?>
+
+                    <?php
+                    $equipmentName = $intervention['equipment_name']
+                        ?? $intervention['equipment']
+                        ?? '';
+
+                    $status = $intervention['status']
+                        ?? '';
+
+                    $date = $intervention['date']
+                        ?? $intervention['maintenance_date']
+                        ?? '';
+
+                    $type = $intervention['type']
+                        ?? '';
+
+                    $id = $intervention['id']
+                        ?? null;
+                    ?>
+
+                    <tr>
+
+                        <td>
+
+                            <div class="equipment-name">
+
+                                <div class="equipment-icon">
+                                    ▭
+                                </div>
+
+                                <div>
+                                    <strong>
+                                        <?= $this->escapeHtml($equipmentName) ?>
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                        </td>
+
+
+                        <td>
+
+                            <?php
+                            $statusClass = 'status-neutral';
+
+                            if (
+                                mb_strtolower($status) === 'terminée' ||
+                                mb_strtolower($status) === 'terminee'
+                            ) {
+                                $statusClass = 'status-terminee';
+                            }
+
+                            if (
+                                mb_strtolower($status) === 'en cours'
+                            ) {
+                                $statusClass = 'status-en-cours';
+                            }
+
+                            if (
+                                mb_strtolower($status) === 'planifiée' ||
+                                mb_strtolower($status) === 'planifiee'
+                            ) {
+                                $statusClass = 'status-planifiee';
+                            }
+                            ?>
+
+                            <span class="status <?= $statusClass ?>">
+                                <?= $this->escapeHtml($status) ?>
+                            </span>
+
+                        </td>
+
+
+                        <td class="date-cell">
+                            <?= $this->escapeHtml($date) ?>
+                        </td>
+
+
+                        <td>
+                            <?= $this->escapeHtml($type) ?>
+                        </td>
+
+
+                        <td>
+
+                            <?php if ($id !== null): ?>
+
+                                <a
+                                    href="#"
+                                    class="action-btn"
+                                    title="Voir"
+                                >
+                                    →
+                                </a>
+
+                            <?php endif; ?>
+
+                        </td>
+
+                    </tr>
+
+                <?php endforeach; ?>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    <?php else: ?>
+
+        <!-- =================================================
+             AUCUNE DONNÉE
+        ================================================== -->
+
+        <div class="empty-dashboard">
+
+            <div class="empty-dashboard-icon">
+                ▭
+            </div>
+
+            <h3>
+                Aucune intervention récente
+            </h3>
+
+            <p>
+                Les interventions enregistrées apparaîtront ici.
+            </p>
+
+        </div>
+
+    <?php endif; ?>
+
+</div>

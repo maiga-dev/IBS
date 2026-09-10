@@ -1,0 +1,63 @@
+<?php
+declare(strict_types=1);
+/**
+ * @var array $session
+ * @var array $equipements
+ */
+
+$libellesStatuts = ['planifiee' => 'Planifiée', 'en_cours' => 'En cours', 'terminee' => 'Terminée'];
+$technicien = trim(($session['technicien_prenom'] ?? '') . ' ' . ($session['technicien_nom'] ?? ''));
+?>
+
+<div class="report-actions no-print">
+    <a href="<?= $this->url('maintenance', ['action' => 'detail', 'id' => $session['id_session']]) ?>" class="history-back-link">← Retour à la session</a>
+    <button onclick="window.print()" class="btn-secondary">🖨️ Imprimer</button>
+</div>
+
+<div class="report-sheet">
+
+    <div class="report-header">
+        <div class="report-logo">
+            <img src="<?= $this->basePath('img/ibs-pulse-logo.svg') ?>" alt="IBS Pulse" height="32">
+        </div>
+        <h1>RAPPORT DE MAINTENANCE</h1>
+    </div>
+
+    <div class="report-section">
+        <div class="report-section-title">INFORMATIONS GÉNÉRALES</div>
+        <div class="report-grid">
+            <div class="report-field"><span>Pays</span><strong><?= $this->escapeHtml($session['nom_pays'] ?? '—') ?></strong></div>
+            <div class="report-field"><span>Ville</span><strong><?= $this->escapeHtml($session['nom_ville'] ?? '—') ?></strong></div>
+            <div class="report-field"><span>Site</span><strong><?= $this->escapeHtml($session['nom_site'] ?? '—') ?></strong></div>
+            <div class="report-field"><span>Centrale</span><strong><?= $this->escapeHtml($session['type_centrale'] ?? '—') ?></strong></div>
+            <div class="report-field"><span>Technicien</span><strong><?= $technicien !== '' ? $this->escapeHtml($technicien) : 'Non affecté' ?></strong></div>
+            <div class="report-field"><span>Date</span><strong><?= !empty($session['date_session']) ? date('d/m/Y', strtotime($session['date_session'])) : '—' ?></strong></div>
+        </div>
+    </div>
+
+    <div class="report-section">
+        <div class="report-section-title">ÉQUIPEMENTS CONCERNÉS</div>
+        <table class="report-table">
+            <thead>
+                <tr><th>Équipement</th><th>N° série</th><th>Marque / Modèle</th><th>Statut</th><th>Compte rendu</th></tr>
+            </thead>
+            <tbody>
+                <?php foreach ($equipements as $eq): ?>
+                    <?php $statutEq = $eq['statut'] ?? 'planifiee'; ?>
+                    <tr>
+                        <td><?= $this->escapeHtml($eq['type'] ?? '—') ?></td>
+                        <td><?= $this->escapeHtml($eq['numero_serie'] ?? '—') ?></td>
+                        <td><?= $this->escapeHtml(trim(($eq['marque'] ?? '') . ' ' . ($eq['modele'] ?? ''))) ?: '—' ?></td>
+                        <td><?= $this->escapeHtml($libellesStatuts[$statutEq] ?? $statutEq) ?></td>
+                        <td><?= !empty($eq['compte_rendu']) ? nl2br($this->escapeHtml($eq['compte_rendu'])) : '<em>—</em>' ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="report-footer">
+        <span>Généré par IBS-Pulse le <?= date('d/m/Y à H:i') ?></span>
+    </div>
+
+</div>

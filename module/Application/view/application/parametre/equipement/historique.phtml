@@ -1,0 +1,375 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ * @var array $equipement
+ * @var array $maintenances
+ */
+
+$equipement = $equipement ?? [];
+
+$maintenances = $maintenances ?? [];
+
+$idEquipement = (int) (
+    $equipement['id_equipement'] ?? 0
+);
+
+$nom = trim(
+    (string) (
+        ($equipement['marque'] ?? '')
+        . ' '
+        . ($equipement['modele'] ?? '')
+    )
+);
+
+if ($nom === '') {
+    $nom = 'Équipement biomédical';
+}
+
+$numeroSerie = trim(
+    (string) (
+        $equipement['numero_serie'] ?? ''
+    )
+);
+
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <h1>
+                Historique de l'équipement
+            </h1>
+
+            <p>
+
+                <?= $this->escapeHtml($nom) ?>
+
+                <?php if ($numeroSerie !== ''): ?>
+
+                    —
+
+                    N° série :
+
+                    <?= $this->escapeHtml(
+                        $numeroSerie
+                    ) ?>
+
+                <?php endif; ?>
+
+            </p>
+
+        </div>
+
+
+        <div>
+
+            <a
+                href="<?= $this->url(
+                    'equipement',
+                    [
+                        'action' => 'view',
+                        'id' => $idEquipement,
+                    ]
+                ) ?>"
+                class="btn-secondary"
+            >
+                ← Retour à l'équipement
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="dashboard-panel">
+
+        <div class="filter-header">
+
+            <div>
+
+                <h2>
+                    Interventions
+                </h2>
+
+                <p>
+
+                    <?= count($maintenances) ?>
+
+                    intervention(s)
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <?php if (empty($maintenances)): ?>
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    🔧
+                </div>
+
+                <h3>
+                    Aucun historique
+                </h3>
+
+                <p>
+                    Aucune intervention n'est encore
+                    enregistrée pour cet équipement.
+                </p>
+
+            </div>
+
+        <?php else: ?>
+
+            <div class="table-responsive">
+
+                <table class="ibs-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Type
+                            </th>
+
+                            <th>
+                                Technicien
+                            </th>
+
+                            <th>
+                                Diagnostic
+                            </th>
+
+                            <th>
+                                Compte rendu
+                            </th>
+
+                            <th>
+                                Statut
+                            </th>
+
+                            <th>
+                                Fin
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                    <?php foreach (
+                        $maintenances
+                        as $maintenance
+                    ): ?>
+
+                        <?php
+
+                        $statut = strtolower(
+                            trim(
+                                (string) (
+                                    $maintenance[
+                                        'statut'
+                                    ] ?? ''
+                                )
+                            )
+                        );
+
+                        $classe =
+                            'status-neutral';
+
+                        if (
+                            $statut === 'terminee'
+                        ) {
+
+                            $classe =
+                                'status-success';
+
+                        } elseif (
+                            $statut === 'en_cours'
+                        ) {
+
+                            $classe =
+                                'status-warning';
+                        }
+
+                        $technicien = trim(
+                            (string) (
+                                (
+                                    $maintenance[
+                                        'technicien_prenom'
+                                    ] ?? ''
+                                )
+                                . ' '
+                                .
+                                (
+                                    $maintenance[
+                                        'technicien_nom'
+                                    ] ?? ''
+                                )
+                            )
+                        );
+
+                        ?>
+
+                        <tr>
+
+                            <td>
+
+                                <?php if (
+                                    !empty(
+                                        $maintenance[
+                                            'date_maintenance'
+                                        ]
+                                    )
+                                ): ?>
+
+                                    <?= $this->escapeHtml(
+                                        date(
+                                            'd/m/Y',
+                                            strtotime(
+                                                (string)
+                                                $maintenance[
+                                                    'date_maintenance'
+                                                ]
+                                            )
+                                        )
+                                    ) ?>
+
+                                <?php else: ?>
+
+                                    —
+
+                                <?php endif; ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    $maintenance[
+                                        'type_maintenance'
+                                    ] ?? '—'
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    $technicien !== ''
+                                        ? $technicien
+                                        : 'Non affecté'
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    $maintenance[
+                                        'diagnostic'
+                                    ]
+                                    ?? '—'
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    $maintenance[
+                                        'compte_rendu'
+                                    ]
+                                    ?? 'Aucun compte rendu'
+                                ) ?>
+
+                            </td>
+
+
+                            <td>
+
+                                <span
+                                    class="status-badge <?= $classe ?>"
+                                >
+
+                                    <span
+                                        class="status-dot"
+                                    ></span>
+
+                                    <?= $this->escapeHtml(
+                                        $maintenance[
+                                            'statut'
+                                        ] ?? '—'
+                                    ) ?>
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <?php if (
+                                    !empty(
+                                        $maintenance[
+                                            'date_fin'
+                                        ]
+                                    )
+                                ): ?>
+
+                                    <?= $this->escapeHtml(
+                                        date(
+                                            'd/m/Y',
+                                            strtotime(
+                                                (string)
+                                                $maintenance[
+                                                    'date_fin'
+                                                ]
+                                            )
+                                        )
+                                    ) ?>
+
+                                <?php else: ?>
+
+                                    —
+
+                                <?php endif; ?>
+
+                            </td>
+
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        <?php endif; ?>
+
+    </div>
+
+</div>
