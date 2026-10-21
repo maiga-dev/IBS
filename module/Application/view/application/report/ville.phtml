@@ -1,0 +1,237 @@
+<?php
+
+$this->headTitle('Sites - Rapport - IBS Pulse');
+
+$paysUrl = $this->url(
+    'rapport/pays',
+    [
+        'idCentrale' => (int) $centrale['id_centrale'],
+        'idPays' => (int) $pays['id_pays'],
+    ]
+);
+?>
+
+<div class="report-page">
+
+    <div class="report-header">
+
+        <div class="report-header-left">
+
+            <div class="report-breadcrumb">
+
+                <a href="<?= $this->url('rapport') ?>">
+                    Rapports
+                </a>
+
+                <span>/</span>
+
+                <a href="<?= $paysUrl ?>">
+                    <?= $this->escapeHtml(
+                        (string) $pays['nom_pays']
+                    ) ?>
+                </a>
+
+                <span>/</span>
+
+                <span>
+                    <?= $this->escapeHtml(
+                        (string) $ville['nom_ville']
+                    ) ?>
+                </span>
+
+            </div>
+
+            <div class="report-kicker">
+                NIVEAU 05 · IMPLANTATION
+            </div>
+
+            <h1 class="report-title">
+                <?= $this->escapeHtml(
+                    (string) $ville['nom_ville']
+                ) ?>
+            </h1>
+
+            <p class="report-subtitle">
+                Sites de la centrale implantés dans cette ville.
+            </p>
+
+        </div>
+
+        <div class="report-header-action">
+
+            <a
+                href="<?= $paysUrl ?>"
+                class="report-back-button"
+            >
+                ← Retour aux villes
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="report-context-bar">
+
+        <div class="report-context-icon">
+            ⌂
+        </div>
+
+        <div class="report-context-content">
+
+            <strong>
+                Sites
+            </strong>
+
+            <span>
+                <?= $this->escapeHtml(
+                    (string) $ville['nom_ville']
+                ) ?>
+                ·
+                <?= $this->escapeHtml(
+                    (string) $pays['nom_pays']
+                ) ?>
+            </span>
+
+        </div>
+
+        <div class="report-context-count">
+
+            <strong>
+                <?= count($sites) ?>
+            </strong>
+
+            <span>
+                site<?= count($sites) > 1 ? 's' : '' ?>
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <section class="report-section">
+
+        <div class="report-section-heading">
+
+            <div>
+
+                <span class="report-section-kicker">
+                    NIVEAU 05
+                </span>
+
+                <h2>
+                    Sites
+                </h2>
+
+                <p>
+                    Sélectionnez un site pour consulter
+                    son parc d'équipements.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <?php if (empty($sites)): ?>
+
+            <div class="report-empty-state">
+
+                <div class="report-empty-icon">
+                    ⌂
+                </div>
+
+                <h3>
+                    Aucun site disponible
+                </h3>
+
+                <p>
+                    Aucun site n'est enregistré pour cette
+                    centrale dans cette ville.
+                </p>
+
+            </div>
+
+        <?php else: ?>
+
+            <div class="report-family-grid">
+
+                <?php foreach ($sites as $index => $site): ?>
+
+                    <?php
+                    $siteUrl = $this->url(
+                        'rapport/site',
+                        [
+                            'idCentrale' => (int) $centrale['id_centrale'],
+                            'idPays' => (int) $pays['id_pays'],
+                            'idVille' => (int) $ville['id_ville'],
+                            'idSite' => (int) $site['id_site'],
+                        ]
+                    );
+                    ?>
+
+                    <a
+                        href="<?= $siteUrl ?>"
+                        class="report-family-card"
+                    >
+
+                        <div class="report-family-card-top">
+
+                            <span class="report-family-number">
+                                <?= str_pad(
+                                    (string) ($index + 1),
+                                    2,
+                                    '0',
+                                    STR_PAD_LEFT
+                                ) ?>
+                            </span>
+
+                            <span class="report-family-arrow">
+                                →
+                            </span>
+
+                        </div>
+
+                        <div class="report-family-icon">
+                            ⌂
+                        </div>
+
+                        <div class="report-family-content">
+
+                            <h3>
+                                <?= $this->escapeHtml(
+                                    (string) $site['nom_site']
+                                ) ?>
+                            </h3>
+
+                            <p>
+                                <?= (int) $site['nombre_equipements'] ?>
+                                équipement<?= ((int) $site['nombre_equipements'] > 1) ? 's' : '' ?>
+                            </p>
+
+                        </div>
+
+                        <div class="report-family-footer">
+
+                            <span>
+                                Consulter le site
+                            </span>
+
+                            <span class="report-family-footer-arrow">
+                                →
+                            </span>
+
+                        </div>
+
+                    </a>
+
+                <?php endforeach; ?>
+
+            </div>
+
+        <?php endif; ?>
+
+    </section>
+
+</div>

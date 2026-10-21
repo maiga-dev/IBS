@@ -1,0 +1,426 @@
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+
+$this->headTitle('Maintenances et rapports');
+
+$maintenances = $maintenances ?? [];
+
+$echapper = fn ($valeur): string =>
+    $this->escapeHtml((string) ($valeur ?? '—'));
+
+$nombre = fn ($valeur): string =>
+    number_format((int) ($valeur ?? 0), 0, ',', ' ');
+
+
+$statutNormalise = static function ($statut): string {
+    $statut = mb_strtolower(trim((string) $statut));
+
+    $statut = str_replace(
+        ['é', 'è', 'ê', 'à', ' '],
+        ['e', 'e', 'e', 'a', '_'],
+        $statut
+    );
+
+    return $statut !== '' ? $statut : 'non_renseigne';
+};
+
+
+$statutLibelle = static function ($statut): string {
+    $statut = trim((string) $statut);
+
+    return $statut !== '' ? ucfirst($statut) : 'Non renseigné';
+};
+
+
+$statutClasse = static function ($statut) use ($statutNormalise): string {
+    return match ($statutNormalise($statut)) {
+        'terminee', 'termine' => 'is-terminee',
+        'en_cours' => 'is-en-cours',
+        'planifiee', 'planifie' => 'is-planifiee',
+        'affectee', 'affecte' => 'is-affectee',
+        'suspendue', 'suspendu' => 'is-suspendue',
+        'arretee', 'arrete' => 'is-arretee',
+        default => 'is-inconnu',
+    };
+};
+
+$compteRenduDisponible = static function (array $maintenance): bool {
+    return trim((string) ($maintenance['compte_rendu'] ?? '')) !== ''
+        || trim((string) ($maintenance['diagnostic_final'] ?? '')) !== '';
+};
+
+
+$urlDocument = function ($chemin): string {
+    $chemin = trim((string) $chemin);
+
+    if ($chemin === '') {
+        return '';
+    }
+
+    if (preg_match('~^https?://~i', $chemin)) {
+        return $chemin;
+    }
+
+    $chemin = str_replace('\\', '/', $chemin);
+    $chemin = '/' . ltrim($chemin, '/');
+
+    return $this->basePath($chemin);
+};
+
+
+$nombreRapports = count(array_filter(
+    $maintenances,
+    $compteRenduDisponible
+));
+
+$statuts = [];
+
+foreach ($maintenances as $maintenance) {
+    $libelle = $statutLibelle($maintenance['statut'] ?? null);
+    $statuts[$libelle] = ($statuts[$libelle] ?? 0) + 1;
+}
+?>
+
+<div class="rapport-page">
+
+    <!-- En-tête -->
+    <header class="rapport-header">
+        <div>
+            <span class="rapport-eyebrow"> Maintenances et rapports</span>
+        </div>
+
+       
+    </header>
+
+    <!-- Statistiques -->
+    <section class="rapport-stats">
+
+        <article class="rapport-stat">
+            <span>Tous</span>
+
+            <strong>
+                <?= $nombre(count($maintenances)) ?>
+            </strong>
+        </article>
+
+        <article class="rapport-stat">
+            <span>Avec compte rendu ou diagnostic final</span>
+
+            <strong>
+                <?= $nombre($nombreRapports) ?>
+            </strong>
+        </article>
+
+        <article class="rapport-stat">
+            <span>Sans compte rendu final</span>
+
+            <strong>
+                <?= $nombre(count($maintenances) - $nombreRapports) ?>
+            </strong>
+        </article>
+
+    </section>
+
+    <!-- Historique -->
+    <section class="rapport-list-panel">
+
+        <div class="rapport-section-heading">
+            <div>
+                <h2>Historique des interventions</h2>
+
+        
+            </div>
+        </div>
+
+        <!-- Répartition par statut -->
+        <?php if ($statuts): ?>
+            <div class="rapport-status-summary">
+
+                <?php foreach ($statuts as $libelle => $total): ?>
+                    <span class="rapport-status-summary-item">
+                        <span>
+                            <?= $echapper($libelle) ?>
+                        </span>
+
+                        <strong>
+                            <?= $nombre($total) ?>
+                        </strong>
+                    </span>
+                <?php endforeach; ?>
+
+            </div>
+        <?php endif; ?>
+
+        <!-- Aucune maintenance -->
+        <?php if (!$maintenances): ?>
+
+            <div class="rapport-empty">
+                <strong>Aucune maintenance enregistrée</strong>
+
+                <p>
+                    Les interventions apparaîtront ici lorsqu'elles seront
+                    enregistrées dans la base de données.
+                </p>
+            </div>
+
+        <?php else: ?>
+
+            <div class="table-responsive">
+
+                <table class="table rapport-table rapport-maintenance-table">
+
+                    <thead>
+                        <tr>
+                            <th>Référence</th>
+                            <th>Date</th>
+                            <th>Centrale et site</th>
+                            <th>Technicien</th>
+                            <th>Statut</th>
+                            <th>Diagnostic final</th>
+                            <th>Compte rendu</th>
+                            <th>Documents</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    <?php foreach ($maintenances as $maintenance): ?>
+
+                        <?php
+                        $statut = $maintenance['statut'] ?? '';
+
+                        $documents = array_values(array_filter(
+                            explode(
+                                '||',
+                                (string) ($maintenance['documents_finaux'] ?? '')
+                            ),
+                            static fn ($url): bool => trim($url) !== ''
+                        ));
+
+                        $aUnRapport = $compteRenduDisponible($maintenance);
+                        ?>
+
+                        <tr>
+
+                            <!-- Référence -->
+                            <td>
+                                <strong>
+                                    <?= $echapper(
+                                        $maintenance['id_maintenance'] ?? null
+                                    ) ?>
+                                </strong>
+
+                                <div class="rapport-secondary-text">
+                                    Session :
+                                    <?= $echapper(
+                                        $maintenance['id_session'] ?? null
+                                    ) ?>
+                                </div>
+                            </td>
+
+                            <!-- Dates -->
+                            <td>
+                                <?= $echapper(
+                                    $maintenance['date_maintenance']
+                                    ?? $maintenance['date_session']
+                                    ?? null
+                                ) ?>
+
+                                <?php if (!empty($maintenance['date_fin'])): ?>
+                                    <div class="rapport-secondary-text">
+                                        Fin :
+                                        <?= $echapper($maintenance['date_fin']) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+
+                            <!-- Centrale, site et localisation -->
+                            <td>
+                                <strong>
+                                    <?= $echapper(
+                                        $maintenance['type_centrale'] ?? null
+                                    ) ?>
+                                </strong>
+
+                                <div class="rapport-secondary-text">
+                                    <?= $echapper(
+                                        $maintenance['nom_site'] ?? null
+                                    ) ?>
+                                </div>
+
+                                <div class="rapport-secondary-text">
+                                    <?= $echapper(
+                                        $maintenance['nom_ville'] ?? null
+                                    ) ?>
+                                    ·
+                                    <?= $echapper(
+                                        $maintenance['nom_pays'] ?? null
+                                    ) ?>
+                                </div>
+                            </td>
+
+                            <!-- Technicien -->
+                            <td>
+                                <?= $echapper(
+                                    $maintenance['technicien_nom'] ?? null
+                                ) ?>
+                            </td>
+
+                            <!-- Statut -->
+                            <td>
+                                <span
+                                    class="rapport-status-badge <?= $echapper(
+                                        $statutClasse($statut)
+                                    ) ?>"
+                                >
+                                    <?= $echapper(
+                                        $statutLibelle($statut)
+                                    ) ?>
+                                </span>
+                            </td>
+
+                            <!-- Diagnostic final -->
+                            <td>
+                                <?php if (
+                                    trim((string) (
+                                        $maintenance['diagnostic_final'] ?? ''
+                                    )) !== ''
+                                ): ?>
+                                    <?= nl2br(
+                                        $echapper(
+                                            $maintenance['diagnostic_final']
+                                        )
+                                    ) ?>
+                                <?php else: ?>
+                                    <span class="rapport-secondary-text">
+                                        Non renseigné
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+
+                            <!-- Compte rendu et commentaire -->
+                            <td>
+                                <?php if ($aUnRapport): ?>
+
+                                    <details class="rapport-details">
+
+                                        <summary>Consulter</summary>
+
+                                        <?php if (
+                                            trim((string) (
+                                                $maintenance['compte_rendu'] ?? ''
+                                            )) !== ''
+                                        ): ?>
+                                            <p>
+                                                <strong>Compte rendu</strong><br>
+
+                                                <?= nl2br(
+                                                    $echapper(
+                                                        $maintenance['compte_rendu']
+                                                    )
+                                                ) ?>
+                                            </p>
+                                        <?php endif; ?>
+
+                                        <?php if (
+                                            trim((string) (
+                                                $maintenance['diagnostic_final'] ?? ''
+                                            )) !== ''
+                                        ): ?>
+                                            <p>
+                                                <strong>Diagnostic final</strong><br>
+
+                                                <?= nl2br(
+                                                    $echapper(
+                                                        $maintenance['diagnostic_final']
+                                                    )
+                                                ) ?>
+                                            </p>
+                                        <?php endif; ?>
+
+                                        <?php if (
+                                            trim((string) (
+                                                $maintenance['commentaire'] ?? ''
+                                            )) !== ''
+                                        ): ?>
+                                            <p>
+                                                <strong>Commentaire</strong><br>
+
+                                                <?= nl2br(
+                                                    $echapper(
+                                                        $maintenance['commentaire']
+                                                    )
+                                                ) ?>
+                                            </p>
+                                        <?php endif; ?>
+
+                                    </details>
+
+                                <?php else: ?>
+
+                                    <span class="rapport-secondary-text">
+                                        Non disponible
+                                    </span>
+
+                                <?php endif; ?>
+                            </td>
+
+                            <!-- Documents PDF -->
+                            <td>
+                                <?php if ($documents): ?>
+
+                                    <div class="rapport-documents-list">
+
+                                        <?php foreach (
+                                            $documents as $index => $document
+                                        ): ?>
+
+                                            <?php
+                                            $lienDocument = $urlDocument($document);
+                                            ?>
+
+                                            <a
+                                                class="rapport-document-link"
+                                                href="<?= $this->escapeHtmlAttr(
+                                                    $lienDocument
+                                                ) ?>"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                <span aria-hidden="true">↗</span>
+                                                Document <?= $nombre($index + 1) ?>
+                                            </a>
+
+                                        <?php endforeach; ?>
+
+                                    </div>
+
+                                <?php else: ?>
+
+                                    <span class="rapport-secondary-text">
+                                        Aucun document
+                                    </span>
+
+                                <?php endif; ?>
+                            </td>
+
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        <?php endif; ?>
+ <a
+            class="rapport-back-link"
+            href="<?= $this->url('rapport') ?>"
+        >
+            ← Retour aux rapports
+        </a>
+    </section>
+
+</div>

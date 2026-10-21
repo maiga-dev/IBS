@@ -1,0 +1,287 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ * @var array $equipement
+ * @var array $postData
+ * @var string|null $error
+ * @var int $idEquipement
+ * @var int $idReleve
+ */
+
+$equipement = $equipement ?? [];
+$postData = $postData ?? [];
+$error = $error ?? null;
+
+$idEquipement = (int) ($idEquipement ?? 0);
+$idReleve = (int) ($idReleve ?? 0);
+
+$designation = trim(
+    (string) ($equipement['designation'] ?? '')
+);
+
+$designation = $designation !== ''
+    ? $designation
+    : 'Équipement biomédical';
+
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-title">
+
+        <div>
+
+          
+
+            <h1>
+                Modifier le relevé
+            </h1>
+
+            <p>
+                <?= $this->escapeHtml($designation) ?>
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <?php if ($error): ?>
+
+        <div class="alert alert-danger">
+            <?= $this->escapeHtml($error) ?>
+        </div>
+
+    <?php endif; ?>
+
+
+    <div class="dashboard-panel form-panel form-panel-wide">
+
+        <form
+            method="post"
+            action="<?= $this->url(
+                'releve',
+                [
+                    'id'     => $idEquipement,
+                    'action' => 'edit',
+                    'releve' => $idReleve,
+                ]
+            ) ?>"
+        >
+
+            <div class="form-card">
+
+                <div class="form-section">
+
+                    <div class="form-section-header">
+
+                        <div>
+
+                            <h2>
+                                Informations du relevé
+                            </h2>
+
+                            <p>
+                                Modifier les mesures enregistrées.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="auth-row">
+
+                        <div class="auth-field">
+
+                            <label for="date_releve">
+                                Date et heure du relevé
+                            </label>
+
+                            <input
+                                type="datetime-local"
+                                name="date_releve"
+                                id="date_releve"
+                                class="form-input"
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) (
+                                        $postData['date_releve']
+                                        ?? ''
+                                    )
+                                ) ?>"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="auth-field">
+
+                            <label for="heure_total">
+                                Heures total
+                            </label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="heure_total"
+                                id="heure_total"
+                                class="form-input"
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) (
+                                        $postData['heure_total']
+                                        ?? ''
+                                    )
+                                ) ?>"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="auth-row">
+
+                        <div class="auth-field">
+
+                            <label for="heure_production">
+                                Heures de production
+                            </label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="heure_production"
+                                id="heure_production"
+                                class="form-input"
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) (
+                                        $postData['heure_production']
+                                        ?? ''
+                                    )
+                                ) ?>"
+                            >
+
+                        </div>
+
+
+                        <div class="auth-field">
+
+                            <label for="pression">
+                                Pression
+                            </label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                name="pression"
+                                id="pression"
+                                class="form-input"
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) (
+                                        $postData['pression']
+                                        ?? ''
+                                    )
+                                ) ?>"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="auth-row">
+
+                        <div class="auth-field">
+
+                            <label for="purete">
+                                Pureté
+                            </label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                max="100"
+                                name="purete"
+                                id="purete"
+                                class="form-input"
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) (
+                                        $postData['purete']
+                                        ?? ''
+                                    )
+                                ) ?>"
+                            >
+
+                        </div>
+
+
+                        <div class="auth-field">
+                        </div>
+
+                    </div>
+
+
+                    <div class="auth-field">
+
+                        <label for="observation">
+                            Observation
+                        </label>
+
+                        <textarea
+                            name="observation"
+                            id="observation"
+                            class="form-input"
+                            rows="5"
+                        ><?= $this->escapeHtml(
+                            (string) (
+                                $postData['observation']
+                                ?? ''
+                            )
+                        ) ?></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-section-divider"></div>
+
+
+                <div class="form-actions">
+
+                    <a
+                        href="<?= $this->url(
+                            'releve',
+                            [
+                                'id' => $idEquipement,
+                            ]
+                        ) ?>"
+                        class="form-cancel-button"
+                    >
+                        Annuler
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="auth-submit form-submit-button"
+                    >
+                        Enregistrer les modifications
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>

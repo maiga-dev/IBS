@@ -13,20 +13,134 @@ $id = (int) (
     $equipement['id_equipement'] ?? 0
 );
 
+/*
+ * La désignation est le nom principal affiché
+ * dans l'en-tête de la fiche.
+ */
+$designation = trim(
+    (string) (
+        $equipement['designation'] ?? ''
+    )
+);
+
+if ($designation === '') {
+    $designation = 'Équipement biomédical';
+}
+
+$type = trim(
+    (string) (
+        $equipement['nom_type'] ?? ''
+    )
+);
+
+$numeroSerie = trim(
+    (string) (
+        $equipement['numero_serie'] ?? ''
+    )
+);
+
+$marque = trim(
+    (string) (
+        $equipement['marque'] ?? ''
+    )
+);
+
+$modele = trim(
+    (string) (
+        $equipement['modele'] ?? ''
+    )
+);
+
+$pays = trim(
+    (string) (
+        $equipement['nom_pays'] ?? ''
+    )
+);
+
+$ville = trim(
+    (string) (
+        $equipement['nom_ville'] ?? ''
+    )
+);
+
+$site = trim(
+    (string) (
+        $equipement['nom_site'] ?? ''
+    )
+);
+
+$adresse = trim(
+    (string) (
+        $equipement['adresse'] ?? ''
+    )
+);
+
+$centrale = trim(
+    (string) (
+        $equipement['type_centrale'] ?? ''
+    )
+);
+
+$dateMiseEnService = trim(
+    (string) (
+        $equipement[
+            'date_mise_en_service'
+        ] ?? ''
+    )
+);
+
+/*
+ * Heures de fonctionnement.
+ */
+$heureFonctionnement = (int) (
+    $equipement['heure_fonctionnement'] ?? 0
+);
+
+$periodicite = trim(
+    (string) (
+        $equipement['periodicite'] ?? ''
+    )
+);
+
+$dateProchaineMaintenance = trim(
+    (string) (
+        $equipement[
+            'date_prochaine_maintenance'
+        ] ?? ''
+    )
+);
+
 ?>
 
 <div class="dashboard">
+
+    <!-- =====================================================
+         EN-TÊTE
+         ===================================================== -->
 
     <div class="dashboard-header">
 
         <div>
 
-            <h1>
-                Détail de l'équipement
-            </h1>
+            <div
+                style="
+                    display:flex;
+                    align-items:center;
+                    gap:10px;
+                    margin-bottom:8px;
+                    flex-wrap:wrap;
+                "
+            >
+
+            </div>
+
+            <h3>
+                Équipement n° <?= $id ?> :
+                <?= $this->escapeHtml($designation) ?>
+            </h3>
 
             <p>
-                Informations détaillées de l'équipement.
+                Fiche complète de l'équipement.
             </p>
 
         </div>
@@ -34,94 +148,90 @@ $id = (int) (
     </div>
 
 
+    <!-- =====================================================
+         LOCALISATION
+         ===================================================== -->
+
     <div class="dashboard-panel">
+
+        <div
+            style="
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:20px;
+                margin-bottom:22px;
+                flex-wrap:wrap;
+            "
+        >
+
+            <div>
+
+                <h2
+                    style="
+                        margin:0;
+                        font-family:var(--font-title);
+                        font-size:18px;
+                        color:var(--black);
+                    "
+                >
+                    Localisation
+                </h2>
+
+                <p
+                    style="
+                        margin:4px 0 0;
+                        color:var(--gray);
+                        font-size:13px;
+                    "
+                >
+                    Emplacement actuel de l'équipement.
+                </p>
+
+            </div>
+
+        </div>
+
 
         <div class="form-grid">
 
-            <div class="form-group">
+            <!-- PAYS -->
 
-                <label>
-                    Désignation
-                </label>
+            <div class="auth-field">
 
-                <div class="ibs-value">
+                <label>Pays</label>
+
+                <div class="form-control form-input">
                     <?= $this->escapeHtml(
-                        $equipement[
-                            'designation'
-                        ] ?? '-'
+                        (string) (
+                            $equipement['nom_pays']
+                            ?? '—'
+                        )
                     ) ?>
                 </div>
 
             </div>
 
 
-            <div class="form-group">
+            <!-- VILLE -->
 
-                <label>
-                    Type d'équipement
-                </label>
+            <div class="auth-field">
 
-                <div class="ibs-value">
+                <label>Ville</label>
+
+                <div class="form-control form-input">
                     <?= $this->escapeHtml(
-                        $equipement[
-                            'nom_type'
-                        ] ?? '-'
+                        (string) (
+                            $equipement['nom_ville']
+                            ?? '—'
+                        )
                     ) ?>
                 </div>
 
             </div>
 
 
-            <div class="form-group">
-
-                <label>
-                    Numéro de série
-                </label>
-
-                <div class="ibs-value">
-                    <?= $this->escapeHtml(
-                        $equipement[
-                            'numero_serie'
-                        ] ?? '-'
-                    ) ?>
-                </div>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>
-                    Marque
-                </label>
-
-                <div class="ibs-value">
-                    <?= $this->escapeHtml(
-                        $equipement[
-                            'marque'
-                        ] ?? '-'
-                    ) ?>
-                </div>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label>
-                    Modèle
-                </label>
-
-                <div class="ibs-value">
-                    <?= $this->escapeHtml(
-                        $equipement[
-                            'modele'
-                        ] ?? '-'
-                    ) ?>
-                </div>
-
-            </div>
-
+            <!-- SITE -->
 
             <div class="form-group">
 
@@ -131,14 +241,35 @@ $id = (int) (
 
                 <div class="ibs-value">
                     <?= $this->escapeHtml(
-                        $equipement[
-                            'nom_site'
-                        ] ?? '-'
+                        $site !== ''
+                            ? $site
+                            : '—'
                     ) ?>
                 </div>
 
             </div>
 
+
+            <!-- CENTRALE -->
+
+            <div class="form-group">
+
+                <label>
+                    Type d'équipement
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $centrale !== ''
+                            ? $centrale
+                            : '—'
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <!-- ADRESSE -->
 
             <div class="form-group">
 
@@ -147,32 +278,184 @@ $id = (int) (
                 </label>
 
                 <div class="ibs-value">
+
                     <?= $this->escapeHtml(
-                        $equipement[
-                            'adresse'
-                        ] ?? '-'
+                        $adresse !== ''
+                            ? $adresse
+                            : '—'
                     ) ?>
+
                 </div>
 
             </div>
 
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         IDENTIFICATION
+         ===================================================== -->
+
+    <div class="dashboard-panel">
+
+        <div style="margin-bottom:22px;">
+
+            <h2
+                style="
+                    margin:0;
+                    font-family:var(--font-title);
+                    font-size:18px;
+                    color:var(--black);
+                "
+            >
+                Identification
+            </h2>
+
+            <p
+                style="
+                    margin:4px 0 0;
+                    color:var(--gray);
+                    font-size:13px;
+                "
+            >
+                Informations générales de l'équipement.
+            </p>
+
+        </div>
+
+
+        <div class="form-grid">
+
+            <!-- TYPE -->
 
             <div class="form-group">
 
                 <label>
-                    Centrale
+                    Nom équipement
                 </label>
 
                 <div class="ibs-value">
                     <?= $this->escapeHtml(
-                        $equipement[
-                            'type_centrale'
-                        ] ?? '-'
+                        $type !== ''
+                            ? $type
+                            : '—'
                     ) ?>
                 </div>
 
             </div>
 
+
+            <!-- DESIGNATION -->
+
+            <div class="form-group">
+
+                <label>
+                    Désignation
+                </label>
+
+                <div class="ibs-value">
+                    <?= $this->escapeHtml(
+                        $designation
+                    ) ?>
+                </div>
+
+            </div>
+
+
+            <!-- NUMERO SERIE -->
+
+            <div class="form-group">
+
+                <label>
+                    Numéro de série
+                </label>
+
+                <div class="ibs-value">
+
+                    <?= $this->escapeHtml(
+                        $numeroSerie !== ''
+                            ? $numeroSerie
+                            : '—'
+                    ) ?>
+
+                </div>
+
+            </div>
+
+
+            <!-- MARQUE -->
+
+            <div class="form-group">
+
+                <label>
+                    Marque
+                </label>
+
+                <div class="ibs-value">
+
+                    <?= $this->escapeHtml(
+                        $marque !== ''
+                            ? $marque
+                            : '—'
+                    ) ?>
+
+                </div>
+
+            </div>
+
+
+            <!-- MODELE -->
+
+            <div class="form-group">
+
+                <label>
+                    Modèle
+                </label>
+
+                <div class="ibs-value">
+
+                    <?= $this->escapeHtml(
+                        $modele !== ''
+                            ? $modele
+                            : '—'
+                    ) ?>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MISE EN SERVICE
+         ===================================================== -->
+
+    <div class="dashboard-panel">
+
+        <div style="margin-bottom:22px;">
+
+            <h2
+                style="
+                    margin:0;
+                    font-family:var(--font-title);
+                    font-size:18px;
+                    color:var(--black);
+                "
+            >
+                Mise en service
+            </h2>
+
+        </div>
+
+
+        <div class="form-grid">
+
+            <!-- DATE DE MISE EN SERVICE -->
 
             <div class="form-group">
 
@@ -181,15 +464,94 @@ $id = (int) (
                 </label>
 
                 <div class="ibs-value">
-                    <?= $this->escapeHtml(
-                        $equipement[
-                            'date_mise_en_service'
-                        ] ?? '-'
-                    ) ?>
+
+                    <?php if (
+                        $dateMiseEnService !== ''
+                    ): ?>
+
+                        <?= $this->escapeHtml(
+                            date(
+                                'd/m/Y',
+                                strtotime(
+                                    $dateMiseEnService
+                                )
+                            )
+                        ) ?>
+
+                    <?php else: ?>
+
+                        —
+
+                    <?php endif; ?>
+
                 </div>
 
             </div>
 
+
+            <!-- HEURES DE FONCTIONNEMENT -->
+
+            <div class="form-group">
+
+                <label>
+                    Heures de fonctionnement
+                </label>
+
+                <div class="ibs-value">
+
+                    <?= $this->escapeHtml(
+                        number_format(
+                            $heureFonctionnement,
+                            0,
+                            ',',
+                            ' '
+                        )
+                    ) ?> h
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MAINTENANCE
+         ===================================================== -->
+
+    <div class="dashboard-panel">
+
+        <div style="margin-bottom:22px;">
+
+            <h2
+                style="
+                    margin:0;
+                    font-family:var(--font-title);
+                    font-size:18px;
+                    color:var(--black);
+                "
+            >
+                Maintenance
+            </h2>
+
+            <p
+                style="
+                    margin:4px 0 0;
+                    color:var(--gray);
+                    font-size:13px;
+                "
+            >
+                Paramètres de suivi de la maintenance.
+            </p>
+
+        </div>
+
+
+        <div class="form-grid">
+
+            <!-- PERIODICITE -->
 
             <div class="form-group">
 
@@ -198,15 +560,19 @@ $id = (int) (
                 </label>
 
                 <div class="ibs-value">
+
                     <?= $this->escapeHtml(
-                        $equipement[
-                            'periodicite'
-                        ] ?? '-'
+                        $periodicite !== ''
+                            ? $periodicite
+                            : '—'
                     ) ?>
+
                 </div>
 
             </div>
 
+
+            <!-- PROCHAINE MAINTENANCE -->
 
             <div class="form-group">
 
@@ -215,19 +581,216 @@ $id = (int) (
                 </label>
 
                 <div class="ibs-value">
-                    <?= $this->escapeHtml(
-                        $equipement[
-                            'date_prochaine_maintenance'
-                        ] ?? '-'
-                    ) ?>
+
+                    <?php if (
+                        $dateProchaineMaintenance !== ''
+                    ): ?>
+
+                        <?= $this->escapeHtml(
+                            date(
+                                'd/m/Y',
+                                strtotime(
+                                    $dateProchaineMaintenance
+                                )
+                            )
+                        ) ?>
+
+                    <?php else: ?>
+
+                        —
+
+                    <?php endif; ?>
+
                 </div>
 
             </div>
 
         </div>
 
+    </div>
+
+
+    <!-- =====================================================
+         ACCÈS AUX DONNÉES DE SUIVI
+         ===================================================== -->
+
+    <div class="dashboard-panel">
+
+        <div style="margin-bottom:22px;">
+
+            <h2
+                style="
+                    margin:0;
+                    font-family:var(--font-title);
+                    font-size:18px;
+                    color:var(--black);
+                "
+            >
+                Suivi de l'équipement
+            </h2>
+
+            <p
+                style="
+                    margin:4px 0 0;
+                    color:var(--gray);
+                    font-size:13px;
+                "
+            >
+                Consultez les relevés techniques et les
+                interventions de maintenance.
+            </p>
+
+        </div>
+
+
+        <div
+            style="
+                display:grid;
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+                gap:14px;
+            "
+        >
+
+            <a
+                href="<?= $this->url(
+                    'releve',
+                    [
+                        'id' => $id,
+                    ]
+                ) ?>"
+                style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    gap:16px;
+                    padding:20px;
+                    border:1px solid var(--petrol-200);
+                    border-radius:var(--radius-lg);
+                    background:var(--petrol-50);
+                    text-decoration:none;
+                    transition:var(--transition);
+                "
+            >
+
+                <div>
+
+                    <strong
+                        style="
+                            display:block;
+                            color:var(--petrol-dark);
+                            font-family:var(--font-title);
+                            font-size:15px;
+                        "
+                    >
+                        Relevés
+                    </strong>
+
+                    <span
+                        style="
+                            display:block;
+                            margin-top:4px;
+                            color:var(--text-soft);
+                            font-size:12px;
+                        "
+                    >
+                        Consulter les relevés techniques
+                    </span>
+
+                </div>
+
+                <span
+                    style="
+                        font-size:22px;
+                        color:var(--petrol);
+                    "
+                >
+                    →
+                </span>
+
+            </a>
+
+
+            <a
+                href="<?= $this->url(
+                    'equipement',
+                    [
+                        'action' => 'historique',
+                        'id' => $id,
+                    ]
+                ) ?>"
+                style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    gap:16px;
+                    padding:20px;
+                    border:1px solid var(--info-200);
+                    border-radius:var(--radius-lg);
+                    background:var(--info-50);
+                    text-decoration:none;
+                    transition:var(--transition);
+                "
+            >
+
+                <div>
+
+                    <strong
+                        style="
+                            display:block;
+                            color:var(--info-dark);
+                            font-family:var(--font-title);
+                            font-size:15px;
+                        "
+                    >
+                        Historique maintenance
+                    </strong>
+
+                    <span
+                        style="
+                            display:block;
+                            margin-top:4px;
+                            color:var(--text-soft);
+                            font-size:12px;
+                        "
+                    >
+                        Voir les interventions et comptes rendus
+                    </span>
+
+                </div>
+
+                <span
+                    style="
+                        font-size:22px;
+                        color:var(--info);
+                    "
+                >
+                    →
+                </span>
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ACTIONS
+         ===================================================== -->
+
+    <div class="dashboard-panel">
 
         <div class="form-actions">
+
+            <a
+                href="<?= $this->url(
+                    'rapport'
+                ) ?>"
+                class="btn-secondary"
+            >
+                Retour au rapport
+            </a>
 
             <a
                 href="<?= $this->url(
@@ -243,27 +806,13 @@ $id = (int) (
                 href="<?= $this->url(
                     'equipement',
                     [
-                        'action' => 'historique',
-                        'id' => $id,
-                    ]
-                ) ?>"
-                class="btn-secondary"
-            >
-                Historique
-            </a>
-
-
-            <a
-                href="<?= $this->url(
-                    'equipement',
-                    [
                         'action' => 'edit',
                         'id' => $id,
                     ]
                 ) ?>"
                 class="btn-ibs"
             >
-                Modifier
+                Modifier l'équipement
             </a>
 
         </div>
@@ -271,3 +820,4 @@ $id = (int) (
     </div>
 
 </div>
+

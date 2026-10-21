@@ -9,11 +9,11 @@ use Application\Model\EquipementTable;
 use Application\Model\TypeEquipementTable;
 use Application\Model\CentraleTable;
 use Application\Model\MaintenanceTable;
-use Application\Model\ReferenceTable;
 use Application\Model\FamilleTable;
 use Application\Model\PaysTable;
 use Application\Model\VilleTable;
 use Application\Model\UtilisateurTable;
+use Application\Model\ReleveTable;
 
 use Laminas\Authentication\AuthenticationService;
 use Laminas\Authentication\Storage\Session as AuthSessionStorage;
@@ -198,6 +198,7 @@ return [
             | TYPE D'ÉQUIPEMENT
             |--------------------------------------------------------------------------
             */
+
             'type_equipement' => [
                 'type' => Segment::class,
 
@@ -240,17 +241,26 @@ return [
                 ],
             ],
 
+            /*
+            |--------------------------------------------------------------------------
+            | RÉSEAUX / FLUIDES MÉDICAUX
+            |--------------------------------------------------------------------------
+            */
+
             'equipement_reseau_fluide' => [
                 'type' => Segment::class,
+
                 'options' => [
                     'route' => '/reseaux-fluides[/:action[/:id]]',
+
                     'constraints' => [
                         'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
-                        'id'     => '[0-9]+',
+                        'id' => '[0-9]+',
                     ],
+
                     'defaults' => [
                         'controller' => Controller\EquipementReseauFluideController::class,
-                        'action'     => 'index',
+                        'action' => 'index',
                     ],
                 ],
             ],
@@ -279,7 +289,6 @@ return [
                 ],
             ],
 
-           
             /*
             |--------------------------------------------------------------------------
             | AUTHENTIFICATION
@@ -327,25 +336,174 @@ return [
                 ],
             ],
 
-            /*
-            |--------------------------------------------------------------------------
-            | RAPPORT
-            |--------------------------------------------------------------------------
-            */
-
+           /*
+        |--------------------------------------------------------------------------
+        | RAPPORT
+        |--------------------------------------------------------------------------
+        */
             'rapport' => [
-                'type' => Literal::class,
+                'type' => Segment::class,
 
                 'options' => [
-                    'route' => '/rapports',
+                    'route' => '/rapport[/:action]',
+
+                    'constraints' => [
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                    ],
 
                     'defaults' => [
-                        'controller' => Controller\RapportController::class,
+                        'controller' => Controller\ReportController::class,
                         'action' => 'index',
                     ],
                 ],
-            ],
 
+                'may_terminate' => true,
+
+                'child_routes' => [
+
+                    /*
+                    * ---------------------------------------------------------
+                    * Famille
+                    * /rapport/famille/1
+                    * ---------------------------------------------------------
+                    */
+                    'famille' => [
+                        'type' => Segment::class,
+
+                        'options' => [
+                            'route' => '/famille/:idFamille',
+
+                            'constraints' => [
+                                'idFamille' => '[0-9]+',
+                            ],
+
+                            'defaults' => [
+                                'action' => 'famille',
+                            ],
+                        ],
+                    ],
+
+                    /*
+                    * ---------------------------------------------------------
+                    * Centrale
+                    * /rapport/centrale/1/5
+                    * ---------------------------------------------------------
+                    */
+                    'centrale' => [
+                        'type' => Segment::class,
+
+                        'options' => [
+                            'route' => '/centrale/:idFamille/:idCentrale',
+
+                            'constraints' => [
+                                'idFamille' => '[0-9]+',
+                                'idCentrale' => '[0-9]+',
+                            ],
+
+                            'defaults' => [
+                                'action' => 'centrale',
+                            ],
+                        ],
+                    ],
+
+                    /*
+                    * ---------------------------------------------------------
+                    * Pays
+                    * /rapport/centrale/1/pays/5
+                    * ---------------------------------------------------------
+                    */
+                    'pays' => [
+                        'type' => Segment::class,
+
+                        'options' => [
+                            'route' => '/centrale/:idCentrale/pays/:idPays',
+
+                            'constraints' => [
+                                'idCentrale' => '[0-9]+',
+                                'idPays' => '[0-9]+',
+                            ],
+
+                            'defaults' => [
+                                'action' => 'pays',
+                            ],
+                        ],
+                    ],
+
+                    /*
+                    * ---------------------------------------------------------
+                    * Ville
+                    * /rapport/centrale/1/pays/5/ville/3
+                    * ---------------------------------------------------------
+                    */
+                    'ville' => [
+                        'type' => Segment::class,
+
+                        'options' => [
+                            'route' => '/centrale/:idCentrale/pays/:idPays/ville/:idVille',
+
+                            'constraints' => [
+                                'idCentrale' => '[0-9]+',
+                                'idPays' => '[0-9]+',
+                                'idVille' => '[0-9]+',
+                            ],
+
+                            'defaults' => [
+                                'action' => 'ville',
+                            ],
+                        ],
+                    ],
+
+                    /*
+                    * ---------------------------------------------------------
+                    * Site
+                    * /rapport/centrale/1/pays/5/ville/3/site/8
+                    * ---------------------------------------------------------
+                    */
+                    'site' => [
+                        'type' => Segment::class,
+
+                        'options' => [
+                            'route' => '/centrale/:idCentrale/pays/:idPays/ville/:idVille/site/:idSite',
+
+                            'constraints' => [
+                                'idCentrale' => '[0-9]+',
+                                'idPays' => '[0-9]+',
+                                'idVille' => '[0-9]+',
+                                'idSite' => '[0-9]+',
+                            ],
+
+                            'defaults' => [
+                                'action' => 'site',
+                            ],
+                        ],
+                    ],
+                                        
+                    'explorer' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/explorer',
+                            'defaults' => [
+                                'controller' => \Application\Controller\ReportController::class,
+                                'action' => 'explorer',
+                            ],
+                        ],
+                    ],
+
+                
+                    'maintenance' => [
+                        'type' => \Laminas\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => '/maintenance',
+                            'defaults' => [
+                                'controller' => \Application\Controller\ReportController::class,
+                                'action' => 'maintenance',
+                            ],
+                        ],
+                    ],
+
+
+                ],
+            ],
             /*
             |--------------------------------------------------------------------------
             | ALERTES
@@ -364,6 +522,31 @@ return [
                     ],
                 ],
             ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | RELEVÉS
+            |--------------------------------------------------------------------------
+            */
+
+            'releve' => [
+                'type' => Segment::class,
+
+                'options' => [
+                    'route' => '/equipements/:id/releves[/:action[/:releve]]',
+
+                    'constraints' => [
+                        'id' => '[0-9]+',
+                        'releve' => '[0-9]+',
+                        'action' => '[a-zA-Z][a-zA-Z0-9_-]*',
+                    ],
+
+                    'defaults' => [
+                        'controller' => Controller\ReleveController::class,
+                        'action' => 'index',
+                    ],
+                ],
+            ],
         ],
     ],
 
@@ -376,6 +559,18 @@ return [
     'service_manager' => [
 
         'factories' => [
+
+            /*
+            |--------------------------------------------------------------------------
+            | Relevé
+            |--------------------------------------------------------------------------
+            */
+
+            Model\ReleveTable::class => function ($container) {
+                return new ReleveTable(
+                    $container->get(Adapter::class)
+                );
+            },
 
             /*
             |--------------------------------------------------------------------------
@@ -485,8 +680,16 @@ return [
                 );
             },
 
+            /*
+            |--------------------------------------------------------------------------
+            | Réseaux / fluides médicaux
+            |--------------------------------------------------------------------------
+            */
+
             Model\EquipementReseauFluideTable::class => function ($container) {
-                return new Model\EquipementReseauFluideTable($container->get(Adapter::class));
+                return new Model\EquipementReseauFluideTable(
+                    $container->get(Adapter::class)
+                );
             },
 
             /*
@@ -531,7 +734,7 @@ return [
             |--------------------------------------------------------------------------
             */
 
-           Controller\EquipementController::class => function ($container) {
+            Controller\EquipementController::class => function ($container) {
 
                 return new Controller\EquipementController(
 
@@ -547,6 +750,15 @@ return [
                         Model\CentraleTable::class
                     ),
 
+                    /*
+                     * IMPORTANT :
+                     * Le contrôleur attend FamilleTable
+                     * en 4ème argument.
+                     */
+                    $container->get(
+                        Model\FamilleTable::class
+                    ),
+
                     $container->get(
                         Model\SiteTable::class
                     ),
@@ -557,6 +769,22 @@ return [
                 );
             },
 
+            /*
+            |--------------------------------------------------------------------------
+            | Relevé
+            |--------------------------------------------------------------------------
+            */
+
+            Controller\ReleveController::class => function ($container) {
+                return new Controller\ReleveController(
+                    $container->get(
+                        Model\ReleveTable::class
+                    ),
+                    $container->get(
+                        Model\EquipementTable::class
+                    )
+                );
+            },
 
             /*
             |--------------------------------------------------------------------------
@@ -571,8 +799,6 @@ return [
                     )
                 );
             },
-
-           
 
             /*
             |--------------------------------------------------------------------------
@@ -607,8 +833,8 @@ return [
             |--------------------------------------------------------------------------
             */
 
-            Controller\RapportController::class => function ($container) {
-                return new Controller\RapportController(
+            Controller\ReportController::class => function ($container) {
+                return new Controller\ReportController(
                     $container->get(Adapter::class)
                 );
             },
@@ -693,6 +919,9 @@ return [
                     ),
                     $container->get(
                         Model\VilleTable::class
+                    ),
+                    $container->get(
+                        Model\PaysTable::class
                     )
                 );
             },
@@ -709,19 +938,17 @@ return [
                         Model\CentraleTable::class
                     ),
                     $container->get(
-                        Model\SiteTable::class
-                    ),
-                    $container->get(
                         Model\FamilleTable::class
                     )
                 );
             },
 
-             /*
+            /*
             |--------------------------------------------------------------------------
             | Type équipement
             |--------------------------------------------------------------------------
             */
+
             Controller\TypeEquipementController::class => function ($container) {
                 return new Controller\TypeEquipementController(
                     $container->get(
@@ -730,11 +957,23 @@ return [
                 );
             },
 
+            /*
+            |--------------------------------------------------------------------------
+            | Réseaux / fluides médicaux
+            |--------------------------------------------------------------------------
+            */
+
             Controller\EquipementReseauFluideController::class => function ($container) {
                 return new Controller\EquipementReseauFluideController(
-                    $container->get(Model\EquipementReseauFluideTable::class),
-                    $container->get(Model\CentraleTable::class),
-                    $container->get(Model\TypeEquipementTable::class)
+                    $container->get(
+                        Model\EquipementReseauFluideTable::class
+                    ),
+                    $container->get(
+                        Model\CentraleTable::class
+                    ),
+                    $container->get(
+                        Model\TypeEquipementTable::class
+                    )
                 );
             },
         ],
@@ -904,28 +1143,19 @@ return [
             |--------------------------------------------------------------------------
             | TYPE D'ÉQUIPEMENT
             |--------------------------------------------------------------------------
-            |
-            | ATTENTION :
-            |
-            | Laminas cherche :
-            |
-            | application/type-equipement/index
-            |
-            | donc les clés utilisent un TIRET.
-            |
             */
 
             'application/type-equipement/index'
-                => __DIR__ . '/../view/application/parametre/type-equipement/index.phtml',
+                => __DIR__ . '/../view/application/parametre/type_equipement/index.phtml',
 
             'application/type-equipement/add'
-                => __DIR__ . '/../view/application/parametre/type-equipement/add.phtml',
+                => __DIR__ . '/../view/application/parametre/type_equipement/add.phtml',
 
             'application/type-equipement/edit'
-                => __DIR__ . '/../view/application/parametre/type-equipement/edit.phtml',
+                => __DIR__ . '/../view/application/parametre/type_equipement/edit.phtml',
 
             'application/type-equipement/form'
-                => __DIR__ . '/../view/application/parametre/type-equipement/form.phtml',
+                => __DIR__ . '/../view/application/parametre/type_equipement/form.phtml',
 
             /*
             |--------------------------------------------------------------------------
@@ -951,6 +1181,20 @@ return [
             'application/equipement/historique'
                 => __DIR__ . '/../view/application/parametre/equipement/historique.phtml',
 
+            /*
+            |--------------------------------------------------------------------------
+            | RELEVÉS D'ÉQUIPEMENT
+            |--------------------------------------------------------------------------
+            */
+
+            'application/equipement/releve/index'
+                => __DIR__ . '/../view/application/parametre/equipement/releve/index.phtml',
+
+            'application/equipement/releve/add'
+                => __DIR__ . '/../view/application/parametre/equipement/releve/add.phtml',
+
+            'application/equipement/releve/edit'
+                => __DIR__ . '/../view/application/parametre/equipement/releve/edit.phtml',
 
             /*
             |--------------------------------------------------------------------------

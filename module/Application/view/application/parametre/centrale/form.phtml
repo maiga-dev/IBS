@@ -1,60 +1,192 @@
 <?php
-/** @var Laminas\View\Renderer\PhpRenderer $this */
+
+declare(strict_types=1);
+
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ */
+
 $erreur = $erreur ?? null;
-$item = $item ?? ['type_centrale' => '', 'id_site' => null, 'id_famille' => null];
-$sites = $sites ?? [];
+
+$item = $item ?? [
+    'type_centrale' => '',
+    'id_famille'    => null,
+];
+
 $familles = $familles ?? [];
+
 $mode = $mode ?? 'ajout';
+
 $action = $mode === 'modification'
-    ? $this->url('centrale', ['action' => 'edit', 'id' => $item['id_centrale'] ?? null])
-    : $this->url('centrale', ['action' => 'add']);
+    ? $this->url('centrale', [
+        'action' => 'edit',
+        'id'     => $item['id_centrale'] ?? null,
+    ])
+    : $this->url('centrale', [
+        'action' => 'add',
+    ]);
+
 ?>
+
 <div class="dashboard">
+
     <div class="dashboard-title">
+
         <div>
-             <a href="<?= $this->url('centrale') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
-            <h1><?= $mode === 'modification' ? 'Modifier la centrale' : 'Ajouter une centrale' ?></h1>
+
+            <h1>
+                <?= $mode === 'modification'
+                    ? 'Modifier le type'
+                    : 'Ajouter le type'
+                ?>
+            </h1>
+
+            <p>
+                Créez une centrale en renseignant son type
+                d'équipement et sa famille.
+            </p>
+
         </div>
+
     </div>
 
-    <div class="dashboard-panel" style="max-width:520px;">
-        <?php if ($erreur): ?>
-            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
-        <?php endif; ?>
 
-        <form method="post" action="<?= $action ?>">
-            <div class="auth-field">
-                <label for="type_centrale">Type de centrale</label>
-                <input type="text" id="type_centrale" name="type_centrale"
-                       value="<?= $this->escapeHtmlAttr($item['type_centrale'] ?? '') ?>" required autofocus>
+    <div class="dashboard-panel form-panel">
+
+        <div class="form-card">
+
+            <div class="form-card-header">
+
+               
+                <div>
+
+                    <h4>
+                        Informations du type d'équipement
+                    </h4>
+
+                   
+                </div>
+
             </div>
-            <div class="auth-field">
-                <label for="id_site">Site</label>
-                <select id="id_site" name="id_site" required
-                        style="width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;">
-                    <option value="">— Sélectionner —</option>
-                    <?php foreach ($sites as $s): ?>
-                        <option value="<?= (int) $s['id_site'] ?>"
-                            <?= ((int) ($item['id_site'] ?? 0) === (int) $s['id_site']) ? 'selected' : '' ?>>
-                            <?= $this->escapeHtml($s['nom_site']) ?>
+
+
+            <?php if ($erreur): ?>
+
+                <div class="auth-error form-error">
+
+                    <?= $this->escapeHtml($erreur) ?>
+
+                </div>
+
+            <?php endif; ?>
+
+
+            <form
+                method="post"
+                action="<?= $action ?>"
+                class="ibs-form"
+            >
+
+                <!-- FAMILLE -->
+
+                <div class="auth-field">
+
+                    <label for="id_famille">
+                        Famille
+                    </label>
+
+                    <select
+                        id="id_famille"
+                        name="id_famille"
+                        autofocus
+                    >
+
+                        <option value="">
+                            Sélectionner une famille
                         </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="auth-field">
-                <label for="id_famille">Famille</label>
-                <select id="id_famille" name="id_famille"
-                        style="width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;">
-                    <option value="">— Aucune —</option>
-                    <?php foreach ($familles as $f): ?>
-                        <option value="<?= (int) $f['id_famille'] ?>"
-                            <?= ((int) ($item['id_famille'] ?? 0) === (int) $f['id_famille']) ? 'selected' : '' ?>>
-                            <?= $this->escapeHtml($f['nom_famille']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <button type="submit" class="auth-submit">Enregistrer</button>
-        </form>
+
+                        <?php foreach ($familles as $famille): ?>
+
+                            <option
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) $famille['id_famille']
+                                ) ?>"
+                                <?= (string) (
+                                    $item['id_famille'] ?? ''
+                                ) === (string) (
+                                    $famille['id_famille']
+                                )
+                                    ? 'selected'
+                                    : ''
+                                ?>
+                            >
+
+                                <?= $this->escapeHtml(
+                                    (string) $famille['nom_famille']
+                                ) ?>
+
+                            </option>
+
+                        <?php endforeach; ?>
+
+                    </select>
+
+                </div>
+
+
+                <!-- TYPE DE CENTRALE -->
+
+                <div class="auth-field">
+
+                    <label for="type_centrale">
+                        Type d'équipement
+                    </label>
+
+                    <input
+                        type="text"
+                        id="type_centrale"
+                        name="type_centrale"
+                        value="<?= $this->escapeHtmlAttr(
+                            (string) (
+                                $item['type_centrale'] ?? ''
+                            )
+                        ) ?>"
+                        placeholder="Ex. Centrale d’oxygène"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- ACTIONS -->
+
+                <div class="form-actions">
+
+                    <a
+                        href="<?= $this->url('centrale') ?>"
+                        class="form-cancel-button"
+                    >
+                        Annuler
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="auth-submit form-submit-button"
+                    >
+
+                        <?= $mode === 'modification'
+                            ? 'Enregistrer les modifications'
+                            : 'Enregistrer la centrale'
+                        ?>
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
     </div>
+
 </div>

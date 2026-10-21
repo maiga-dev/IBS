@@ -1,0 +1,634 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ * @var array $types
+ * @var array $sites
+ * @var array $centrales
+ * @var array $familles
+ * @var array $postData
+ * @var string|null $error
+ */
+
+$types = $types ?? [];
+$sites = $sites ?? [];
+$centrales = $centrales ?? [];
+$familles = $familles ?? [];
+$postData = $postData ?? [];
+$error = $error ?? null;
+
+$idFamille = (int) (
+    $postData['id_famille'] ?? 0
+);
+
+$idTypeEquipement = (int) (
+    $postData['id_type_equipement'] ?? 0
+);
+
+$idSite = (int) (
+    $postData['id_site'] ?? 0
+);
+
+$idCentrale = (int) (
+    $postData['id_centrale'] ?? 0
+);
+
+$designation = (string) (
+    $postData['designation'] ?? ''
+);
+
+$numeroSerie = (string) (
+    $postData['numero_serie'] ?? ''
+);
+
+$marque = (string) (
+    $postData['marque'] ?? ''
+);
+
+$modele = (string) (
+    $postData['modele'] ?? ''
+);
+
+$dateMiseEnService = (string) (
+    $postData['date_mise_en_service'] ?? ''
+);
+
+$heureFonctionnement = (int) (
+    $postData['heure_fonctionnement'] ?? 0
+);
+
+$periodicite = (string) (
+    $postData['periodicite'] ?? ''
+);
+
+$dateProchaineMaintenance = (string) (
+    $postData['date_prochaine_maintenance'] ?? ''
+);
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-header">
+
+        <div>
+            <h1>Ajouter un équipement</h1>
+
+            <p>
+                Enregistrer un nouvel équipement dans le parc.
+            </p>
+        </div>
+
+    </div>
+
+    <?php if ($error): ?>
+
+        <div class="alert alert-danger">
+            <?= $this->escapeHtml($error) ?>
+        </div>
+
+    <?php endif; ?>
+
+    <div class="dashboard-panel">
+
+        <form
+            method="post"
+            action="<?= $this->url('equipement', [
+                'action' => 'add',
+            ]) ?>"
+        >
+
+            <!-- =========================================
+                 IDENTIFICATION
+                 ========================================= -->
+
+            <div class="form-section">
+
+                <div class="form-section-header">
+                    <h2>Identification</h2>
+                </div>
+
+                <div class="form-grid">
+
+                    <!-- FAMILLE -->
+
+                    <div class="form-group">
+
+                        <label for="id_famille">
+                            Famille
+                            <span class="required">*</span>
+                        </label>
+
+                        <select
+                            name="id_famille"
+                            id="id_famille"
+                            class="ibs-input"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionner une famille
+                            </option>
+
+                            <?php foreach ($familles as $famille): ?>
+
+                                <?php
+                                $familleId = (int) (
+                                    $famille['id_famille'] ?? 0
+                                );
+
+                                $familleNom = (string) (
+                                    $famille['nom_famille'] ?? ''
+                                );
+                                ?>
+
+                                <option
+                                    value="<?= $familleId ?>"
+                                    <?= $familleId === $idFamille
+                                        ? 'selected'
+                                        : '' ?>
+                                >
+                                    <?= $this->escapeHtml(
+                                        $familleNom
+                                    ) ?>
+                                </option>
+
+                            <?php endforeach; ?>
+
+                        </select>
+
+                    </div>
+
+                    <!-- TYPE ÉQUIPEMENT -->
+
+                    <div class="form-group">
+
+                        <label for="id_type_equipement">
+                            Type d'équipement
+                            <span class="required">*</span>
+                        </label>
+
+                        <select
+                            name="id_type_equipement"
+                            id="id_type_equipement"
+                            class="ibs-input"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionner un type
+                            </option>
+
+                            <?php foreach ($types as $type): ?>
+
+                                <?php
+                                $typeId = (int) (
+                                    $type['id_type_equipement'] ?? 0
+                                );
+
+                                $nomType = (string) (
+                                    $type['nom_type']
+                                    ?? $type['nom_type_equipement']
+                                    ?? $type['type_equipement']
+                                    ?? $type['nom']
+                                    ?? ''
+                                );
+                                ?>
+
+                                <option
+                                    value="<?= $typeId ?>"
+                                    <?= $typeId === $idTypeEquipement
+                                        ? 'selected'
+                                        : '' ?>
+                                >
+                                    <?= $this->escapeHtml(
+                                        $nomType
+                                    ) ?>
+                                </option>
+
+                            <?php endforeach; ?>
+
+                        </select>
+
+                    </div>
+
+                    <!-- DÉSIGNATION -->
+
+                    <div class="form-group">
+
+                        <label for="designation">
+                            Désignation
+                        </label>
+
+                        <input
+                            type="text"
+                            name="designation"
+                            id="designation"
+                            class="ibs-input"
+                            value="<?= $this->escapeHtmlAttr(
+                                $designation
+                            ) ?>"
+                            placeholder="Désignation de l'équipement"
+                        >
+
+                    </div>
+
+                    <!-- NUMÉRO DE SÉRIE -->
+
+                    <div class="form-group">
+
+                        <label for="numero_serie">
+                            Numéro de série
+                        </label>
+
+                        <input
+                            type="text"
+                            name="numero_serie"
+                            id="numero_serie"
+                            class="ibs-input"
+                            value="<?= $this->escapeHtmlAttr(
+                                $numeroSerie
+                            ) ?>"
+                            placeholder="Numéro de série"
+                        >
+
+                    </div>
+
+                    <!-- MARQUE -->
+
+                    <div class="form-group">
+
+                        <label for="marque">
+                            Marque
+                        </label>
+
+                        <input
+                            type="text"
+                            name="marque"
+                            id="marque"
+                            class="ibs-input"
+                            value="<?= $this->escapeHtmlAttr(
+                                $marque
+                            ) ?>"
+                            placeholder="Marque"
+                        >
+
+                    </div>
+
+                    <!-- MODÈLE -->
+
+                    <div class="form-group">
+
+                        <label for="modele">
+                            Modèle
+                        </label>
+
+                        <input
+                            type="text"
+                            name="modele"
+                            id="modele"
+                            class="ibs-input"
+                            value="<?= $this->escapeHtmlAttr(
+                                $modele
+                            ) ?>"
+                            placeholder="Modèle"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 AFFECTATION
+                 ========================================= -->
+
+            <div class="form-section">
+
+                <div class="form-section-header">
+                    <h2>Affectation</h2>
+                </div>
+
+                <div class="form-grid">
+
+                    <!-- CENTRALE -->
+
+                    <div class="form-group">
+
+                        <label for="id_centrale">
+                            Centrale
+                            <span class="required">*</span>
+                        </label>
+
+                        <select
+                            name="id_centrale"
+                            id="id_centrale"
+                            class="ibs-input"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionner une centrale
+                            </option>
+
+                            <?php foreach ($centrales as $centrale): ?>
+
+                                <?php
+                                $centraleId = (int) (
+                                    $centrale['id_centrale'] ?? 0
+                                );
+
+                                $centraleFamille = (int) (
+                                    $centrale['id_famille'] ?? 0
+                                );
+
+                                $nomCentrale = (string) (
+                                    $centrale['type_centrale'] ?? ''
+                                );
+                                ?>
+
+                                <option
+                                    value="<?= $centraleId ?>"
+                                    data-famille="<?= $centraleFamille ?>"
+                                    <?= $centraleId === $idCentrale
+                                        ? 'selected'
+                                        : '' ?>
+                                >
+                                    <?= $this->escapeHtml(
+                                        $nomCentrale
+                                    ) ?>
+                                </option>
+
+                            <?php endforeach; ?>
+
+                        </select>
+
+                    </div>
+
+                    <!-- SITE -->
+
+                    <div class="form-group">
+
+                        <label for="id_site">
+                            Site
+                            <span class="required">*</span>
+                        </label>
+
+                        <select
+                            name="id_site"
+                            id="id_site"
+                            class="ibs-input"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionner un site
+                            </option>
+
+                            <?php foreach ($sites as $site): ?>
+
+                                <?php
+                                $siteId = (int) (
+                                    $site['id_site'] ?? 0
+                                );
+
+                                $nomSite = (string) (
+                                    $site['nom_site'] ?? ''
+                                );
+                                ?>
+
+                                <option
+                                    value="<?= $siteId ?>"
+                                    <?= $siteId === $idSite
+                                        ? 'selected'
+                                        : '' ?>
+                                >
+                                    <?= $this->escapeHtml(
+                                        $nomSite
+                                    ) ?>
+                                </option>
+
+                            <?php endforeach; ?>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 MAINTENANCE
+                 ========================================= -->
+
+            <div class="form-section">
+
+                <div class="form-section-header">
+                    <h2>Maintenance</h2>
+                </div>
+
+                <div class="form-grid">
+
+                    <!-- HEURES DE FONCTIONNEMENT -->
+
+                    <div class="form-group">
+
+                        <label for="heure_fonctionnement">
+                            Heures de fonctionnement
+                        </label>
+
+                        <input
+                            type="number"
+                            name="heure_fonctionnement"
+                            id="heure_fonctionnement"
+                            class="ibs-input"
+                            min="0"
+                            step="1"
+                            value="<?= $this->escapeHtmlAttr(
+                                (string) $heureFonctionnement
+                            ) ?>"
+                            placeholder="0"
+                        >
+
+                        <small class="form-help">
+                            Nombre total d'heures de fonctionnement.
+                        </small>
+
+                    </div>
+
+                    <!-- DATE DE MISE EN SERVICE -->
+
+                    <div class="form-group">
+
+                        <label for="date_mise_en_service">
+                            Date de mise en service
+                        </label>
+
+                        <input
+                            type="date"
+                            name="date_mise_en_service"
+                            id="date_mise_en_service"
+                            class="ibs-input"
+                            value="<?= $this->escapeHtmlAttr(
+                                $dateMiseEnService
+                            ) ?>"
+                        >
+
+                    </div>
+
+                    <!-- PÉRIODICITÉ -->
+
+                    <div class="form-group">
+
+                        <label for="periodicite">
+                            Périodicité
+                        </label>
+
+                        <input
+                            type="text"
+                            name="periodicite"
+                            id="periodicite"
+                            class="ibs-input"
+                            value="<?= $this->escapeHtmlAttr(
+                                $periodicite
+                            ) ?>"
+                            placeholder="Ex. 3 mois, 6 mois, 1 an"
+                        >
+
+                    </div>
+
+                    <!-- PROCHAINE MAINTENANCE -->
+
+                    <div class="form-group">
+
+                        <label for="date_prochaine_maintenance">
+                            Prochaine maintenance
+                        </label>
+
+                        <input
+                            type="date"
+                            name="date_prochaine_maintenance"
+                            id="date_prochaine_maintenance"
+                            class="ibs-input"
+                            value="<?= $this->escapeHtmlAttr(
+                                $dateProchaineMaintenance
+                            ) ?>"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 ACTIONS
+                 ========================================= -->
+
+            <div class="form-actions">
+
+                <a
+                    href="<?= $this->url('equipement') ?>"
+                    class="btn btn-secondary"
+                >
+                    Annuler
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Enregistrer l'équipement
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const familleSelect =
+        document.getElementById('id_famille');
+
+    const centraleSelect =
+        document.getElementById('id_centrale');
+
+    if (!familleSelect || !centraleSelect) {
+        return;
+    }
+
+    function filtrerCentrales() {
+
+        const familleId =
+            String(familleSelect.value || '').trim();
+
+        Array.from(centraleSelect.options).forEach(function (option) {
+
+            if (option.value === '') {
+                option.hidden = false;
+                return;
+            }
+
+            const optionFamille =
+                String(
+                    option.getAttribute('data-famille') || ''
+                ).trim();
+
+            /*
+             * Aucune famille sélectionnée :
+             * on affiche toutes les centrales.
+             */
+            if (familleId === '') {
+                option.hidden = false;
+                return;
+            }
+
+            /*
+             * Famille sélectionnée :
+             * on affiche uniquement les centrales
+             * appartenant à cette famille.
+             */
+            option.hidden =
+                optionFamille !== familleId;
+        });
+
+        /*
+         * Si la centrale actuellement sélectionnée
+         * ne correspond plus à la famille choisie,
+         * on la remet à vide.
+         */
+        const selectedOption =
+            centraleSelect.options[
+                centraleSelect.selectedIndex
+            ];
+
+        if (
+            selectedOption &&
+            selectedOption.value !== '' &&
+            selectedOption.hidden
+        ) {
+            centraleSelect.value = '';
+        }
+    }
+
+    familleSelect.addEventListener(
+        'change',
+        filtrerCentrales
+    );
+
+    filtrerCentrales();
+});
+</script>

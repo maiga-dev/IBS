@@ -1,50 +1,150 @@
 <?php
 /** @var Laminas\View\Renderer\PhpRenderer $this */
+
 $equipements = $equipements ?? [];
 ?>
+
 <div class="dashboard">
+
     <div class="dashboard-title">
         <div>
             <h1>Réseau fluide médical</h1>
             <p>Unités de détente, alarmes, prises — par réseau de distribution.</p>
         </div>
-        <a href="<?= $this->url('equipement_reseau_fluide', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+
+        <a
+            href="<?= $this->url(
+                'equipement_reseau_fluide',
+                ['action' => 'add']
+            ) ?>"
+            class="auth-submit"
+        >
             + Ajouter
         </a>
     </div>
 
     <div class="dashboard-panel">
+
         <?php if (empty($equipements)): ?>
+
             <div class="empty-dashboard">
                 <div class="empty-dashboard-icon">✓</div>
                 <strong>Aucun équipement de réseau enregistré</strong>
             </div>
+
         <?php else: ?>
+
+            <div class="users-actions-toolbar">
+                <div class="users-actions-label">Recherche :</div>
+
+                <div class="users-action-search">
+                    <span class="users-action-search-icon">⌕</span>
+                    <input
+                        type="text"
+                        id="searchReseaux"
+                        placeholder="Rechercher un équipement..."
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+
             <div class="table-wrapper">
-                <table class="ibs-table">
+                <table class="ibs-table" id="tableReseaux">
                     <thead>
-                        <tr><th>Désignation</th><th>Type</th><th>Réseau</th><th>Nombre</th><th>P. entrée</th><th>P. sortie</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($equipements as $e): ?>
                         <tr>
-                            <td><?= $this->escapeHtml($e['designation']) ?></td>
+                            <th>N°</th>
+                            <th>Désignation</th>
+                            <th>Type</th>
+                            <th>Réseau</th>
+                            <th>Nombre</th>
+                            <th>P. entrée</th>
+                            <th>P. sortie</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    <?php foreach ($equipements as $index => $e): ?>
+                        <?php $id = $e['id_equipement_reseau_fluide'] ?? 0; ?>
+                        <tr>
+                            <td><?= $index + 1 ?></td>
+                            <td><?= $this->escapeHtml((string) ($e['designation'] ?? '—')) ?></td>
                             <td><?= $this->escapeHtml((string) ($e['nom_type'] ?? '—')) ?></td>
                             <td><?= $this->escapeHtml((string) ($e['type_centrale'] ?? '—')) ?></td>
                             <td><?= $this->escapeHtml((string) ($e['nombre'] ?? '—')) ?></td>
-                            <td><?= $e['pression_entree'] !== null ? $this->escapeHtml((string) $e['pression_entree']) : '—' ?></td>
-                            <td><?= $e['pression_sortie'] !== null ? $this->escapeHtml((string) $e['pression_sortie']) : '—' ?></td>
-                            <td style="text-align:right;white-space:nowrap;">
-                                <a href="<?= $this->url('equipement_reseau_fluide', ['action' => 'edit', 'id' => $e['id_equipement_reseau_fluide']]) ?>">Modifier</a>
-                                &nbsp;·&nbsp;
-                                <a href="<?= $this->url('equipement_reseau_fluide', ['action' => 'delete', 'id' => $e['id_equipement_reseau_fluide']]) ?>"
-                                   onclick="return confirm('Supprimer cet équipement de réseau ?');">Supprimer</a>
+                            <td><?= $this->escapeHtml((string) ($e['pression_entree'] ?? '—')) ?></td>
+                            <td><?= $this->escapeHtml((string) ($e['pression_sortie'] ?? '—')) ?></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a
+                                        href="<?= $this->url(
+                                            'equipement_reseau_fluide',
+                                            ['action' => 'view', 'id' => $id]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Voir"
+                                        aria-label="Voir"
+                                    >👁</a>
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'equipement_reseau_fluide',
+                                            ['action' => 'edit', 'id' => $id]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Modifier"
+                                        aria-label="Modifier"
+                                    >✎</a>
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'equipement_reseau_fluide',
+                                            ['action' => 'delete', 'id' => $id]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Supprimer"
+                                        aria-label="Supprimer"
+                                        onclick="return confirm('Supprimer cet équipement de réseau ?');"
+                                    >🗑</a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+
         <?php endif; ?>
+
     </div>
 </div>
+
+<?php if (!empty($equipements)): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('searchReseaux');
+    const rows = Array.from(
+        document.querySelectorAll('#tableReseaux tbody tr')
+    );
+
+    function normaliser(texte) {
+        return String(texte || '')
+            .toLocaleLowerCase('fr-FR')
+            .normalize('NFD')
+            .replace(/[̀-ͯ]/g, '');
+    }
+
+    input.addEventListener('input', function () {
+        const recherche = normaliser(input.value.trim());
+
+        rows.forEach(function (row) {
+            const contenu = normaliser(row.textContent);
+            row.style.display =
+                recherche === '' || contenu.includes(recherche)
+                    ? ''
+                    : 'none';
+        });
+    });
+});
+</script>
+<?php endif; ?>

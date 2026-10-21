@@ -1,0 +1,989 @@
+<?php
+
+$session = $session ?? [];
+$operation = $operation ?? '';
+$techniciens = $techniciens ?? [];
+$erreurs = $erreurs ?? [];
+$postData = $postData ?? [];
+$csrf_token = $csrf_token ?? '';
+
+$titres = [
+    'affecter' => 'Affecter un technicien',
+    'demarrer' => 'Démarrer la maintenance',
+    'suspendre' => 'Suspendre la maintenance',
+    'arreter'  => 'Arrêter la maintenance',
+    'terminer' => 'Terminer la maintenance',
+];
+
+$descriptions = [
+    'affecter' => 'Sélectionnez le technicien qui sera chargé de cette maintenance.',
+    'demarrer' => 'Confirmez le démarrage de la maintenance.',
+    'suspendre' => 'Indiquez la raison de la suspension de la maintenance.',
+    'arreter'  => 'Indiquez la raison de l’arrêt de la maintenance.',
+    'terminer' => 'Renseignez les informations finales de la maintenance.',
+];
+
+$idSession = (int) ($session['id_session'] ?? 0);
+$statut = (string) ($session['statut'] ?? 'planifiee');
+
+$action = $operation;
+
+$needsJustification = in_array(
+    $operation,
+    ['suspendre', 'arreter'],
+    true
+);
+
+$needsFinal = $operation === 'terminer';
+
+$isResume = (
+    $operation === 'demarrer'
+    && strtolower(trim($statut)) === 'suspendue'
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Informations de la session
+|--------------------------------------------------------------------------
+*/
+
+$pays = trim((string) ($session['nom_pays'] ?? ''));
+$ville = trim((string) ($session['nom_ville'] ?? ''));
+$site = trim((string) ($session['nom_site'] ?? ''));
+$centrale = trim((string) ($session['type_centrale'] ?? ''));
+
+$technicien = trim(
+    (string) ($session['technicien_prenom'] ?? '')
+    . ' '
+    . (string) ($session['technicien_nom'] ?? '')
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Type de maintenance
+|--------------------------------------------------------------------------
+*/
+
+$typeMaintenance = trim(
+    (string) (
+        $postData['type_maintenance']
+        ?? $session['type_maintenance']
+        ?? ''
+    )
+);
+
+$typeMaintenanceNormalise = strtolower(
+    trim($typeMaintenance)
+);
+
+$estPreventive = (
+    $typeMaintenanceNormalise === 'preventive'
+    || $typeMaintenanceNormalise === 'préventive'
+);
+
+$estCorrective = (
+    $typeMaintenanceNormalise === 'corrective'
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Couverture
+|--------------------------------------------------------------------------
+*/
+
+$couverture = trim(
+    (string) (
+        $postData['couverture']
+        ?? $session['couverture']
+        ?? 'contrat'
+    )
+);
+
+$couvertureNormalisee = strtolower(
+    trim($couverture)
+);
+
+$estContrat = $couvertureNormalisee === 'contrat';
+$estExtra = $couvertureNormalisee === 'extra';
+
+
+/*
+|--------------------------------------------------------------------------
+| Date
+|--------------------------------------------------------------------------
+*/
+
+$dateSession = trim(
+    (string) ($session['date_session'] ?? '')
+);
+
+$dateAffichee = $dateSession;
+
+if ($dateSession !== '') {
+    try {
+        $dateObj = new DateTime($dateSession);
+        $dateAffichee = $dateObj->format('d/m/Y');
+    } catch (Throwable $e) {
+        $dateAffichee = $dateSession;
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| Valeurs du formulaire
+|--------------------------------------------------------------------------
+*/
+
+$diagnosticFinal = (string) (
+    $postData['diagnostic_final']
+    ?? $session['diagnostic_final']
+    ?? ''
+);
+
+$compteRendu = (string) (
+    $postData['compte_rendu']
+    ?? ''
+);
+
+$commentaire = (string) (
+    $postData['commentaire']
+    ?? ''
+);
+
+$justification = (string) (
+    $postData['justification']
+    ?? ''
+);
+
+$idTechnicienSelectionne = (int) (
+    $postData['id_technicien']
+    ?? $session['id_technicien']
+    ?? 0
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Action du formulaire
+|--------------------------------------------------------------------------
+*/
+
+$formAction = $this->url(
+    'maintenance',
+    [
+        'action' => $action,
+        'id' => $idSession,
+    ]
+);
+
+?>
+
+<div class="dashboard maintenance-action-page">
+
+    <!-- =========================================================
+         EN-TÊTE
+         ========================================================= -->
+
+    <div class="dashboard-header maintenance-action-header">
+
+        <div>
+
+            <a
+                href="<?= $this->url(
+                    'maintenance',
+                    [
+                        'action' => 'detail',
+                        'id' => $idSession,
+                    ]
+                ) ?>"
+                class="maintenance-back"
+            >
+                ← Retour au détail
+            </a>
+
+            <h1>
+                <?= $this->escapeHtml(
+                    $titres[$operation] ?? 'Action maintenance'
+                ) ?>
+            </h1>
+
+            <p>
+
+                Maintenance N° <?= $idSession ?>
+
+                <?php if ($centrale !== ''): ?>
+                    — <?= $this->escapeHtml($centrale) ?>
+                <?php endif; ?>
+
+                <?php if ($site !== ''): ?>
+                    — <?= $this->escapeHtml($site) ?>
+                <?php endif; ?>
+
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         ERREURS
+         ========================================================= -->
+
+    <?php if (!empty($erreurs)): ?>
+
+        <div class="alert alert-danger maintenance-action-alert">
+
+            <?php foreach ($erreurs as $erreur): ?>
+
+                <div>
+                    <?= $this->escapeHtml((string) $erreur) ?>
+                </div>
+
+            <?php endforeach; ?>
+
+        </div>
+
+    <?php endif; ?>
+
+
+    <!-- =========================================================
+         FORMULAIRE
+         ========================================================= -->
+
+    <section class="dashboard-panel maintenance-action-form-card">
+
+        <div class="maintenance-section-heading">
+
+            <div>
+
+                <span class="maintenance-section-kicker">
+                    MAINTENANCE N° <?= $idSession ?>
+                </span>
+
+                <h2>
+                    <?= $this->escapeHtml(
+                        $titres[$operation] ?? 'Action maintenance'
+                    ) ?>
+                </h2>
+
+                <p>
+                    <?= $this->escapeHtml(
+                        $descriptions[$operation]
+                        ?? 'Renseignez les informations demandées.'
+                    ) ?>
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <form
+            method="post"
+            enctype="multipart/form-data"
+            action="<?= $this->escapeHtmlAttr($formAction) ?>"
+            class="maintenance-action-form"
+        >
+
+            <!-- CSRF -->
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="<?= $this->escapeHtmlAttr($csrf_token) ?>"
+            >
+
+
+            <!-- =================================================
+                 AFFECTER
+                 ================================================= -->
+
+            <?php if ($operation === 'affecter'): ?>
+
+                <div class="maintenance-form-group">
+
+                    <label for="id_technicien">
+
+                        Technicien
+
+                        <span>*</span>
+
+                    </label>
+
+                    <select
+                        name="id_technicien"
+                        id="id_technicien"
+                        class="form-select maintenance-select"
+                        required
+                    >
+
+                        <option value="">
+                            Sélectionner un technicien
+                        </option>
+
+                        <?php foreach ($techniciens as $technicienItem): ?>
+
+                            <?php
+
+                            $idTechnicien = (int) (
+                                $technicienItem['id_utilisateur']
+                                ?? 0
+                            );
+
+                            $nomTechnicien = trim(
+                                (string) (
+                                    $technicienItem['prenom']
+                                    ?? ''
+                                )
+                                . ' '
+                                . (string) (
+                                    $technicienItem['nom']
+                                    ?? ''
+                                )
+                            );
+
+                            ?>
+
+                            <option
+                                value="<?= $idTechnicien ?>"
+                                <?= $idTechnicien === $idTechnicienSelectionne
+                                    ? 'selected'
+                                    : '' ?>
+                            >
+                                <?= $this->escapeHtml(
+                                    $nomTechnicien
+                                ) ?>
+                            </option>
+
+                        <?php endforeach; ?>
+
+                    </select>
+
+                </div>
+
+            <?php endif; ?>
+
+
+            <!-- =================================================
+                 DÉMARRER
+                 ================================================= -->
+
+            <?php if ($operation === 'demarrer'): ?>
+
+                <div class="maintenance-confirm-box">
+
+                    <div class="maintenance-confirm-icon">
+                        ✓
+                    </div>
+
+                    <div>
+
+                        <strong>
+
+                            <?= $isResume
+                                ? 'Reprendre la maintenance'
+                                : 'Démarrer la maintenance'
+                            ?>
+
+                        </strong>
+
+                        <p>
+
+                            <?= $isResume
+                                ? 'La maintenance actuellement suspendue sera reprise.'
+                                : 'La maintenance sera passée à l’état en cours.'
+                            ?>
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            <?php endif; ?>
+
+
+            <!-- =================================================
+                 SUSPENDRE / ARRÊTER
+                 ================================================= -->
+
+            <?php if ($needsJustification): ?>
+
+                <div class="maintenance-form-group">
+
+                    <label for="justification">
+
+                        <?= $operation === 'suspendre'
+                            ? 'Motif de suspension'
+                            : 'Motif de l’arrêt'
+                        ?>
+
+                        <span>*</span>
+
+                    </label>
+
+                    <textarea
+                        name="justification"
+                        id="justification"
+                        class="maintenance-textarea maintenance-auto-expand"
+                        rows="4"
+                        required
+                        placeholder="<?= $operation === 'suspendre'
+                            ? 'Indiquez pourquoi la maintenance doit être suspendue...'
+                            : 'Indiquez pourquoi la maintenance doit être arrêtée...'
+                        ?>"
+                    ><?= $this->escapeHtml(
+                        $justification
+                    ) ?></textarea>
+
+                </div>
+
+            <?php endif; ?>
+
+
+            <!-- =================================================
+                 TERMINER — RAPPORT PMS / CMS
+                 ================================================= -->
+
+            <?php if ($needsFinal): ?>
+
+                <div class="pms-report">
+
+                    <!-- EN-TÊTE -->
+
+                    <div class="pms-report-header">
+
+                        <div>
+
+                            <span class="pms-report-kicker">
+                                IBS PULSE
+                            </span>
+
+                            <h2>
+                                PMS / CMS — RAPPORT DE MAINTENANCE
+                            </h2>
+
+                            <p>
+                                Maintenance N° <?= $idSession ?>
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CORPS -->
+
+                    <div class="pms-report-body">
+
+                        <!-- INFORMATIONS -->
+
+                        <div class="pms-info-grid">
+
+                            <div class="pms-info-item">
+
+                                <span class="pms-label">
+                                    Pays
+                                </span>
+
+                                <span class="pms-value">
+                                    <?= $pays !== ''
+                                        ? $this->escapeHtml($pays)
+                                        : '—'
+                                    ?>
+                                </span>
+
+                            </div>
+
+
+                            <div class="pms-info-item">
+
+                                <span class="pms-label">
+                                    Ville
+                                </span>
+
+                                <span class="pms-value">
+                                    <?= $ville !== ''
+                                        ? $this->escapeHtml($ville)
+                                        : '—'
+                                    ?>
+                                </span>
+
+                            </div>
+
+
+                            <div class="pms-info-item">
+
+                                <span class="pms-label">
+                                    Site / Hôpital
+                                </span>
+
+                                <span class="pms-value">
+                                    <?= $site !== ''
+                                        ? $this->escapeHtml($site)
+                                        : '—'
+                                    ?>
+                                </span>
+
+                            </div>
+
+
+                            <div class="pms-info-item">
+
+                                <span class="pms-label">
+                                    Centrale
+                                </span>
+
+                                <span class="pms-value">
+                                    <?= $centrale !== ''
+                                        ? $this->escapeHtml($centrale)
+                                        : '—'
+                                    ?>
+                                </span>
+
+                            </div>
+
+
+                            <div class="pms-info-item">
+
+                                <span class="pms-label">
+                                    Représentant
+                                </span>
+
+                                <span class="pms-value">
+                                    —
+                                </span>
+
+                            </div>
+
+
+                            <div class="pms-info-item">
+
+                                <span class="pms-label">
+                                    Ingénieur / Technicien
+                                </span>
+
+                                <span class="pms-value">
+                                    <?= $technicien !== ''
+                                        ? $this->escapeHtml($technicien)
+                                        : '—'
+                                    ?>
+                                </span>
+
+                            </div>
+
+
+                            <div class="pms-info-item">
+
+                                <span class="pms-label">
+                                    Date
+                                </span>
+
+                                <span class="pms-value">
+                                    <?= $dateAffichee !== ''
+                                        ? $this->escapeHtml($dateAffichee)
+                                        : '—'
+                                    ?>
+                                </span>
+
+                            </div>
+
+
+                            <div class="pms-info-item">
+
+                                <span class="pms-label">
+                                    Statut
+                                </span>
+
+                                <span class="pms-value">
+                                    <?= $this->escapeHtml(
+                                        ucfirst($statut)
+                                    ) ?>
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- TYPE + COUVERTURE -->
+
+                        <div class="pms-choice-section">
+
+                            <div class="pms-choice-group">
+
+                                <span class="pms-choice-title">
+                                    Type de maintenance
+                                </span>
+
+                                <div class="pms-choice-options">
+
+                                    <label class="pms-choice-option">
+
+                                        <input
+                                            type="radio"
+                                            name="type_maintenance"
+                                            value="preventive"
+                                            <?= $estPreventive
+                                                ? 'checked'
+                                                : '' ?>
+                                        >
+
+                                        <span class="pms-radio"></span>
+
+                                        <span>
+                                            Préventive
+                                        </span>
+
+                                    </label>
+
+
+                                    <label class="pms-choice-option">
+
+                                        <input
+                                            type="radio"
+                                            name="type_maintenance"
+                                            value="corrective"
+                                            <?= $estCorrective
+                                                ? 'checked'
+                                                : '' ?>
+                                        >
+
+                                        <span class="pms-radio"></span>
+
+                                        <span>
+                                            Corrective
+                                        </span>
+
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="pms-choice-group">
+
+                                <span class="pms-choice-title">
+                                    Couverture
+                                </span>
+
+                                <div class="pms-choice-options">
+
+                                    <label class="pms-choice-option">
+
+                                        <input
+                                            type="radio"
+                                            name="couverture"
+                                            value="contrat"
+                                            <?= $estContrat
+                                                ? 'checked'
+                                                : '' ?>
+                                        >
+
+                                        <span class="pms-radio"></span>
+
+                                        <span>
+                                            Contrat
+                                        </span>
+
+                                    </label>
+
+
+                                    <label class="pms-choice-option">
+
+                                        <input
+                                            type="radio"
+                                            name="couverture"
+                                            value="extra"
+                                            <?= $estExtra
+                                                ? 'checked'
+                                                : '' ?>
+                                        >
+
+                                        <span class="pms-radio"></span>
+
+                                        <span>
+                                            Extra
+                                        </span>
+
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- DIAGNOSTIC FINAL -->
+
+                        <div class="maintenance-form-group pms-field">
+
+                            <label
+                                for="diagnostic_final"
+                                class="pms-field-label"
+                            >
+
+                                Diagnostic final
+
+                                <span>*</span>
+
+                            </label>
+
+                            <textarea
+                                name="diagnostic_final"
+                                id="diagnostic_final"
+                                class="maintenance-textarea maintenance-auto-expand"
+                                rows="5"
+                                required
+                                placeholder="Décrivez le diagnostic final après l’intervention..."
+                            ><?= $this->escapeHtml(
+                                $diagnosticFinal
+                            ) ?></textarea>
+
+                        </div>
+
+
+                        <!-- COMPTE RENDU -->
+
+                        <div class="maintenance-form-group pms-field">
+
+                            <label
+                                for="compte_rendu"
+                                class="pms-field-label"
+                            >
+
+                                Compte rendu
+
+                                <span>*</span>
+
+                            </label>
+
+                            <textarea
+                                name="compte_rendu"
+                                id="compte_rendu"
+                                class="maintenance-textarea maintenance-auto-expand"
+                                rows="7"
+                                required
+                                placeholder="Décrivez les travaux réalisés, les contrôles effectués et les résultats..."
+                            ><?= $this->escapeHtml(
+                                $compteRendu
+                            ) ?></textarea>
+
+                        </div>
+
+
+                        <!-- COMMENTAIRE -->
+
+                        <div class="maintenance-form-group pms-field">
+
+                            <label
+                                for="commentaire"
+                                class="pms-field-label"
+                            >
+
+                                Commentaire
+
+                            </label>
+
+                            <textarea
+                                name="commentaire"
+                                id="commentaire"
+                                class="maintenance-textarea maintenance-auto-expand"
+                                rows="4"
+                                placeholder="Ajoutez un commentaire si nécessaire..."
+                            ><?= $this->escapeHtml(
+                                $commentaire
+                            ) ?></textarea>
+
+                        </div>
+
+
+                        <!-- FICHIER -->
+
+                        <div class="maintenance-form-group">
+
+                            <label for="fichier">
+
+                                Rapport / pièce jointe
+
+                                <span>*</span>
+
+                            </label>
+
+                            <div class="maintenance-file-upload">
+
+                                <div class="maintenance-file-icon">
+                                    +
+                                </div>
+
+                                <div class="maintenance-file-content">
+
+                                    <input
+                                        type="file"
+                                        name="fichier"
+                                        id="fichier"
+                                        accept=".jpg,.jpeg,.png,.webp,.pdf"
+                                        required
+                                    >
+
+                                    <span
+                                        id="maintenance-file-name"
+                                        class="maintenance-file-name"
+                                    >
+                                        PDF, JPG, PNG ou WEBP — 10 Mo maximum
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            <?php endif; ?>
+
+
+            <!-- =================================================
+                 BOUTONS
+                 ================================================= -->
+
+            <div class="maintenance-form-actions">
+
+                <a
+                    href="<?= $this->url(
+                        'maintenance',
+                        [
+                            'action' => 'detail',
+                            'id' => $idSession,
+                        ]
+                    ) ?>"
+                    class="btn btn-secondary maintenance-action-btn"
+                >
+                    Annuler
+                </a>
+
+
+                <button
+                    type="submit"
+                    class="btn btn-primary maintenance-action-btn"
+                >
+
+                    <?php if ($operation === 'affecter'): ?>
+
+                        Affecter
+
+                    <?php elseif ($operation === 'demarrer'): ?>
+
+                        <?= $isResume
+                            ? 'Reprendre la maintenance'
+                            : 'Démarrer la maintenance'
+                        ?>
+
+                    <?php elseif ($operation === 'suspendre'): ?>
+
+                        Suspendre
+
+                    <?php elseif ($operation === 'arreter'): ?>
+
+                        Arrêter
+
+                    <?php elseif ($operation === 'terminer'): ?>
+
+                        Terminer la maintenance
+
+                    <?php else: ?>
+
+                        Valider
+
+                    <?php endif; ?>
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </section>
+
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    /*
+     * Agrandissement automatique des textarea.
+     */
+    const textareas = document.querySelectorAll(
+        '.maintenance-action-page textarea'
+    );
+
+    textareas.forEach(function (textarea) {
+
+        function autoResize() {
+
+            textarea.style.height = 'auto';
+
+            textarea.style.height =
+                textarea.scrollHeight + 'px';
+        }
+
+        textarea.addEventListener(
+            'input',
+            autoResize
+        );
+
+        autoResize();
+
+    });
+
+
+    /*
+     * Affichage du nom du fichier sélectionné.
+     */
+    const fichier = document.getElementById(
+        'fichier'
+    );
+
+    const fichierNom = document.getElementById(
+        'maintenance-file-name'
+    );
+
+
+    if (fichier && fichierNom) {
+
+        fichier.addEventListener(
+            'change',
+            function () {
+
+                if (
+                    this.files &&
+                    this.files.length > 0
+                ) {
+
+                    fichierNom.textContent =
+                        this.files[0].name;
+
+                } else {
+
+                    fichierNom.textContent =
+                        'PDF, JPG, PNG ou WEBP — 10 Mo maximum';
+
+                }
+
+            }
+        );
+
+    }
+
+});
+</script>

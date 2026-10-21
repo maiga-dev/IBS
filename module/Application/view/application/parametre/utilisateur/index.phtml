@@ -2,105 +2,222 @@
 /** @var Laminas\View\Renderer\PhpRenderer $this */
 
 $utilisateurs = $utilisateurs ?? [];
+
+/*
+ * Préparation des utilisateurs pour la recherche dans le champ Actions.
+ * Les URLs sont générées côté PHP afin de respecter les routes Laminas.
+ */
+$utilisateursActions = [];
+
+foreach ($utilisateurs as $u) {
+
+    $nomComplet = trim(
+        ($u['prenom'] ?? '') . ' ' . ($u['nom'] ?? '')
+    );
+
+    $utilisateursActions[] = [
+        'id' => (string) ($u['id'] ?? ''),
+        'nom' => $nomComplet,
+        'email' => (string) ($u['email'] ?? ''),
+        'modifier' => $this->url(
+            'utilisateur',
+            [
+                'action' => 'edit',
+                'id' => $u['id']
+            ]
+        ),
+        'supprimer' => $this->url(
+            'utilisateur',
+            [
+                'action' => 'delete',
+                'id' => $u['id']
+            ]
+        )
+    ];
+}
 ?>
 
 <div class="dashboard">
 
+    <!-- =====================================================
+         EN-TÊTE DE LA PAGE
+         ===================================================== -->
     <div class="dashboard-title">
+
         <div>
             <h1>Utilisateurs</h1>
             <p>Équipes IBS et leurs rôles.</p>
         </div>
 
         <a
-            href="<?= $this->url('utilisateur', ['action' => 'add']) ?>"
+            href="<?= $this->url(
+                'utilisateur',
+                ['action' => 'add']
+            ) ?>"
             class="auth-submit"
-            style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;"
+            style="
+                width:auto;
+                padding:10px 18px;
+                text-decoration:none;
+                display:inline-block;
+            "
         >
             + Ajouter
         </a>
+
     </div>
 
+
+    <!-- =====================================================
+         PANNEAU PRINCIPAL
+         ===================================================== -->
     <div class="dashboard-panel">
 
         <?php if (empty($utilisateurs)): ?>
 
+            <!-- Aucun utilisateur -->
             <div class="empty-dashboard">
-                <div class="empty-dashboard-icon">✓</div>
-                <strong>Aucun utilisateur enregistré</strong>
+
+                <div class="empty-dashboard-icon">
+                    ✓
+                </div>
+
+                <strong>
+                    Aucun utilisateur enregistré
+                </strong>
+
             </div>
 
         <?php else: ?>
 
+
+            
+
+
+            
+
+            <!-- =================================================
+                 TABLEAU DES UTILISATEURS
+                 ================================================= -->
             <div class="table-wrapper">
 
-                <table class="ibs-table">
+                <table
+                    class="ibs-table"
+                    id="tableUtilisateurs"
+                >
 
                     <thead>
+
                         <tr>
-                            <th>Nom</th>
-                            <th>Email</th>
-                            <th>Téléphone</th>
-                            <th>Rôle</th>
-                            <th></th>
+
+                            <th>
+                                N°
+                            </th>
+
+
+                            <th>
+                                Nom
+                            </th>
+
+                            <th>
+                                Email
+                            </th>
+
+                            <th>
+                                Téléphone
+                            </th>
+
+                            <th>
+                                Rôle
+                            </th>
+
+                            <th>
+                                
+                            </th>
+
                         </tr>
+
                     </thead>
+
 
                     <tbody>
 
-                    <?php foreach ($utilisateurs as $u): ?>
+                    <?php foreach ($utilisateurs as $index => $u): ?>
 
-                        <tr>
+                        <?php
+                        $nomComplet = trim(
+                            ($u['prenom'] ?? '') . ' ' .
+                            ($u['nom'] ?? '')
+                        );
+                        ?>
 
+                        <tr class="utilisateur-row">
+
+                            <!-- N° d'affichage -->
+                            <td>
+                                <?= $this->escapeHtml((string) ($index + 1)) ?>
+                            </td>
+
+
+                            <!-- NOM -->
                             <td>
                                 <?= $this->escapeHtml(
-                                    $u['prenom'] . ' ' . $u['nom']
+                                    $nomComplet ?: '—'
                                 ) ?>
                             </td>
 
-                            <td>
-                                <?= $this->escapeHtml($u['email']) ?>
-                            </td>
 
+                            <!-- EMAIL -->
                             <td>
                                 <?= $this->escapeHtml(
-                                    (string) ($u['telephone'] ?? '—')
+                                    $u['email'] ?? '—'
                                 ) ?>
                             </td>
 
+
+                            <!-- TÉLÉPHONE -->
                             <td>
                                 <?= $this->escapeHtml(
-                                    ucfirst((string) $u['role'])
+                                    (string) (
+                                        $u['telephone'] ?? '—'
+                                    )
                                 ) ?>
                             </td>
 
-                            <td style="text-align:right;">
 
-                                <a href="<?= $this->url(
-                                    'utilisateur',
-                                    [
-                                        'action' => 'edit',
-                                        'id' => $u['id']
-                                    ]
-                                ) ?>">
-                                    Modifier
-                                </a>
+                            <!-- RÔLE -->
+                            <td>
+                                <?= $this->escapeHtml(
+                                    ucfirst(
+                                        (string) (
+                                            $u['role'] ?? '—'
+                                        )
+                                    )
+                                ) ?>
+                            </td>
 
-                                &nbsp;·&nbsp;
-
-                                <a
-                                    href="<?= $this->url(
-                                        'utilisateur',
-                                        [
-                                            'action' => 'delete',
-                                            'id' => $u['id']
-                                        ]
-                                    ) ?>"
-                                    onclick="return confirm('Supprimer cet utilisateur ?');"
-                                >
-                                    Supprimer
-                                </a>
-
+                            <!-- ACTIONS -->
+                            <td>
+                                <div class="action-buttons">
+                                   
+                                    <a
+                                        href="<?= $this->url('utilisateur', ['action' => 'edit', 'id' => (int) $u['id']]) ?>"
+                                        class="action-btn"
+                                        title="Modifier"
+                                        aria-label="Modifier"
+                                    >
+                                        ✎
+                                    </a>
+                                    <a
+                                        href="<?= $this->url('utilisateur', ['action' => 'delete', 'id' => (int) $u['id']]) ?>"
+                                        class="action-btn action-btn-delete"
+                                        title="Supprimer"
+                                        aria-label="Supprimer"
+                                        onclick="return confirm('Supprimer cet utilisateur ?');"
+                                    >
+                                        🗑
+                                    </a>
+                                </div>
                             </td>
 
                         </tr>
@@ -118,3 +235,178 @@ $utilisateurs = $utilisateurs ?? [];
     </div>
 
 </div>
+
+
+<?php if (!empty($utilisateursActions)): ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const utilisateurs =
+        <?= json_encode(
+            $utilisateursActions,
+            JSON_HEX_TAG |
+            JSON_HEX_APOS |
+            JSON_HEX_QUOT |
+            JSON_HEX_AMP
+        ) ?>;
+
+    const searchInput =
+        document.getElementById('actionUserSearch');
+
+    const editButton =
+        document.getElementById('actionEditUser');
+
+    const deleteButton =
+        document.getElementById('actionDeleteUser');
+
+    const message =
+        document.getElementById('actionUserMessage');
+
+
+    /*
+     * Désactive les boutons d'action.
+     */
+    function desactiverActions() {
+
+        editButton.href = '#';
+        deleteButton.href = '#';
+
+        editButton.classList.add('disabled');
+        deleteButton.classList.add('disabled');
+
+        editButton.setAttribute(
+            'aria-disabled',
+            'true'
+        );
+
+        deleteButton.setAttribute(
+            'aria-disabled',
+            'true'
+        );
+    }
+
+
+    /*
+     * Active les boutons pour l'utilisateur sélectionné.
+     */
+    function activerActions(utilisateur) {
+
+        editButton.href = utilisateur.modifier;
+        deleteButton.href = utilisateur.supprimer;
+
+        editButton.classList.remove('disabled');
+        deleteButton.classList.remove('disabled');
+
+        editButton.setAttribute(
+            'aria-disabled',
+            'false'
+        );
+
+        deleteButton.setAttribute(
+            'aria-disabled',
+            'false'
+        );
+
+        message.textContent =
+            'Utilisateur sélectionné : ' +
+            utilisateur.nom;
+    }
+
+
+    /*
+     * Recherche par nom, prénom ou email.
+     */
+    function rechercherUtilisateur() {
+
+        const recherche =
+            searchInput.value
+                .toLowerCase()
+                .trim();
+
+        if (recherche === '') {
+
+            desactiverActions();
+
+            message.textContent =
+                'Saisissez ou sélectionnez un utilisateur pour afficher les actions.';
+
+            return;
+        }
+
+
+        const utilisateur =
+            utilisateurs.find(function (user) {
+
+                const nom =
+                    (user.nom || '').toLowerCase();
+
+                const email =
+                    (user.email || '').toLowerCase();
+
+                return (
+                    nom === recherche ||
+                    nom.includes(recherche) ||
+                    email.includes(recherche)
+                );
+            });
+
+
+        if (utilisateur) {
+
+            activerActions(utilisateur);
+
+        } else {
+
+            desactiverActions();
+
+            message.textContent =
+                'Aucun utilisateur correspondant à cette recherche.';
+
+        }
+
+    }
+
+
+    searchInput.addEventListener(
+        'input',
+        rechercherUtilisateur
+    );
+
+
+    /*
+     * Confirmation avant suppression.
+     */
+    deleteButton.addEventListener(
+        'click',
+        function (event) {
+
+            if (
+                deleteButton.classList.contains('disabled')
+            ) {
+                event.preventDefault();
+                return;
+            }
+
+            const confirmation =
+                confirm(
+                    'Supprimer cet utilisateur ?'
+                );
+
+            if (!confirmation) {
+                event.preventDefault();
+            }
+
+        }
+    );
+
+
+    /*
+     * État initial.
+     */
+    desactiverActions();
+
+});
+</script>
+
+<?php endif; ?>

@@ -3,6 +3,20 @@
 $title = $this->headTitle()
     ->setSeparator(' — ')
     ->setAutoEscape(false);
+
+$identite = $this->identity();
+
+
+$estAdministrateur = false;
+
+if ($identite) {
+    $role = strtolower(
+        trim((string) ($identite['role'] ?? ''))
+    );
+
+    $estAdministrateur = $role === 'administrateur';
+}
+
 ?>
 
 <?= $this->doctype() ?>
@@ -17,19 +31,11 @@ $title = $this->headTitle()
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     >
 
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin
-    >
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
@@ -47,6 +53,7 @@ $title = $this->headTitle()
 
 </head>
 
+
 <body>
 
 <div class="ibs-app">
@@ -55,7 +62,7 @@ $title = $this->headTitle()
          SIDEBAR
     ====================================================== -->
 
-    <aside class="ibs-sidebar">
+    <aside class="ibs-sidebar" id="ibsSidebar">
 
         <!-- LOGO -->
 
@@ -65,11 +72,13 @@ $title = $this->headTitle()
                 href="<?= $this->url('home') ?>"
                 class="ibs-brand-link"
             >
+
                 <img
                     src="<?= $this->basePath('img/ibs-pulse-logo.svg') ?>"
                     alt="IBS Pulse"
                     class="ibs-logo"
                 >
+
             </a>
 
         </div>
@@ -78,6 +87,8 @@ $title = $this->headTitle()
         <!-- NAVIGATION -->
 
         <nav class="ibs-navigation">
+
+            <!-- TABLEAU DE BORD -->
 
             <a
                 href="<?= $this->url('home') ?>"
@@ -88,7 +99,9 @@ $title = $this->headTitle()
             </a>
 
 
-           <a
+            <!-- MAINTENANCE -->
+
+            <a
                 href="<?= $this->url('maintenance') ?>"
                 class="ibs-nav-item"
             >
@@ -96,6 +109,8 @@ $title = $this->headTitle()
                 <span>Maintenance</span>
             </a>
 
+
+            <!-- RAPPORTS -->
 
             <a
                 href="<?= $this->url('rapport') ?>"
@@ -106,27 +121,169 @@ $title = $this->headTitle()
             </a>
 
 
-           <a
-                href="<?= $this->url('parametre') ?>"
-                class="ibs-nav-item"
-            >
-                <span class="nav-icon">⚙</span>
-                <span>Paramètres</span>
-            </a>
+            <?php if ($estAdministrateur): ?>
+
+                <!-- =================================================
+                     PARAMÈTRES
+                ================================================== -->
+
+                <div
+                    class="ibs-nav-dropdown"
+                    id="ibsSettingsDropdown"
+                >
+
+                    <!-- BOUTON PARAMÈTRES -->
+
+                    <div
+                        class="ibs-nav-item ibs-settings-trigger"
+                        id="ibsSettingsTrigger"
+                        role="button"
+                        tabindex="0"
+                        aria-expanded="false"
+                        aria-haspopup="true"
+                    >
+                        <span class="nav-icon">⚙</span>
+                        <span>Paramètres</span>
+                        <span class="dropdown-arrow">›</span>
+                    </div>
 
 
-            <!-- =================================================
-                 DECONNEXION
-            ================================================== -->
-            <a href="<?= $this->url('auth', ['action' => 'logout']) ?>" class="ibs-nav-item logout-nav-item">
-                <span class="nav-icon">🚪</span>
-                <span>Déconnexion</span>
-            </a>
-           
+                    <!-- MENU PARAMÈTRES -->
+
+                    <div class="ibs-settings-menu">
+
+                        <!-- UTILISATEURS -->
+
+                        <a
+                            href="<?= $this->url('utilisateur') ?>"
+                            class="ibs-settings-item"
+                        >
+                            <span>Utilisateurs</span>
+                        </a>
+
+
+                        <!-- LOCALISATION -->
+
+                        <div class="ibs-settings-submenu">
+
+                            <div
+                                class="ibs-settings-item ibs-submenu-trigger"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                            >
+                                <span>Localisation</span>
+                                <span class="submenu-arrow">›</span>
+                            </div>
+
+                            <div class="ibs-submenu">
+
+                                <a
+                                    href="<?= $this->url('pays') ?>"
+                                    class="ibs-submenu-item"
+                                >Pays</a>
+
+                                <a
+                                    href="<?= $this->url('ville') ?>"
+                                    class="ibs-submenu-item"
+                                >Ville</a>
+
+                                <a
+                                    href="<?= $this->url('site') ?>"
+                                    class="ibs-submenu-item"
+                                >Site</a>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ÉQUIPEMENT -->
+
+                        <div class="ibs-settings-submenu">
+
+                            <div
+                                class="ibs-settings-item ibs-submenu-trigger"
+                                role="button"
+                                tabindex="0"
+                                aria-expanded="false"
+                            >
+                                <span>Équipement</span>
+                                <span class="submenu-arrow">›</span>
+                            </div>
+
+                            <div class="ibs-submenu">
+
+                                <a
+                                    href="<?= $this->url('famille') ?>"
+                                    class="ibs-submenu-item"
+                                >Famille</a>
+
+                                <a
+                                    href="<?= $this->url('centrale') ?>"
+                                    class="ibs-submenu-item"
+                                >Type équipement</a>
+
+                                <a
+                                    href="<?= $this->url('type_equipement') ?>"
+                                    class="ibs-submenu-item"
+                                >Nom équipement</a>
+
+                                <a
+                                    href="<?= $this->url('equipement') ?>"
+                                    class="ibs-submenu-item"
+                                >Équipement</a>
+
+                                <a
+                                    href="<?= $this->url('equipement_reseau_fluide') ?>"
+                                    class="ibs-submenu-item"
+                                >Equipement Fluide</a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            <?php endif; ?>
 
         </nav>
 
-       
+
+        <!-- =================================================
+             DÉCONNEXION (fixée tout en bas du menu)
+        ================================================== -->
+
+        <div class="ibs-sidebar-bottom">
+
+            <a
+                href="<?= $this->url('auth', ['action' => 'logout']) ?>"
+                class="ibs-nav-item logout-nav-item"
+            >
+
+                <span class="nav-icon">
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </span>
+
+                <span>Déconnexion</span>
+
+            </a>
+
+        </div>
 
     </aside>
 
@@ -142,8 +299,21 @@ $title = $this->headTitle()
 
         <header class="ibs-header">
 
-           
-            <div></div>
+            <div class="header-left">
+
+                <!-- Bouton "3 traits" (visible sur téléphone) -->
+                <button
+                    type="button"
+                    class="mobile-menu-button"
+                    id="ibsMenuButton"
+                    aria-label="Ouvrir le menu"
+                    aria-controls="ibsSidebar"
+                    aria-expanded="false"
+                ></button>
+
+                <p>Gestion de la Maintenance Assistée par Ordinateur</p>
+
+            </div>
 
 
             <div class="header-right">
@@ -157,39 +327,49 @@ $title = $this->headTitle()
                     title="Alertes"
                 >
                     <span class="notification-icon">🔔</span>
-                   
                 </a>
 
 
                 <!-- UTILISATEUR -->
 
-               <?php $identite = $this->identity(); ?>
+                <div class="user-menu">
 
-            <!-- UTILISATEUR -->
-            <div class="user-menu">
+                    <div class="user-avatar">
+                        👤
+                    </div>
 
-                <div class="user-avatar">
-                    👤
+                    <div class="user-information">
+
+                        <strong>
+
+                            <?= $identite
+                                ? $this->escapeHtml(
+                                    ($identite['prenom'] ?? '')
+                                    . ' '
+                                    . ($identite['nom'] ?? '')
+                                )
+                                : 'Utilisateur' ?>
+
+                        </strong>
+
+                        <small>
+
+                            <?= $identite
+                                ? $this->escapeHtml(
+                                    ucfirst(
+                                        (string) (
+                                            $identite['role']
+                                            ?? 'consultant'
+                                        )
+                                    )
+                                )
+                                : 'Compte' ?>
+
+                        </small>
+
+                    </div>
+
                 </div>
-
-                <div class="user-information">
-
-                    <strong>
-                        <?= $identite
-                            ? $this->escapeHtml($identite['prenom'] . ' ' . $identite['nom'])
-                            : 'Utilisateur' ?>
-                    </strong>
-
-                    <small>
-                        <?= $identite
-                            ? $this->escapeHtml(ucfirst((string) $identite['role']))
-                            : 'Compte' ?>
-                    </small>
-
-                </div>
-
-            </div>
-
 
             </div>
 
@@ -204,9 +384,240 @@ $title = $this->headTitle()
 
         </div>
 
+
     </main>
 
 </div>
 
+
+<!-- =========================================================
+     MENU TÉLÉPHONE : ouverture / fermeture avec les 3 traits
+========================================================== -->
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const button  = document.getElementById('ibsMenuButton');
+    const sidebar = document.getElementById('ibsSidebar');
+
+    if (!button || !sidebar) {
+        return;
+    }
+
+    function setOpen(open) {
+
+        sidebar.classList.toggle('open', open);
+        document.body.classList.toggle('menu-open', open);
+
+        button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        button.setAttribute(
+            'aria-label',
+            open ? 'Fermer le menu' : 'Ouvrir le menu'
+        );
+
+    }
+
+    button.addEventListener('click', function (event) {
+
+        event.stopPropagation();
+
+        setOpen(!sidebar.classList.contains('open'));
+
+    });
+
+    /* Un appui à côté du menu (sur le fond sombre) le referme. */
+    document.addEventListener('click', function (event) {
+
+        if (
+            sidebar.classList.contains('open') &&
+            !sidebar.contains(event.target) &&
+            !button.contains(event.target)
+        ) {
+            setOpen(false);
+        }
+
+    });
+
+    /* Touche Échap : fermeture. */
+    document.addEventListener('keydown', function (event) {
+
+        if (event.key === 'Escape') {
+            setOpen(false);
+        }
+
+    });
+
+    /* Repasse en affichage normal si l'écran s'agrandit. */
+    window.addEventListener('resize', function () {
+
+        if (window.innerWidth > 900) {
+            setOpen(false);
+        }
+
+    });
+
+});
+
+</script>
+
+
+<?php if ($estAdministrateur): ?>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    const dropdown =
+        document.getElementById('ibsSettingsDropdown');
+
+    const trigger =
+        document.getElementById('ibsSettingsTrigger');
+
+    if (!dropdown || !trigger) {
+        return;
+    }
+
+    const submenuTriggers =
+        dropdown.querySelectorAll('.ibs-submenu-trigger');
+
+
+    /* Ferme tous les sous-menus. */
+    function closeSubmenus() {
+
+        submenuTriggers.forEach(function (item) {
+
+            item.setAttribute('aria-expanded', 'false');
+
+            const parent =
+                item.closest('.ibs-settings-submenu');
+
+            if (parent) {
+                parent.classList.remove('is-open');
+            }
+
+        });
+
+    }
+
+
+    /* Ouvre le menu Paramètres. */
+    function openMenu() {
+
+        dropdown.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+
+    }
+
+
+    /* Ferme le menu Paramètres et ses sous-menus. */
+    function closeMenu() {
+
+        dropdown.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+
+        closeSubmenus();
+
+    }
+
+
+    /* Clic sur Paramètres. */
+    trigger.addEventListener('click', function (event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (dropdown.classList.contains('is-open')) {
+            closeMenu();
+        } else {
+            openMenu();
+        }
+
+    });
+
+
+    /* Navigation clavier. */
+    trigger.addEventListener('keydown', function (event) {
+
+        if (event.key === 'Enter' || event.key === ' ') {
+
+            event.preventDefault();
+            trigger.click();
+
+        }
+
+    });
+
+
+    /* Gestion des sous-menus. */
+    submenuTriggers.forEach(function (item) {
+
+        item.addEventListener('click', function (event) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const parent =
+                item.closest('.ibs-settings-submenu');
+
+            if (!parent) {
+                return;
+            }
+
+            const isOpen =
+                parent.classList.contains('is-open');
+
+            /* Ferme les autres sous-menus. */
+            submenuTriggers.forEach(function (otherItem) {
+
+                const otherParent =
+                    otherItem.closest('.ibs-settings-submenu');
+
+                if (otherParent && otherParent !== parent) {
+
+                    otherParent.classList.remove('is-open');
+                    otherItem.setAttribute('aria-expanded', 'false');
+
+                }
+
+            });
+
+            /* Ouvre ou ferme le sous-menu sélectionné. */
+            if (isOpen) {
+
+                parent.classList.remove('is-open');
+                item.setAttribute('aria-expanded', 'false');
+
+            } else {
+
+                parent.classList.add('is-open');
+                item.setAttribute('aria-expanded', 'true');
+
+            }
+
+        });
+
+        item.addEventListener('keydown', function (event) {
+
+            if (event.key === 'Enter' || event.key === ' ') {
+
+                event.preventDefault();
+                item.click();
+
+            }
+
+        });
+
+    });
+
+  
+});
+
+</script>
+
+<?php endif; ?>
+
+
 </body>
+
 </html>

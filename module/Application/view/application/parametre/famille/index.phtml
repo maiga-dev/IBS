@@ -1,43 +1,136 @@
 <?php
 /** @var Laminas\View\Renderer\PhpRenderer $this */
+
 $familles = $familles ?? [];
 ?>
+
 <div class="dashboard">
+
     <div class="dashboard-title">
         <div>
             <h1>Familles</h1>
             <p>Familles de centrales biomédicales.</p>
         </div>
-        <a href="<?= $this->url('famille', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+
+        <a
+            href="<?= $this->url('famille', ['action' => 'add']) ?>"
+            class="auth-submit"
+        >
             + Ajouter
         </a>
     </div>
 
     <div class="dashboard-panel">
+
         <?php if (empty($familles)): ?>
+
             <div class="empty-dashboard">
                 <div class="empty-dashboard-icon">✓</div>
                 <strong>Aucune famille enregistrée</strong>
             </div>
+
         <?php else: ?>
+
+            <div class="users-actions-toolbar">
+                <div class="users-actions-label">Recherche :</div>
+
+                <div class="users-action-search">
+                    <span class="users-action-search-icon">⌕</span>
+                    <input
+                        type="text"
+                        id="searchFamilles"
+                        placeholder="Rechercher..."
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+
             <div class="table-wrapper">
-                <table class="ibs-table">
-                    <thead><tr><th>Nom</th><th></th></tr></thead>
-                    <tbody>
-                    <?php foreach ($familles as $f): ?>
+                <table class="ibs-table" id="tableFamilles">
+                    <thead>
                         <tr>
-                            <td><?= $this->escapeHtml($f['nom_famille']) ?></td>
-                            <td style="text-align:right;">
-                                <a href="<?= $this->url('famille', ['action' => 'edit', 'id' => $f['id_famille']]) ?>">Modifier</a>
-                                &nbsp;·&nbsp;
-                                <a href="<?= $this->url('famille', ['action' => 'delete', 'id' => $f['id_famille']]) ?>"
-                                   onclick="return confirm('Supprimer cette famille ?');">Supprimer</a>
+                            <th>N°</th>
+                            <th>Nom</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    <?php foreach ($familles as $index => $f): ?>
+                        <tr>
+                            <td><?= $index + 1 ?></td>
+                            <td><?= $this->escapeHtml((string) ($f['nom_famille'] ?? '—')) ?></td>
+                            <td>
+                                <div class="action-buttons">
+                                   
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'famille',
+                                            [
+                                                'action' => 'edit',
+                                                'id' => $f['id_famille']
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Modifier"
+                                        aria-label="Modifier"
+                                    >✎</a>
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'famille',
+                                            [
+                                                'action' => 'delete',
+                                                'id' => $f['id_famille']
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Supprimer"
+                                        aria-label="Supprimer"
+                                        onclick="return confirm('Supprimer cette famille ?');"
+                                    >🗑</a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+
         <?php endif; ?>
+
     </div>
 </div>
+
+<?php if (!empty($familles)): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchFamilles');
+    const rows = Array.from(
+        document.querySelectorAll('#tableFamilles tbody tr')
+    );
+
+    function normaliser(texte) {
+        return String(texte || '')
+            .toLocaleLowerCase('fr-FR')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function rechercher() {
+        const recherche = normaliser(searchInput.value.trim());
+
+        rows.forEach(function (row) {
+            const contenu = normaliser(row.textContent);
+            row.style.display =
+                recherche === '' || contenu.includes(recherche)
+                    ? ''
+                    : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', rechercher);
+});
+</script>
+<?php endif; ?>

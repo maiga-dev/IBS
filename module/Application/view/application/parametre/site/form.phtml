@@ -1,63 +1,600 @@
 <?php
 /** @var Laminas\View\Renderer\PhpRenderer $this */
+
 $erreur = $erreur ?? null;
-$item = $item ?? ['nom_site' => '', 'adresse' => '', 'id_ville' => null, 'latitude' => '', 'longitude' => ''];
+
+$item = $item ?? [
+    'nom_site'  => '',
+    'adresse'   => '',
+    'id_pays'   => null,
+    'id_ville'  => null,
+    'telephone' => '',
+    'latitude'  => '',
+    'longitude' => '',
+];
+
+$paysListe = $paysListe ?? [];
 $villes = $villes ?? [];
+
 $mode = $mode ?? 'ajout';
+
 $action = $mode === 'modification'
-    ? $this->url('site', ['action' => 'edit', 'id' => $item['id_site'] ?? null])
-    : $this->url('site', ['action' => 'add']);
+    ? $this->url('site', [
+        'action' => 'edit',
+        'id' => $item['id_site'] ?? null,
+    ])
+    : $this->url('site', [
+        'action' => 'add',
+    ]);
 ?>
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
 <div class="dashboard">
+
     <div class="dashboard-title">
         <div>
-            <a href="<?= $this->url('site') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
-            <h1><?= $mode === 'modification' ? 'Modifier le site' : 'Ajouter un site' ?></h1>
+
+            
+
+            <h1>
+                <?= $mode === 'modification'
+                    ? 'Modifier le site'
+                    : 'Ajouter un site'
+                ?>
+            </h1>
+
+            <p>
+                Sélectionnez la localisation puis renseignez les informations
+                du site.
+            </p>
+
         </div>
     </div>
 
-    <div class="dashboard-panel" style="max-width:520px;">
-        <?php if ($erreur): ?>
-            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
-        <?php endif; ?>
 
-        <form method="post" action="<?= $action ?>">
-            <div class="auth-field">
-                <label for="nom_site">Nom du site</label>
-                <input type="text" id="nom_site" name="nom_site"
-                       value="<?= $this->escapeHtmlAttr($item['nom_site'] ?? '') ?>" required autofocus>
-            </div>
-            <div class="auth-field">
-                <label for="adresse">Adresse</label>
-                <input type="text" id="adresse" name="adresse"
-                       value="<?= $this->escapeHtmlAttr($item['adresse'] ?? '') ?>">
-            </div>
-            <div class="auth-field">
-                <label for="id_ville">Ville</label>
-                <select id="id_ville" name="id_ville" required
-                        style="width:100%;padding:10px 12px;border:1px solid #E7E9EC;border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;">
-                    <option value="">— Sélectionner —</option>
-                    <?php foreach ($villes as $v): ?>
-                        <option value="<?= (int) $v['id_ville'] ?>"
-                            <?= ((int) ($item['id_ville'] ?? 0) === (int) $v['id_ville']) ? 'selected' : '' ?>>
-                            <?= $this->escapeHtml($v['nom_ville']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="auth-row">
-                <div class="auth-field">
-                    <label for="latitude">Latitude</label>
-                    <input type="text" id="latitude" name="latitude"
-                           value="<?= $this->escapeHtmlAttr((string) ($item['latitude'] ?? '')) ?>">
+    <div class="dashboard-panel form-panel form-panel-wide">
+
+        <div class="form-card">
+
+            <!-- ÉTAPE 1 -->
+            <div class="form-section">
+
+                <div class="form-section-header">
+
+                    <div class="form-step">
+                        1
+                    </div>
+
+                    <div>
+                        <h2>Localisation du site</h2>
+                        <p>
+                            Sélectionnez le pays puis la ville à laquelle le site appartient.
+                        </p>
+                    </div>
+
                 </div>
-                <div class="auth-field">
-                    <label for="longitude">Longitude</label>
-                    <input type="text" id="longitude" name="longitude"
-                           value="<?= $this->escapeHtmlAttr((string) ($item['longitude'] ?? '')) ?>">
-                </div>
+
+
+                <?php if ($erreur): ?>
+
+                    <div class="auth-error form-error">
+                        <?= $this->escapeHtml($erreur) ?>
+                    </div>
+
+                <?php endif; ?>
+
+
+                <form
+                    method="post"
+                    action="<?= $action ?>"
+                    class="ibs-form"
+                    id="siteForm"
+                >
+
+                    <!-- PAYS AJOUTÉ AU DÉBUT -->
+
+                    <div class="auth-field">
+
+                        <label for="id_pays">
+                            Pays
+                        </label>
+
+                        <select
+                            id="id_pays"
+                            name="id_pays"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionner un pays
+                            </option>
+
+                            <?php foreach ($paysListe as $pays): ?>
+
+                                <option
+                                    value="<?= $this->escapeHtmlAttr(
+                                        (string) $pays['id_pays']
+                                    ) ?>"
+                                    <?= (string) (
+                                        $item['id_pays'] ?? ''
+                                    ) === (string) (
+                                        $pays['id_pays']
+                                    )
+                                        ? 'selected'
+                                        : ''
+                                    ?>
+                                >
+                                    <?= $this->escapeHtml(
+                                        (string) $pays['nom_pays']
+                                    ) ?>
+                                </option>
+
+                            <?php endforeach; ?>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- VILLE -->
+
+                    <div class="auth-field">
+
+                        <label for="id_ville">
+                            Ville
+                        </label>
+
+                        <select
+                            id="id_ville"
+                            name="id_ville"
+                            required
+                        >
+
+                            <option value="">
+                                Sélectionner une ville
+                            </option>
+
+                            <?php foreach ($villes as $ville): ?>
+
+                                <option
+                                    value="<?= $this->escapeHtmlAttr(
+                                        (string) $ville['id_ville']
+                                    ) ?>"
+                                    <?= (string) (
+                                        $item['id_ville'] ?? ''
+                                    ) === (string) (
+                                        $ville['id_ville']
+                                    )
+                                        ? 'selected'
+                                        : ''
+                                    ?>
+                                >
+                                    <?= $this->escapeHtml(
+                                        (string) $ville['nom_ville']
+                                    ) ?>
+
+                                    <?php if (!empty($ville['nom_pays'])): ?>
+                                        — <?= $this->escapeHtml(
+                                            (string) $ville['nom_pays']
+                                        ) ?>
+                                    <?php endif; ?>
+
+                                </option>
+
+                            <?php endforeach; ?>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- ÉTAPE 2 -->
+
+                    <div class="form-section-divider"></div>
+
+                    <div class="form-section-header">
+
+                        <div class="form-step">
+                            2
+                        </div>
+
+                        <div>
+                            <h2>Informations du site</h2>
+                            <p>
+                                Renseignez les coordonnées du site.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="auth-field">
+
+                        <label for="nom_site">
+                            Nom du site
+                        </label>
+
+                        <input
+                            type="text"
+                            id="nom_site"
+                            name="nom_site"
+                            value="<?= $this->escapeHtmlAttr(
+                                (string) ($item['nom_site'] ?? '')
+                            ) ?>"
+                            placeholder="Ex. CHU de Ouagadougou"
+                            required
+                            autofocus
+                        >
+
+                    </div>
+
+
+                    <div class="auth-row">
+
+                        <div class="auth-field">
+
+                            <label for="telephone">
+                                Téléphone
+                            </label>
+
+                            <input
+                                type="tel"
+                                id="telephone"
+                                name="telephone"
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) ($item['telephone'] ?? '')
+                                ) ?>"
+                                placeholder="+226 70 00 00 00"
+                                autocomplete="tel"
+                            >
+
+                        </div>
+
+
+                        <div class="auth-field">
+
+                            <label for="adresse">
+                                Adresse
+                            </label>
+
+                            <input
+                                type="text"
+                                id="adresse"
+                                name="adresse"
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) ($item['adresse'] ?? '')
+                                ) ?>"
+                                placeholder="Adresse du site"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ÉTAPE 3 -->
+
+                    <div class="form-section-divider"></div>
+
+                    <div class="form-section-header">
+
+                        <div class="form-step">
+                            3
+                        </div>
+
+                        <div>
+                            <h2>Localisation géographique</h2>
+                            <p>
+                                Positionnez le site sur la carte.
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div class="location-search">
+
+                        <input
+                            type="text"
+                            id="adresseRecherche"
+                            class="location-search-input"
+                            placeholder="Rechercher une adresse ou un lieu..."
+                        >
+
+                        <button
+                            type="button"
+                            id="rechercherAdresse"
+                            class="location-search-button"
+                        >
+                            Rechercher
+                        </button>
+
+                    </div>
+
+
+                    <div class="location-actions">
+
+                        <button
+                            type="button"
+                            id="localiserSite"
+                            class="location-button"
+                        >
+                            Utiliser ma position
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="siteMap"
+                        class="site-map"
+                    ></div>
+
+
+                    <div class="auth-row location-coordinates">
+
+                        <div class="auth-field">
+
+                            <label for="latitude">
+                                Latitude
+                            </label>
+
+                            <input
+                                type="text"
+                                id="latitude"
+                                name="latitude"
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) ($item['latitude'] ?? '')
+                                ) ?>"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <div class="auth-field">
+
+                            <label for="longitude">
+                                Longitude
+                            </label>
+
+                            <input
+                                type="text"
+                                id="longitude"
+                                name="longitude"
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) ($item['longitude'] ?? '')
+                                ) ?>"
+                                readonly
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-actions">
+                       
+                        <a
+                            href="<?= $this->url('site') ?>"
+                            class="form-cancel-button"
+                        >
+                            Annuler
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="auth-submit form-submit-button"
+                        >
+                            <?= $mode === 'modification'
+                                ? 'Enregistrer les modifications'
+                                : 'Enregistrer le site'
+                            ?>
+                        </button>
+
+                    </div>
+
+                </form>
+
             </div>
-            <button type="submit" class="auth-submit">Enregistrer</button>
-        </form>
+
+        </div>
+
     </div>
+
 </div>
+
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const latitudeInput =
+        document.getElementById('latitude');
+
+    const longitudeInput =
+        document.getElementById('longitude');
+
+    const searchInput =
+        document.getElementById('adresseRecherche');
+
+    const searchButton =
+        document.getElementById('rechercherAdresse');
+
+    const locateButton =
+        document.getElementById('localiserSite');
+
+    const mapElement =
+        document.getElementById('siteMap');
+
+    let latitude =
+        parseFloat(latitudeInput.value);
+
+    let longitude =
+        parseFloat(longitudeInput.value);
+
+    if (!Number.isFinite(latitude)) {
+        latitude = 12.3714;
+    }
+
+    if (!Number.isFinite(longitude)) {
+        longitude = -1.5197;
+    }
+
+
+    const map = L.map(mapElement).setView(
+        [latitude, longitude],
+        13
+    );
+
+
+    L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }
+    ).addTo(map);
+
+
+    let marker = L.marker([
+        latitude,
+        longitude
+    ]).addTo(map);
+
+
+    function updatePosition(lat, lng) {
+
+        latitudeInput.value = lat.toFixed(6);
+        longitudeInput.value = lng.toFixed(6);
+
+        marker.setLatLng([
+            lat,
+            lng
+        ]);
+
+        map.setView([
+            lat,
+            lng
+        ], 16);
+    }
+
+
+    map.on('click', function (event) {
+
+        updatePosition(
+            event.latlng.lat,
+            event.latlng.lng
+        );
+
+    });
+
+
+    if (latitudeInput.value !== '' &&
+        longitudeInput.value !== '') {
+
+        updatePosition(
+            latitude,
+            longitude
+        );
+    }
+
+
+    searchButton.addEventListener(
+        'click',
+        function () {
+
+            const query =
+                searchInput.value.trim();
+
+            if (query === '') {
+                return;
+            }
+
+            fetch(
+                'https://nominatim.openstreetmap.org/search?' +
+                new URLSearchParams({
+                    q: query,
+                    format: 'json',
+                    limit: 1
+                }),
+                {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                }
+            )
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (results) {
+
+                if (!results.length) {
+                    alert(
+                        'Aucune localisation trouvée.'
+                    );
+                    return;
+                }
+
+                const result =
+                    results[0];
+
+                updatePosition(
+                    parseFloat(result.lat),
+                    parseFloat(result.lon)
+                );
+
+            })
+            .catch(function () {
+
+                alert(
+                    'Impossible de rechercher cette localisation.'
+                );
+
+            });
+
+        }
+    );
+
+
+    locateButton.addEventListener(
+        'click',
+        function () {
+
+            if (!navigator.geolocation) {
+                alert(
+                    'La géolocalisation n’est pas disponible sur cet appareil.'
+                );
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+
+                    updatePosition(
+                        position.coords.latitude,
+                        position.coords.longitude
+                    );
+
+                },
+                function () {
+
+                    alert(
+                        'Impossible d’obtenir votre position.'
+                    );
+
+                }
+            );
+
+        }
+    );
+
+});
+</script>

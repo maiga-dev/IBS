@@ -1,0 +1,229 @@
+<?php
+
+$this->headTitle('Famille - Parc biomédical - IBS Pulse');
+
+$parcUrl = $this->url('rapport', [
+    'action' => 'parc',
+]);
+?>
+
+<div class="report-page">
+
+    <div class="report-header">
+
+        <div class="report-header-left">
+
+            <div class="report-breadcrumb">
+
+                <a href="<?= $this->url('rapport') ?>">
+                    Rapports
+                </a>
+
+                <span>/</span>
+
+                <a href="<?= $parcUrl ?>">
+                    Parc biomédical
+                </a>
+
+                <span>/</span>
+
+                <span>Famille</span>
+
+            </div>
+
+            <div class="report-kicker">
+                NIVEAU 02
+            </div>
+
+            <h1 class="report-title">
+                <?= $this->escapeHtml(
+                    (string) $famille['nom_famille']
+                ) ?>
+            </h1>
+
+            <p class="report-subtitle">
+                Consultez les centrales appartenant à cette
+                famille d'équipements.
+            </p>
+
+        </div>
+
+        <div class="report-header-action">
+
+            <a
+                href="<?= $parcUrl ?>"
+                class="report-back-button"
+            >
+                ← Retour aux familles
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="report-context-bar">
+
+        <div class="report-context-icon">
+            ⚙
+        </div>
+
+        <div class="report-context-content">
+
+            <strong>
+                Centrales de la famille
+            </strong>
+
+            <span>
+                Sélectionnez une centrale pour poursuivre.
+            </span>
+
+        </div>
+
+        <div class="report-context-count">
+
+            <strong>
+                <?= count($centrales) ?>
+            </strong>
+
+            <span>
+                centrale<?= count($centrales) > 1 ? 's' : '' ?>
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <section class="report-section">
+
+        <div class="report-section-heading">
+
+            <div>
+
+                <span class="report-section-kicker">
+                    NIVEAU 02
+                </span>
+
+                <h2>
+                    Centrales
+                </h2>
+
+                <p>
+                    Les centrales associées à cette famille.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <?php if (empty($centrales)): ?>
+
+            <div class="report-empty-state">
+
+                <div class="report-empty-icon">
+                    ⚙
+                </div>
+
+                <h3>
+                    Aucune centrale
+                </h3>
+
+                <p>
+                    Aucune centrale n'est associée à cette
+                    famille.
+                </p>
+
+            </div>
+
+        <?php else: ?>
+
+            <div class="report-family-grid">
+
+                <?php foreach ($centrales as $index => $centrale): ?>
+
+                    <?php
+                    $idCentrale = (int) $centrale['id_centrale'];
+
+                    $nomCentrale = trim(
+                        (string) $centrale['type_centrale']
+                    );
+
+                    $nombreEquipements = (int) (
+                        $centrale['nombre_equipements'] ?? 0
+                    );
+
+                    $centraleUrl = $this->url(
+                        'rapport/centrale',
+                        [
+                            'idFamille' => (int) $famille['id_famille'],
+                            'idCentrale' => $idCentrale,
+                        ]
+                    );
+                    ?>
+
+                    <a
+                        href="<?= $centraleUrl ?>"
+                        class="report-family-card"
+                    >
+
+                        <div class="report-family-card-top">
+
+                            <span class="report-family-number">
+                                <?= str_pad(
+                                    (string) ($index + 1),
+                                    2,
+                                    '0',
+                                    STR_PAD_LEFT
+                                ) ?>
+                            </span>
+
+                            <span class="report-family-arrow">
+                                →
+                            </span>
+
+                        </div>
+
+                        <div class="report-family-icon">
+                            ⚙
+                        </div>
+
+                        <div class="report-family-content">
+
+                            <h3>
+                                <?= $this->escapeHtml(
+                                    $nomCentrale
+                                ) ?>
+                            </h3>
+
+                            <p>
+                                <?= $nombreEquipements ?>
+                                équipement<?= $nombreEquipements > 1 ? 's' : '' ?>
+                            </p>
+
+                        </div>
+
+                        <div class="report-family-footer">
+
+                            <span>
+                                Explorer la centrale
+                            </span>
+
+                            <span class="report-family-footer-arrow">
+                                →
+                            </span>
+
+                        </div>
+
+                    </a>
+
+                <?php endforeach; ?>
+
+            </div>
+
+        <?php endif; ?>
+
+    </section>
+
+</div>

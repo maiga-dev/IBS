@@ -84,7 +84,18 @@ class VilleController extends AbstractActionController
     public function deleteAction()
     {
         $id = (int) $this->params()->fromRoute('id');
-        $this->villeTable->delete($id);
+
+        try {
+            $this->villeTable->delete($id);
+
+            $this->flashMessenger()->addSuccessMessage(
+                'La ville a été supprimée avec succès.'
+            );
+        } catch (\Throwable $e) {
+            $this->flashMessenger()->addErrorMessage(
+                'Impossible de supprimer cette ville : elle est encore utilisée par un ou plusieurs sites.'
+            );
+        }
 
         return $this->redirect()->toRoute('ville');
     }

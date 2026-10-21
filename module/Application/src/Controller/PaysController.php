@@ -17,7 +17,7 @@ class PaysController extends AbstractActionController
     public function indexAction(): ViewModel
     {
         return new ViewModel([
-            'paysListe' => $this->paysTable->findAll('nom_pays'),
+            'pays' => $this->paysTable->findAll('nom_pays'),
         ]);
     }
 
@@ -31,7 +31,10 @@ class PaysController extends AbstractActionController
             if ($nom === '') {
                 $erreur = 'Le nom du pays est obligatoire.';
             } else {
-                $this->paysTable->insert(['nom_pays' => $nom]);
+                $this->paysTable->insert([
+                    'nom_pays' => $nom
+                ]);
+
                 return $this->redirect()->toRoute('pays');
             }
         }
@@ -48,7 +51,7 @@ class PaysController extends AbstractActionController
         $id = (int) $this->params()->fromRoute('id');
         $item = $this->paysTable->find($id);
 
-        if (! $item) {
+        if (!$item) {
             return $this->redirect()->toRoute('pays');
         }
 
@@ -60,7 +63,11 @@ class PaysController extends AbstractActionController
             if ($nom === '') {
                 $erreur = 'Le nom du pays est obligatoire.';
             } else {
-                $this->paysTable->update($id, ['nom_pays' => $nom]);
+                $this->paysTable->update(
+                    $id,
+                    ['nom_pays' => $nom]
+                );
+
                 return $this->redirect()->toRoute('pays');
             }
         }
@@ -72,10 +79,21 @@ class PaysController extends AbstractActionController
         ]);
     }
 
-    public function deleteAction()
+   public function deleteAction()
     {
         $id = (int) $this->params()->fromRoute('id');
-        $this->paysTable->delete($id);
+
+        try {
+            $this->paysTable->delete($id);
+
+            $this->flashMessenger()->addSuccessMessage(
+                'Le pays a été supprimé avec succès.'
+            );
+        } catch (\Throwable $e) {
+            $this->flashMessenger()->addErrorMessage(
+                'Impossible de supprimer ce pays : il est encore utilisé par une ou plusieurs villes.'
+            );
+        }
 
         return $this->redirect()->toRoute('pays');
     }

@@ -1,0 +1,290 @@
+
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+
+$this->headTitle('Parc biomédical');
+
+$sections = [
+    'familles' => $familles ?? [],
+    'centrales' => $centrales ?? [],
+    'pays' => $pays ?? [],
+    'villes' => $villes ?? [],
+    'sites' => $sites ?? [],
+    'equipements' => $equipements ?? [],
+    'utilisateurs' => $utilisateurs ?? [],
+];
+
+$echapper = fn ($valeur): string =>
+    $this->escapeHtml((string) ($valeur ?? '—'));
+
+$nombre = fn ($valeur): string =>
+    number_format((int) ($valeur ?? 0), 0, ',', ' ');
+
+$afficher = static fn ($valeur): string =>
+    trim((string) ($valeur ?? '')) !== ''
+        ? (string) $valeur
+        : 'Non renseigné';
+?>
+
+<div class="rapport-page">
+    <header class="rapport-header">
+        <div>
+            <span class="rapport-eyebrow">IBS PULSE · INVENTAIRE</span>
+            
+        </div>
+
+       
+    </header>
+
+    <section class="rapport-stats">
+        <?php foreach ([
+            'Familles' => count($sections['familles']),
+            'Centrales' => count($sections['centrales']),
+            'Sites' => count($sections['sites']),
+            'Équipements' => count($sections['equipements']),
+        ] as $libelle => $total): ?>
+            <article class="rapport-stat">
+                <span><?= $echapper($libelle) ?></span>
+                <strong><?= $nombre($total) ?></strong>
+            </article>
+        <?php endforeach; ?>
+    </section>
+
+    <div class="rapport-list-panel">
+        <div class="rapport-section-heading">
+            <div>
+                <h2>Inventaire complet</h2>
+            </div>
+        </div>
+
+        <?php if (empty(array_filter($sections))): ?>
+            <div class="rapport-empty">
+                <strong>Aucune donnée disponible</strong>
+                <p>Les listes du parc ne contiennent actuellement aucun élément.</p>
+            </div>
+        <?php endif; ?>
+
+        <section class="rapport-data-section" id="familles">
+            <div class="rapport-section-heading">
+                <div>
+                    <h2>Familles</h2>
+                    <p><?= $nombre(count($sections['familles'])) ?> famille(s)</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table rapport-table">
+                    <thead>
+                        <tr><th>Famille</th><th>Type d'équipements associées</th></tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($sections['familles'] as $item): ?>
+                        <tr>
+                            <td><?= $echapper($item['nom_famille'] ?? null) ?></td>
+                            <td><?= $nombre($item['nombre_centrales'] ?? 0) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if (!$sections['familles']): ?>
+                        <tr><td colspan="2">Aucune famille enregistrée.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="rapport-data-section" id="centrales">
+            <div class="rapport-section-heading">
+                <div>
+                    <h2>Type équipement</h2>
+                    <p><?= $nombre(count($sections['centrales'])) ?> type équipement(s)</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table rapport-table">
+                    <thead>
+                        <tr><th>Type d'équipements</th><th>Famille</th><th>Équipements</th></tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($sections['centrales'] as $item): ?>
+                        <tr>
+                            <td><?= $echapper($item['type_centrale'] ?? null) ?></td>
+                            <td><?= $echapper($item['nom_famille'] ?? null) ?></td>
+                            <td><?= $nombre($item['nombre_equipements'] ?? 0) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if (!$sections['centrales']): ?>
+                        <tr><td colspan="3">Aucune centrale enregistrée.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="rapport-data-section" id="pays">
+            <div class="rapport-section-heading">
+                <div>
+                    <h2>Pays</h2>
+                    <p><?= $nombre(count($sections['pays'])) ?> pays</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table rapport-table">
+                    <thead><tr><th>Pays</th><th>Villes</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($sections['pays'] as $item): ?>
+                        <tr>
+                            <td><?= $echapper($item['nom_pays'] ?? null) ?></td>
+                            <td><?= $nombre($item['nombre_villes'] ?? 0) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if (!$sections['pays']): ?>
+                        <tr><td colspan="2">Aucun pays enregistré.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="rapport-data-section" id="villes">
+            <div class="rapport-section-heading">
+                <div>
+                    <h2>Villes</h2>
+                    <p><?= $nombre(count($sections['villes'])) ?> ville(s)</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table rapport-table">
+                    <thead><tr><th>Ville</th><th>Pays</th><th>Sites</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($sections['villes'] as $item): ?>
+                        <tr>
+                            <td><?= $echapper($item['nom_ville'] ?? null) ?></td>
+                            <td><?= $echapper($item['nom_pays'] ?? null) ?></td>
+                            <td><?= $nombre($item['nombre_sites'] ?? 0) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if (!$sections['villes']): ?>
+                        <tr><td colspan="3">Aucune ville enregistrée.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="rapport-data-section" id="sites">
+            <div class="rapport-section-heading">
+                <div>
+                    <h2>Sites</h2>
+                    <p><?= $nombre(count($sections['sites'])) ?> site(s)</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table rapport-table">
+                    <thead>
+                        <tr><th>Site</th><th>Ville</th><th>Pays</th><th>Téléphone</th><th>Équipements</th></tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($sections['sites'] as $item): ?>
+                        <tr>
+                            <td>
+                                <strong><?= $echapper($item['nom_site'] ?? null) ?></strong>
+                                <div class="rapport-secondary-text">
+                                    <?= $echapper($item['adresse'] ?? null) ?>
+                                </div>
+                            </td>
+                            <td><?= $echapper($item['nom_ville'] ?? null) ?></td>
+                            <td><?= $echapper($item['nom_pays'] ?? null) ?></td>
+                            <td><?= $echapper($item['telephone'] ?? null) ?></td>
+                            <td><?= $nombre($item['nombre_equipements'] ?? 0) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if (!$sections['sites']): ?>
+                        <tr><td colspan="5">Aucun site enregistré.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="rapport-data-section" id="equipements">
+            <div class="rapport-section-heading">
+                <div>
+                    <h2>Équipements</h2>
+                    <p><?= $nombre(count($sections['equipements'])) ?> équipement(s)</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table rapport-table">
+                    <thead>
+                        <tr>
+                            <th>Désignation</th><th>Type</th><th>Marque / modèle</th>
+                            <th>N° de série</th><th>Type équipement</th><th>Site</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($sections['equipements'] as $item): ?>
+                        <tr>
+                            <td><?= $echapper($item['designation'] ?? null) ?></td>
+                            <td><?= $echapper($item['nom_type'] ?? null) ?></td>
+                            <td>
+                                <?= $echapper($item['marque'] ?? null) ?>
+                                <div class="rapport-secondary-text">
+                                    <?= $echapper($item['modele'] ?? null) ?>
+                                </div>
+                            </td>
+                            <td><?= $echapper($item['numero_serie'] ?? null) ?></td>
+                            <td><?= $echapper($item['type_centrale'] ?? null) ?></td>
+                            <td>
+                                <?= $echapper($item['nom_site'] ?? null) ?>
+                                <div class="rapport-secondary-text">
+                                    <?= $echapper($item['nom_ville'] ?? null) ?> ·
+                                    <?= $echapper($item['nom_pays'] ?? null) ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if (!$sections['equipements']): ?>
+                        <tr><td colspan="6">Aucun équipement enregistré.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="rapport-data-section" id="utilisateurs">
+            <div class="rapport-section-heading">
+                <div>
+                    <h2>Utilisateurs</h2>
+                    <p><?= $nombre(count($sections['utilisateurs'])) ?> utilisateur(s)</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table rapport-table">
+                    <thead><tr><th>Identifiant</th><th>Prénom</th><th>Nom</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($sections['utilisateurs'] as $item): ?>
+                        <tr>
+                            <td><?= $echapper($item['id'] ?? null) ?></td>
+                            <td><?= $echapper($item['prenom'] ?? null) ?></td>
+                            <td><?= $echapper($item['nom'] ?? null) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if (!$sections['utilisateurs']): ?>
+                        <tr><td colspan="3">Aucun utilisateur enregistré.</td></tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+     <a class="rapport-back-link"
+           href="<?= $this->url('rapport') ?>">
+            ← Retour aux rapports
+        </a>
+</div>

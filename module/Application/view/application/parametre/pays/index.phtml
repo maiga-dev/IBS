@@ -1,43 +1,152 @@
 <?php
 /** @var Laminas\View\Renderer\PhpRenderer $this */
-$paysListe = $paysListe ?? [];
+
+$pays = $pays ?? [];
 ?>
+
 <div class="dashboard">
+
+    <?php if ($this->flashMessenger()->hasSuccessMessages()): ?>
+        <div class="alert alert-success">
+            <?php foreach ($this->flashMessenger()->getSuccessMessages() as $message): ?>
+                <?= $this->escapeHtml($message) ?>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($this->flashMessenger()->hasErrorMessages()): ?>
+        <div class="alert alert-danger">
+            <?php foreach ($this->flashMessenger()->getErrorMessages() as $message): ?>
+                <?= $this->escapeHtml($message) ?>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
     <div class="dashboard-title">
         <div>
             <h1>Pays</h1>
-            <p>Pays couverts par IBS.</p>
+            <p>Pays utilisés pour la localisation des sites.</p>
         </div>
-        <a href="<?= $this->url('pays', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+
+        <a
+            href="<?= $this->url('pays', ['action' => 'add']) ?>"
+            class="auth-submit"
+        >
             + Ajouter
         </a>
     </div>
 
     <div class="dashboard-panel">
-        <?php if (empty($paysListe)): ?>
+
+        <?php if (empty($pays)): ?>
+
             <div class="empty-dashboard">
                 <div class="empty-dashboard-icon">✓</div>
                 <strong>Aucun pays enregistré</strong>
             </div>
+
         <?php else: ?>
+
+            <div class="users-actions-toolbar">
+                <div class="users-actions-label">Recherche :</div>
+
+                <div class="users-action-search">
+                    <span class="users-action-search-icon">⌕</span>
+                    <input
+                        type="text"
+                        id="searchPays"
+                        placeholder="Rechercher un pays..."
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+
             <div class="table-wrapper">
-                <table class="ibs-table">
-                    <thead><tr><th>Nom</th><th></th></tr></thead>
-                    <tbody>
-                    <?php foreach ($paysListe as $p): ?>
+                <table class="ibs-table" id="tablePays">
+                    <thead>
                         <tr>
-                            <td><?= $this->escapeHtml($p['nom_pays']) ?></td>
-                            <td style="text-align:right;">
-                                <a href="<?= $this->url('pays', ['action' => 'edit', 'id' => $p['id_pays']]) ?>">Modifier</a>
-                                &nbsp;·&nbsp;
-                                <a href="<?= $this->url('pays', ['action' => 'delete', 'id' => $p['id_pays']]) ?>"
-                                   onclick="return confirm('Supprimer ce pays ?');">Supprimer</a>
+                            <th>N°</th>
+                            <th>Nom</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    <?php foreach ($pays as $index => $p): ?>
+                        <tr>
+                            <td><?= $index + 1 ?></td>
+                            <td><?= $this->escapeHtml((string) ($p['nom_pays'] ?? '—')) ?></td>
+                            <td>
+                                <div class="action-buttons">
+                                   
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'pays',
+                                            [
+                                                'action' => 'edit',
+                                                'id' => $p['id_pays']
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Modifier"
+                                        aria-label="Modifier"
+                                    >✎</a>
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'pays',
+                                            [
+                                                'action' => 'delete',
+                                                'id' => $p['id_pays']
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Supprimer"
+                                        aria-label="Supprimer"
+                                        onclick="return confirm('Supprimer ce pays ?');"
+                                    >🗑</a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+
         <?php endif; ?>
+
     </div>
 </div>
+
+<?php if (!empty($pays)): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchPays');
+    const rows = Array.from(
+        document.querySelectorAll('#tablePays tbody tr')
+    );
+
+    function normaliser(texte) {
+        return String(texte || '')
+            .toLocaleLowerCase('fr-FR')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function rechercher() {
+        const recherche = normaliser(searchInput.value.trim());
+
+        rows.forEach(function (row) {
+            const contenu = normaliser(row.textContent);
+            row.style.display =
+                recherche === '' || contenu.includes(recherche)
+                    ? ''
+                    : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', rechercher);
+});
+</script>
+<?php endif; ?>

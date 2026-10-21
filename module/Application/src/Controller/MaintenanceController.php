@@ -5,60 +5,87 @@ declare(strict_types=1);
 namespace Application\Controller;
 
 use Application\Model\MaintenanceTable;
-use Laminas\Http\Response;
 use Laminas\Mvc\Controller\AbstractActionController;
 use Laminas\View\Model\ViewModel;
 
 class MaintenanceController extends AbstractActionController
 {
     use CsrfTrait;
+    use RoleTrait;
 
-    private MaintenanceTable $maintenanceTable;
-
-    public function __construct(MaintenanceTable $maintenanceTable)
-    {
-        $this->maintenanceTable = $maintenanceTable;
+    public function __construct(
+        private MaintenanceTable $maintenanceTable
+    ) {
     }
 
-    /**
-     * Liste des sessions.
-     *
-     * Le filtrage est effectué côté navigateur
-     * dans index.phtml.
-     */
     public function indexAction(): ViewModel
     {
-        return new ViewModel([
-            'sessions' =>
-                $this->maintenanceTable->fetchSessions(),
+        if ($redirect = $this->exigerConnexion()) {
+            return $redirect;
+        }
 
-            'csrf_token' =>
-                $this->genererCsrfToken(),
+        $utilisateur = $this->utilisateurConnecte();
+
+        if (!$utilisateur) {
+            return $this->redirect()->toRoute(
+                'auth',
+                ['action' => 'login']
+            );
+        }
+
+        $role = strtolower(
+            trim((string) ($utilisateur['role'] ?? ''))
+        );
+
+        $sessions = $role === 'technicien'
+            ? $this->maintenanceTable->fetchSessionsPourTechnicien(
+                (int) $utilisateur['id']
+            )
+            : $this->maintenanceTable->fetchSessions();
+
+        return new ViewModel([
+            'sessions' => $sessions,
+            'utilisateur' => $utilisateur,
+            'csrf_token' => $this->genererCsrfToken(),
         ]);
     }
 
-    /**
-     * Création d'une session.
-     *
-     * Aucun technicien n'est affecté ici.
-     */
     public function addAction(): ViewModel
     {
+        if ($redirect = $this->exigerConnexion()) {
+            return $redirect;
+        }
+
+        if (!$this->estAdministrateurConnecte()) {
+            return $this->redirect()->toRoute('home');
+        }
+
         $request = $this->getRequest();
-
         $erreurs = [];
+        $postData = $request->getPost()->toArray();
 
-        $centrales =
-            $this->maintenanceTable->getCentrales();
-
-        $idCentralePreselectionnee =
-            (int) $this->params()
-                ->fromQuery('centrale', 0);
+        /*
+         * Données indépendantes pour la cascade :
+         *
+         * Pays
+         *   ↓
+         * Ville
+         *   ↓
+         * Site
+         *   ↓
+         * Centrale
+         */
+        $pays = $this->maintenanceTable->getPays();
+        $villes = $this->maintenanceTable->getVilles();
+        $sites = $this->maintenanceTable->getSites();
+        $centrales = $this->maintenanceTable->getCentrales();
 
         if ($request->isPost()) {
-            if (!$this->csrfValide(
-                $request->getPost('csrf_token')
-            )) {
+            if (
+                !$this->csrfValide(
+                    $request->getPost('csrf_token')
+                )
+            ) {
                 $erreurs[] =
                     'Session expirée, merci de réessayer.';
             }
@@ -75,6 +102,34 @@ class MaintenanceController extends AbstractActionController
                 )
             );
 
+            $typeMaintenance = trim(
+                (string) $request->getPost(
+                    'type_maintenance',
+                    ''
+                )
+            );
+
+            $diagnosticInitial = trim(
+                (string) $request->getPost(
+                    'diagnostic_initial',
+                    ''
+                )
+            );
+
+            $compteRendu = trim(
+                (string) $request->getPost(
+                    'compte_rendu',
+                    ''
+                )
+            );
+
+            $commentaire = trim(
+                (string) $request->getPost(
+                    'commentaire',
+                    ''
+                )
+            );
+
             if ($idCentrale <= 0) {
                 $erreurs[] =
                     'La centrale est obligatoire.';
@@ -85,13 +140,60 @@ class MaintenanceController extends AbstractActionController
                     'La date est obligatoire.';
             }
 
-            if (empty($erreurs)) {
+            if ($diagnosticInitial === '') {
+                $erreurs[] =
+                    'Le premier diagnostic est obligatoire.';
+            }
+
+            $fichier = $this->getUploadedFile($request);
+
+            if ($fichier !== null) {
+                $erreurFichier =
+                    $this->validerFichierMaintenance(
+                        $fichier
+                    );
+
+                if ($erreurFichier !== null) {
+                    $erreurs[] = $erreurFichier;
+                }
+            }
+
+            if (!$erreurs) {
                 try {
                     $idSession =
                         $this->maintenanceTable->creerSession(
                             $idCentrale,
-                            $dateSession
+                            $dateSession,
+                            $typeMaintenance !== ''
+                                ? $typeMaintenance
+                                : null,
+                            $diagnosticInitial,
+                            $compteRendu !== ''
+                                ? $compteRendu
+                                : null,
+                            $commentaire !== ''
+                                ? $commentaire
+                                : null
                         );
+
+                    if ($fichier !== null) {
+                        $saved =
+                            $this->enregistrerFichierSession(
+                                $idSession,
+                                $fichier
+                            );
+
+                        if ($saved !== null) {
+                            $this->maintenanceTable
+                                ->ajouterPieceJointeSession(
+                                    $idSession,
+                                    $saved['url'],
+                                    $saved['type'],
+                                    'Pièce initiale',
+                                    'initiale'
+                                );
+                        }
+                    }
 
                     return $this->redirect()->toRoute(
                         'maintenance',
@@ -107,82 +209,677 @@ class MaintenanceController extends AbstractActionController
                     );
 
                     $erreurs[] =
-                        "Erreur lors de l'enregistrement.";
+                        'Erreur lors de la création de la maintenance : '
+                        . $e->getMessage();
                 }
             }
         }
 
         return new ViewModel([
-            'centrales' =>
-                $centrales,
+            /*
+             * Nouvelles listes indépendantes.
+             */
+            'pays' => $pays,
+            'villes' => $villes,
+            'sites' => $sites,
+            'centrales' => $centrales,
 
-            'id_centrale_preselectionnee' =>
-                $idCentralePreselectionnee,
-
-            'erreurs' =>
-                $erreurs,
-
-            'csrf_token' =>
-                $this->genererCsrfToken(),
+            'postData' => $postData,
+            'erreurs' => $erreurs,
+            'csrf_token' => $this->genererCsrfToken(),
         ]);
     }
 
-    /**
-     * Détail d'une session.
-     */
-    public function detailAction()
+    public function editAction(): ViewModel
     {
-        $id = (int) $this->params()
+        if ($redirect = $this->exigerConnexion()) {
+            return $redirect;
+        }
+
+        if (!$this->estAdministrateurConnecte()) {
+            return $this->redirect()->toRoute('home');
+        }
+
+        $idSession = (int) $this->params()
             ->fromRoute('id', 0);
 
-        if ($id <= 0) {
+        if ($idSession <= 0) {
             return $this->notFoundAction();
         }
 
         $session =
-            $this->maintenanceTable->findSession($id);
+            $this->maintenanceTable->findSession(
+                $idSession
+            );
 
         if (!$session) {
             return $this->notFoundAction();
         }
 
+        $request = $this->getRequest();
+        $erreurs = [];
+
+        /*
+         * Même logique que pour l'ajout :
+         * chaque niveau de localisation est récupéré
+         * indépendamment.
+         */
+        $pays = $this->maintenanceTable->getPays();
+        $villes = $this->maintenanceTable->getVilles();
+        $sites = $this->maintenanceTable->getSites();
+        $centrales = $this->maintenanceTable->getCentrales();
+
+        /*
+         * Valeurs initiales.
+         */
+        $postData = [
+            'id_centrale' => (string) (
+                $session['id_centrale'] ?? ''
+            ),
+
+            'date_session' => substr(
+                (string) (
+                    $session['date_session'] ?? ''
+                ),
+                0,
+                10
+            ),
+
+            'type_maintenance' => (string) (
+                $session['type_maintenance'] ?? ''
+            ),
+
+            'diagnostic_initial' => (string) (
+                $session['diagnostic_initial'] ?? ''
+            ),
+
+            'compte_rendu' => (string) (
+                $session['compte_rendu_initial'] ?? ''
+            ),
+
+            'commentaire' => (string) (
+                $session['commentaire_initial'] ?? ''
+            ),
+        ];
+
+        if ($request->isPost()) {
+            if (
+                !$this->csrfValide(
+                    $request->getPost('csrf_token')
+                )
+            ) {
+                $erreurs[] =
+                    'Session expirée, merci de réessayer.';
+            }
+
+            /*
+             * On récupère la centrale envoyée par le formulaire.
+             */
+            $idCentrale = (int) $request->getPost(
+                'id_centrale',
+                0
+            );
+
+            $dateSession = trim(
+                (string) $request->getPost(
+                    'date_session',
+                    ''
+                )
+            );
+
+            $typeMaintenance = trim(
+                (string) $request->getPost(
+                    'type_maintenance',
+                    ''
+                )
+            );
+
+            $diagnosticInitial = trim(
+                (string) $request->getPost(
+                    'diagnostic_initial',
+                    ''
+                )
+            );
+
+            $compteRendu = trim(
+                (string) $request->getPost(
+                    'compte_rendu',
+                    ''
+                )
+            );
+
+            $commentaire = trim(
+                (string) $request->getPost(
+                    'commentaire',
+                    ''
+                )
+            );
+
+            if ($idCentrale <= 0) {
+                $erreurs[] =
+                    'La centrale est obligatoire.';
+            }
+
+            if ($dateSession === '') {
+                $erreurs[] =
+                    'La date est obligatoire.';
+            }
+
+            if ($diagnosticInitial === '') {
+                $erreurs[] =
+                    'Le premier diagnostic est obligatoire.';
+            }
+
+            $fichier = $this->getUploadedFile(
+                $request
+            );
+
+            if ($fichier !== null) {
+                $erreurFichier =
+                    $this->validerFichierMaintenance(
+                        $fichier
+                    );
+
+                if ($erreurFichier !== null) {
+                    $erreurs[] = $erreurFichier;
+                }
+            }
+
+            /*
+             * Toujours conserver les valeurs envoyées
+             * en cas d'erreur.
+             */
+            $postData = [
+                'id_centrale' => (string) $idCentrale,
+                'date_session' => $dateSession,
+                'type_maintenance' => $typeMaintenance,
+                'diagnostic_initial' => $diagnosticInitial,
+                'compte_rendu' => $compteRendu,
+                'commentaire' => $commentaire,
+            ];
+
+            if (!$erreurs) {
+                try {
+                    $this->maintenanceTable->modifierSession(
+                        $idSession,
+                        $idCentrale,
+                        $dateSession,
+                        $typeMaintenance !== ''
+                            ? $typeMaintenance
+                            : null,
+                        $diagnosticInitial,
+                        $compteRendu !== ''
+                            ? $compteRendu
+                            : null,
+                        $commentaire !== ''
+                            ? $commentaire
+                            : null
+                    );
+
+                    if ($fichier !== null) {
+                        $saved =
+                            $this->enregistrerFichierSession(
+                                $idSession,
+                                $fichier
+                            );
+
+                        if ($saved !== null) {
+                            $this->maintenanceTable
+                                ->ajouterPieceJointeSession(
+                                    $idSession,
+                                    $saved['url'],
+                                    $saved['type'],
+                                    'Pièce ajoutée lors de la modification',
+                                    'initiale'
+                                );
+                        }
+                    }
+
+                    return $this->redirect()->toRoute(
+                        'maintenance',
+                        [
+                            'action' => 'detail',
+                            'id' => $idSession,
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    error_log(
+                        '[MaintenanceController::editAction] '
+                        . $e->getMessage()
+                    );
+
+                    $erreurs[] =
+                        'Erreur lors de la modification : '
+                        . $e->getMessage();
+                }
+            }
+
+            /*
+             * Mise à jour des valeurs de session pour
+             * conserver l'affichage après une erreur.
+             */
+            $session['id_centrale'] = $idCentrale;
+            $session['date_session'] = $dateSession;
+            $session['type_maintenance'] = $typeMaintenance;
+            $session['diagnostic_initial'] =
+                $diagnosticInitial;
+            $session['compte_rendu_initial'] =
+                $compteRendu;
+            $session['commentaire_initial'] =
+                $commentaire;
+        }
+
         return new ViewModel([
-            'session' =>
-                $session,
+            'session' => $session,
+
+            /*
+             * Données indépendantes pour la cascade.
+             */
+            'pays' => $pays,
+            'villes' => $villes,
+            'sites' => $sites,
+            'centrales' => $centrales,
+
+            'postData' => $postData,
+            'erreurs' => $erreurs,
+            'csrf_token' => $this->genererCsrfToken(),
+        ]);
+    }
+
+    public function detailAction(): ViewModel
+    {
+        if ($redirect = $this->exigerConnexion()) {
+            return $redirect;
+        }
+
+        $utilisateur = $this->utilisateurConnecte();
+
+        if (!$utilisateur) {
+            return $this->redirect()->toRoute(
+                'auth',
+                ['action' => 'login']
+            );
+        }
+
+        $idSession = (int) $this->params()
+            ->fromRoute('id', 0);
+
+        $session =
+            $this->maintenanceTable->findSession(
+                $idSession
+            );
+
+        if (!$session) {
+            return $this->notFoundAction();
+        }
+
+        $role = strtolower(
+            trim((string) (
+                $utilisateur['role'] ?? ''
+            ))
+        );
+
+        $estAdministrateur = in_array(
+            $role,
+            ['admin', 'administrateur'],
+            true
+        );
+
+        return new ViewModel([
+            'session' => $session,
 
             'equipements' =>
                 $this->maintenanceTable
-                    ->getEquipementsDeSession($id),
+                    ->getEquipementsDeSession(
+                        $idSession
+                    ),
 
             'techniciens' =>
-                $this->maintenanceTable
-                    ->getTechniciens(),
+                $estAdministrateur
+                    ? $this->maintenanceTable
+                        ->getTechniciens()
+                    : [],
+
+            'utilisateur' => $utilisateur,
 
             'csrf_token' =>
                 $this->genererCsrfToken(),
         ]);
     }
 
-    /**
-     * Affecte ou change le technicien
-     * d'une maintenance.
-     *
-     * Un seul technicien est possible.
-     */
-    public function affecterTechnicienAction()
-    {
-        $request = $this->getRequest();
-
-        if (!$request->isPost()) {
-            return $this->redirect()
-                ->toRoute('maintenance');
+    private function sessionActionView(
+        int $idSession,
+        string $operation
+    ): ViewModel {
+        if ($redirect = $this->exigerConnexion()) {
+            return $redirect;
         }
 
-        if (!$this->csrfValide(
-            $request->getPost('csrf_token')
-        )) {
-            return $this->redirect()
-                ->toRoute('maintenance');
+        $utilisateur = $this->utilisateurConnecte();
+
+        if (!$utilisateur) {
+            return $this->redirect()->toRoute(
+                'auth',
+                ['action' => 'login']
+            );
+        }
+
+        $session =
+            $this->maintenanceTable->findSession(
+                $idSession
+            );
+
+        if (!$session) {
+            return $this->notFoundAction();
+        }
+
+        $role = strtolower(
+            trim((string) (
+                $utilisateur['role'] ?? ''
+            ))
+        );
+
+        $admin = in_array(
+            $role,
+            ['admin', 'administrateur'],
+            true
+        );
+
+        if ($operation === 'affecter' && !$admin) {
+            return $this->redirect()->toRoute(
+                'home'
+            );
+        }
+
+        if (
+            $operation !== 'affecter'
+            && !in_array(
+                $role,
+                [
+                    'admin',
+                    'administrateur',
+                    'technicien',
+                ],
+                true
+            )
+        ) {
+            return $this->redirect()->toRoute(
+                'home'
+            );
+        }
+
+        if (
+            $operation !== 'affecter'
+            && $role === 'technicien'
+            && (int) (
+                $session['id_technicien'] ?? 0
+            ) !== (int) (
+                $utilisateur['id'] ?? 0
+            )
+        ) {
+            return $this->redirect()->toRoute(
+                'home'
+            );
+        }
+
+        $erreurs = [];
+        $postData = [];
+
+        $techniciens = $admin
+            ? $this->maintenanceTable
+                ->getTechniciens()
+            : [];
+
+        if ($this->getRequest()->isPost()) {
+            if (
+                !$this->csrfValide(
+                    $this->getRequest()
+                        ->getPost('csrf_token')
+                )
+            ) {
+                $erreurs[] =
+                    'Session expirée, merci de réessayer.';
+            }
+
+            $postData = $this->getRequest()
+                ->getPost()
+                ->toArray();
+
+            if (!$erreurs) {
+                try {
+                    if ($operation === 'affecter') {
+                        $idTechnicien = (int) (
+                            $this->getRequest()
+                                ->getPost(
+                                    'id_technicien',
+                                    0
+                                )
+                        );
+
+                        if ($idTechnicien <= 0) {
+                            throw new \InvalidArgumentException(
+                                'Sélectionnez un technicien.'
+                            );
+                        }
+
+                        $this->maintenanceTable
+                            ->affecterTechnicienSession(
+                                $idSession,
+                                $idTechnicien
+                            );
+                    } else {
+                        $justification = trim(
+                            (string) $this->getRequest()
+                                ->getPost(
+                                    'justification',
+                                    ''
+                                )
+                        );
+
+                        $diagnosticFinal = trim(
+                            (string) $this->getRequest()
+                                ->getPost(
+                                    'diagnostic_final',
+                                    ''
+                                )
+                        );
+
+                        $compteRendu = trim(
+                            (string) $this->getRequest()
+                                ->getPost(
+                                    'compte_rendu',
+                                    ''
+                                )
+                        );
+
+                        $commentaire = trim(
+                            (string) $this->getRequest()
+                                ->getPost(
+                                    'commentaire',
+                                    ''
+                                )
+                        );
+
+                        $statutsOperation = [
+                            'demarrer' => 'en_cours',
+                            'suspendre' => 'suspendue',
+                            'arreter' => 'arretee',
+                            'terminer' => 'terminee',
+                        ];
+
+                        $nouveauStatut =
+                            $statutsOperation[$operation]
+                            ?? null;
+
+                        if ($nouveauStatut === null) {
+                            throw new \InvalidArgumentException(
+                                'Action inconnue.'
+                            );
+                        }
+
+                        $fichier =
+                            $this->getUploadedFile(
+                                $this->getRequest()
+                            );
+
+                        if ($nouveauStatut === 'terminee') {
+                            if ($fichier === null) {
+                                throw new \InvalidArgumentException(
+                                    'Au moins une photo ou un PDF est obligatoire pour terminer la maintenance.'
+                                );
+                            }
+                        }
+
+                        if ($fichier !== null) {
+                            $erreurFichier =
+                                $this->validerFichierMaintenance(
+                                    $fichier
+                                );
+
+                            if ($erreurFichier !== null) {
+                                throw new \InvalidArgumentException(
+                                    $erreurFichier
+                                );
+                            }
+                        }
+
+                        $this->maintenanceTable
+                            ->changerStatutSession(
+                                $idSession,
+                                $nouveauStatut,
+                                $justification !== ''
+                                    ? $justification
+                                    : null,
+                                $diagnosticFinal !== ''
+                                    ? $diagnosticFinal
+                                    : null,
+                                $compteRendu !== ''
+                                    ? $compteRendu
+                                    : null,
+                                $commentaire !== ''
+                                    ? $commentaire
+                                    : null
+                            );
+
+                        if ($fichier !== null) {
+                            $saved =
+                                $this->enregistrerFichierSession(
+                                    $idSession,
+                                    $fichier
+                                );
+
+                            if ($saved !== null) {
+                                $this->maintenanceTable
+                                    ->ajouterPieceJointeSession(
+                                        $idSession,
+                                        $saved['url'],
+                                        $saved['type'],
+                                        $nouveauStatut === 'terminee'
+                                            ? 'Pièce du rapport final'
+                                            : 'Pièce de maintenance',
+                                        $nouveauStatut === 'terminee'
+                                            ? 'finale'
+                                            : 'intervention'
+                                    );
+                            }
+                        }
+                    }
+
+                    return $this->redirect()->toRoute(
+                        'maintenance',
+                        [
+                            'action' => 'detail',
+                            'id' => $idSession,
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    error_log(
+                        '[MaintenanceController::sessionActionView] '
+                        . $e->getMessage()
+                    );
+
+                    $erreurs[] = $e->getMessage();
+                }
+            }
+        }
+
+        $view = new ViewModel([
+            'session' => $session,
+            'operation' => $operation,
+            'techniciens' => $techniciens,
+            'postData' => $postData,
+            'erreurs' => $erreurs,
+            'csrf_token' => $this->genererCsrfToken(),
+        ]);
+
+        $view->setTemplate(
+            'application/maintenance/action'
+        );
+
+        return $view;
+    }
+
+    public function affecterAction(): ViewModel
+    {
+        return $this->sessionActionView(
+            (int) $this->params()->fromRoute('id', 0),
+            'affecter'
+        );
+    }
+
+    public function demarrerAction(): ViewModel
+    {
+        return $this->sessionActionView(
+            (int) $this->params()->fromRoute('id', 0),
+            'demarrer'
+        );
+    }
+
+    public function suspendreAction(): ViewModel
+    {
+        return $this->sessionActionView(
+            (int) $this->params()->fromRoute('id', 0),
+            'suspendre'
+        );
+    }
+
+    public function arreterAction(): ViewModel
+    {
+        return $this->sessionActionView(
+            (int) $this->params()->fromRoute('id', 0),
+            'arreter'
+        );
+    }
+
+    public function terminerAction(): ViewModel
+    {
+        return $this->sessionActionView(
+            (int) $this->params()->fromRoute('id', 0),
+            'terminer'
+        );
+    }
+
+    public function affecterTechnicienAction()
+    {
+        if ($redirect = $this->exigerConnexion()) {
+            return $redirect;
+        }
+
+        if (!$this->estAdministrateurConnecte()) {
+            return $this->redirect()->toRoute('home');
+        }
+
+        $request = $this->getRequest();
+
+        if (
+            !$request->isPost()
+            || !$this->csrfValide(
+                $request->getPost('csrf_token')
+            )
+        ) {
+            return $this->redirect()->toRoute(
+                'maintenance'
+            );
         }
 
         $idMaintenance = (int) $request->getPost(
@@ -198,11 +895,19 @@ class MaintenanceController extends AbstractActionController
         $technicienPost =
             $request->getPost('id_technicien');
 
-        $idTechnicien =
-            ($technicienPost !== null
-                && $technicienPost !== '')
-            ? (int) $technicienPost
-            : null;
+        $idTechnicien = null;
+
+        if (
+            $technicienPost !== null
+            && $technicienPost !== ''
+        ) {
+            $idTechnicien = (int) $technicienPost;
+
+            $idTechnicien =
+                $idTechnicien > 0
+                    ? $idTechnicien
+                    : null;
+        }
 
         if ($idMaintenance > 0) {
             $this->maintenanceTable
@@ -212,38 +917,34 @@ class MaintenanceController extends AbstractActionController
                 );
         }
 
-        if ($idSession > 0) {
-            return $this->redirect()->toRoute(
-                'maintenance',
-                [
+        return $this->redirect()->toRoute(
+            'maintenance',
+            $idSession > 0
+                ? [
                     'action' => 'detail',
                     'id' => $idSession,
                 ]
-            );
-        }
-
-        return $this->redirect()
-            ->toRoute('maintenance');
+                : []
+        );
     }
 
-    /**
-     * Mise à jour du statut / diagnostic /
-     * rapport d'une maintenance.
-     */
-    public function updateItemAction()
+    public function changerStatutAction()
     {
-        $request = $this->getRequest();
-
-        if (!$request->isPost()) {
-            return $this->redirect()
-                ->toRoute('maintenance');
+        if ($redirect = $this->exigerConnexion()) {
+            return $redirect;
         }
 
-        if (!$this->csrfValide(
-            $request->getPost('csrf_token')
-        )) {
-            return $this->redirect()
-                ->toRoute('maintenance');
+        $request = $this->getRequest();
+
+        if (
+            !$request->isPost()
+            || !$this->csrfValide(
+                $request->getPost('csrf_token')
+            )
+        ) {
+            return $this->redirect()->toRoute(
+                'maintenance'
+            );
         }
 
         $idMaintenance = (int) $request->getPost(
@@ -256,119 +957,191 @@ class MaintenanceController extends AbstractActionController
             0
         );
 
-        if ($idMaintenance > 0) {
-            $statut = trim(
-                (string) $request->getPost(
-                    'statut',
-                    'planifiee'
-                )
-            );
+        $nouveauStatut = trim(
+            (string) $request->getPost(
+                'statut',
+                ''
+            )
+        );
 
-            $dateFin =
-                $request->getPost('date_fin') ?: null;
+        $justification = trim(
+            (string) $request->getPost(
+                'justification',
+                ''
+            )
+        );
 
-            $diagnostic =
-                trim((string) (
-                    $request->getPost(
-                        'diagnostic',
-                        ''
-                    )
-                ));
+        $diagnosticFinal = trim(
+            (string) $request->getPost(
+                'diagnostic_final',
+                ''
+            )
+        );
 
-            $compteRendu =
-                trim((string) (
-                    $request->getPost(
-                        'compte_rendu',
-                        ''
-                    )
-                ));
+        $compteRendu = trim(
+            (string) $request->getPost(
+                'compte_rendu',
+                ''
+            )
+        );
 
-            $this->maintenanceTable->updateItem(
-                $idMaintenance,
-                $statut,
-                $dateFin,
-                $diagnostic ?: null,
-                $compteRendu ?: null
+        $commentaire = trim(
+            (string) $request->getPost(
+                'commentaire',
+                ''
+            )
+        );
+
+        $utilisateur =
+            $this->utilisateurConnecte();
+
+        if (!$utilisateur || $idMaintenance <= 0) {
+            return $this->redirect()->toRoute(
+                'maintenance'
             );
         }
 
-        if ($idSession > 0) {
+        $maintenance =
+            $this->maintenanceTable
+                ->findMaintenance(
+                    $idMaintenance
+                );
+
+        if (!$maintenance) {
             return $this->redirect()->toRoute(
-                'maintenance',
+                'maintenance'
+            );
+        }
+
+        $role = strtolower(
+            trim((string) (
+                $utilisateur['role'] ?? ''
+            ))
+        );
+
+        if (
+            $role === 'technicien'
+            && (int) (
+                $maintenance['id_technicien'] ?? 0
+            ) !== (int) $utilisateur['id']
+        ) {
+            return $this->redirect()->toRoute(
+                'home'
+            );
+        }
+
+        if (
+            !in_array(
+                $role,
                 [
+                    'administrateur',
+                    'technicien',
+                ],
+                true
+            )
+        ) {
+            return $this->redirect()->toRoute(
+                'home'
+            );
+        }
+
+        try {
+            $fichier =
+                $this->getUploadedFile($request);
+
+            if ($nouveauStatut === 'terminee') {
+                if ($fichier === null) {
+                    throw new \InvalidArgumentException(
+                        'Une photo ou un PDF final est obligatoire pour terminer.'
+                    );
+                }
+
+                $erreurFichier =
+                    $this->validerFichierMaintenance(
+                        $fichier
+                    );
+
+                if ($erreurFichier !== null) {
+                    throw new \InvalidArgumentException(
+                        $erreurFichier
+                    );
+                }
+            } elseif ($fichier !== null) {
+                $erreurFichier =
+                    $this->validerFichierMaintenance(
+                        $fichier
+                    );
+
+                if ($erreurFichier !== null) {
+                    throw new \InvalidArgumentException(
+                        $erreurFichier
+                    );
+                }
+            }
+
+            $this->maintenanceTable->changerStatut(
+                $idMaintenance,
+                $nouveauStatut,
+                $justification !== ''
+                    ? $justification
+                    : null,
+                $diagnosticFinal !== ''
+                    ? $diagnosticFinal
+                    : null,
+                $compteRendu !== ''
+                    ? $compteRendu
+                    : null,
+                $commentaire !== ''
+                    ? $commentaire
+                    : null
+            );
+
+            if ($fichier !== null) {
+                $saved =
+                    $this->enregistrerFichierMaintenance(
+                        $idMaintenance,
+                        $fichier
+                    );
+
+                if ($saved !== null) {
+                    $this->maintenanceTable
+                        ->ajouterPieceJointe(
+                            $idMaintenance,
+                            $saved['url'],
+                            $saved['type'],
+                            $nouveauStatut === 'terminee'
+                                ? 'Pièce finale'
+                                : 'Pièce de maintenance',
+                            $nouveauStatut === 'terminee'
+                                ? 'finale'
+                                : 'intervention'
+                        );
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log(
+                '[MaintenanceController::changerStatutAction] '
+                . $e->getMessage()
+            );
+        }
+
+        return $this->redirect()->toRoute(
+            'maintenance',
+            $idSession > 0
+                ? [
                     'action' => 'detail',
                     'id' => $idSession,
                 ]
-            );
-        }
-
-        return $this->redirect()
-            ->toRoute('maintenance');
+                : []
+        );
     }
 
-    /**
-     * Ajoute une photo/document à une ligne de maintenance (diagnostic
-     * ou clôture). Stocké dans public/uploads/maintenance/<id>/.
-     */
     public function ajouterPieceJointeAction()
     {
-        $request = $this->getRequest();
-
-        if (!$request->isPost()) {
-            return $this->redirect()->toRoute('maintenance');
+        if ($redirect = $this->exigerConnexion()) {
+            return $redirect;
         }
 
-        if (!$this->csrfValide(
-            $request->getPost('csrf_token')
-        )) {
-            return $this->redirect()->toRoute('maintenance');
-        }
-
-        $idMaintenance = (int) $request->getPost('id_maintenance', 0);
-        $idSession = (int) $request->getPost('id_session', 0);
-        $legende = trim((string) $request->getPost('legende', ''));
-
-        $files = $request->getFiles()->toArray();
-
-        if (
-            $idMaintenance > 0
-            && ! empty($files['fichier']['tmp_name'])
-            && $files['fichier']['error'] === UPLOAD_ERR_OK
-        ) {
-            $dossierDestination = getcwd() . '/uploads/maintenance/' . $idMaintenance;
-
-            if (! is_dir($dossierDestination)) {
-                mkdir($dossierDestination, 0775, true);
-            }
-
-            $nomOriginal = basename($files['fichier']['name']);
-            $nomFichier = uniqid('piece_', true) . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $nomOriginal);
-            $cheminDestination = $dossierDestination . '/' . $nomFichier;
-
-            if (move_uploaded_file($files['fichier']['tmp_name'], $cheminDestination)) {
-                $urlPublique = '/uploads/maintenance/' . $idMaintenance . '/' . $nomFichier;
-                $extension = strtolower((string) pathinfo($nomFichier, PATHINFO_EXTENSION));
-                $typeFichier = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true) ? 'photo' : 'document';
-
-                $this->maintenanceTable->ajouterPieceJointe($idMaintenance, $urlPublique, $typeFichier, $legende ?: null);
-            }
-        }
-
-        if ($idSession > 0) {
-            return $this->redirect()->toRoute(
-                'maintenance',
-                ['action' => 'detail', 'id' => $idSession]
-            );
-        }
-
-        return $this->redirect()->toRoute('maintenance');
-    }
-
-    /**
-     * Suppression d'une session.
-     */
-    public function deleteAction()
-    {
         $request = $this->getRequest();
 
         if (
@@ -377,68 +1150,384 @@ class MaintenanceController extends AbstractActionController
                 $request->getPost('csrf_token')
             )
         ) {
-            return $this->redirect()
-                ->toRoute('maintenance');
+            return $this->redirect()->toRoute(
+                'maintenance'
+            );
         }
 
-        $id = (int) $this->params()
-            ->fromRoute('id', 0);
+        $idMaintenance = (int) $request->getPost(
+            'id_maintenance',
+            0
+        );
 
-        if ($id > 0) {
+        $idSession = (int) $request->getPost(
+            'id_session',
+            0
+        );
+
+        $legende = trim(
+            (string) $request->getPost(
+                'legende',
+                ''
+            )
+        );
+
+        $phase = trim(
+            (string) $request->getPost(
+                'phase',
+                'intervention'
+            )
+        );
+
+        $utilisateur =
+            $this->utilisateurConnecte();
+
+        if (!$utilisateur || $idMaintenance <= 0) {
+            return $this->redirect()->toRoute(
+                'maintenance'
+            );
+        }
+
+        $maintenance =
             $this->maintenanceTable
-                ->supprimerSession($id);
+                ->findMaintenance(
+                    $idMaintenance
+                );
+
+        if (!$maintenance) {
+            return $this->redirect()->toRoute(
+                'maintenance'
+            );
         }
 
-        return $this->redirect()
-            ->toRoute('maintenance');
+        $role = strtolower(
+            trim((string) (
+                $utilisateur['role'] ?? ''
+            ))
+        );
+
+        if (
+            $role === 'technicien'
+            && (int) (
+                $maintenance['id_technicien'] ?? 0
+            ) !== (int) $utilisateur['id']
+        ) {
+            return $this->redirect()->toRoute(
+                'home'
+            );
+        }
+
+        if (
+            !in_array(
+                $role,
+                [
+                    'administrateur',
+                    'technicien',
+                ],
+                true
+            )
+        ) {
+            return $this->redirect()->toRoute(
+                'home'
+            );
+        }
+
+        $fichier =
+            $this->getUploadedFile($request);
+
+        if (
+            $fichier !== null
+            && $this->validerFichierMaintenance(
+                $fichier
+            ) === null
+        ) {
+            $saved =
+                $this->enregistrerFichierMaintenance(
+                    $idMaintenance,
+                    $fichier
+                );
+
+            if ($saved !== null) {
+                $this->maintenanceTable
+                    ->ajouterPieceJointe(
+                        $idMaintenance,
+                        $saved['url'],
+                        $saved['type'],
+                        $legende !== ''
+                            ? $legende
+                            : null,
+                        in_array(
+                            $phase,
+                            ['initiale', 'finale'],
+                            true
+                        )
+                            ? $phase
+                            : 'intervention'
+                    );
+            }
+        }
+
+        return $this->redirect()->toRoute(
+            'maintenance',
+            $idSession > 0
+                ? [
+                    'action' => 'detail',
+                    'id' => $idSession,
+                ]
+                : []
+        );
     }
 
-    /**
-     * Rapport de session.
-     */
-    public function rapportAction()
+    public function deleteAction()
     {
-        $id = (int) $this->params()
+        if ($redirect = $this->exigerConnexion()) {
+            return $redirect;
+        }
+
+        if (!$this->estAdministrateurConnecte()) {
+            return $this->redirect()->toRoute('home');
+        }
+
+        $request = $this->getRequest();
+
+        if (
+            !$request->isPost()
+            || !$this->csrfValide(
+                $request->getPost('csrf_token')
+            )
+        ) {
+            return $this->redirect()->toRoute(
+                'maintenance'
+            );
+        }
+
+        $idSession = (int) $this->params()
+            ->fromRoute('id', 0);
+
+        if ($idSession > 0) {
+            try {
+                $this->maintenanceTable
+                    ->supprimerSession(
+                        $idSession
+                    );
+            } catch (\Throwable $e) {
+                error_log(
+                    '[MaintenanceController::deleteAction] '
+                    . $e->getMessage()
+                );
+            }
+        }
+
+        return $this->redirect()->toRoute(
+            'maintenance'
+        );
+    }
+
+    public function rapportAction(): ViewModel
+    {
+        if ($redirect = $this->exigerConnexion()) {
+            return $redirect;
+        }
+
+        $idSession = (int) $this->params()
             ->fromRoute('id', 0);
 
         $session =
             $this->maintenanceTable
-                ->findSession($id);
+                ->findSession($idSession);
 
         if (!$session) {
             return $this->notFoundAction();
         }
 
         return new ViewModel([
-            'session' =>
-                $session,
+            'session' => $session,
 
             'equipements' =>
                 $this->maintenanceTable
-                    ->getEquipementsDeSession($id),
+                    ->getEquipementsDeSession(
+                        $idSession
+                    ),
         ]);
     }
 
-    /**
-     * NOUVEAU — manquait sur ce contrôleur : AbstractActionController ne
-     * fournit pas notFoundAction() par défaut (contrairement à
-     * IndexController dans le squelette Laminas). On la définit ici pour
-     * que detailAction()/rapportAction() puissent l'appeler sans erreur
-     * fatale "Call to undefined method".
-     */
     public function notFoundAction(): ViewModel
     {
-        $response = $this->getResponse();
+        return new ViewModel();
+    }
 
-        if ($response instanceof Response) {
-            $response->setStatusCode(404);
+    private function estAdministrateurConnecte(): bool
+    {
+        $utilisateur =
+            $this->utilisateurConnecte();
+
+        if (!$utilisateur) {
+            return false;
         }
 
-        $viewModel = new ViewModel([
-            'message' => 'Session de maintenance introuvable.',
-        ]);
-        $viewModel->setTemplate('application/maintenance/not-found');
+        $role = strtolower(
+            trim((string) (
+                $utilisateur['role'] ?? ''
+            ))
+        );
 
-        return $viewModel;
+        return in_array(
+            $role,
+            ['administrateur'],
+            true
+        );
+    }
+
+    private function getUploadedFile(
+        $request
+    ): ?array {
+        $files = $request
+            ->getFiles()
+            ->toArray();
+
+        $file = $files['fichier'] ?? null;
+
+        if (
+            !is_array($file)
+            || empty($file['tmp_name'])
+        ) {
+            return null;
+        }
+
+        return $file;
+    }
+
+    private function validerFichierMaintenance(
+        array $file
+    ): ?string {
+        if (
+            ($file['error'] ?? UPLOAD_ERR_NO_FILE)
+            !== UPLOAD_ERR_OK
+        ) {
+            return 'Le fichier n’a pas pu être envoyé.';
+        }
+
+        if (
+            (int) ($file['size'] ?? 0)
+            > 10 * 1024 * 1024
+        ) {
+            return 'Le fichier est limité à 10 Mo.';
+        }
+
+        $finfo = new \finfo(
+            FILEINFO_MIME_TYPE
+        );
+
+        $mime = $finfo->file(
+            (string) $file['tmp_name']
+        );
+
+        $mimes = [
+            'image/jpeg' => 'photo',
+            'image/png' => 'photo',
+            'image/webp' => 'photo',
+            'application/pdf' => 'document',
+        ];
+
+        if (!isset($mimes[$mime])) {
+            return 'Seuls les fichiers JPG, PNG, WEBP et PDF sont autorisés.';
+        }
+
+        return null;
+    }
+
+    private function typeFichier(
+        array $file
+    ): string {
+        $finfo = new \finfo(
+            FILEINFO_MIME_TYPE
+        );
+
+        $mime = $finfo->file(
+            (string) $file['tmp_name']
+        );
+
+        return $mime === 'application/pdf'
+            ? 'document'
+            : 'photo';
+    }
+
+    private function enregistrerFichierSession(
+        int $idSession,
+        array $file
+    ): ?array {
+        return $this->enregistrerFichier(
+            'session_' . $idSession,
+            $file
+        );
+    }
+
+    private function enregistrerFichierMaintenance(
+        int $idMaintenance,
+        array $file
+    ): ?array {
+        return $this->enregistrerFichier(
+            'maintenance_' . $idMaintenance,
+            $file
+        );
+    }
+
+    private function enregistrerFichier(
+        string $dossier,
+        array $file
+    ): ?array {
+        $base =
+            getcwd()
+            . '/uploads/maintenance/'
+            . $dossier;
+
+        if (
+            !is_dir($base)
+            && !mkdir($base, 0775, true)
+            && !is_dir($base)
+        ) {
+            return null;
+        }
+
+        $extension = strtolower(
+            (string) pathinfo(
+                (string) ($file['name'] ?? ''),
+                PATHINFO_EXTENSION
+            )
+        );
+
+        if ($extension === '') {
+            $extension = 'bin';
+        }
+
+        $type = $this->typeFichier($file);
+
+        $nom =
+            bin2hex(random_bytes(16))
+            . '.'
+            . $extension;
+
+        $destination =
+            $base
+            . '/'
+            . $nom;
+
+        if (
+            !move_uploaded_file(
+                (string) $file['tmp_name'],
+                $destination
+            )
+        ) {
+            return null;
+        }
+
+        return [
+            'url' =>
+                '/uploads/maintenance/'
+                . $dossier
+                . '/'
+                . $nom,
+            'type' => $type,
+        ];
     }
 }

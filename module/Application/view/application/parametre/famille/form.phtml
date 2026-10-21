@@ -1,32 +1,119 @@
 <?php
 /** @var Laminas\View\Renderer\PhpRenderer $this */
+
 $erreur = $erreur ?? null;
-$item = $item ?? ['nom_famille' => ''];
+
+$item = $item ?? [
+    'nom_famille' => '',
+];
+
 $mode = $mode ?? 'ajout';
+
 $action = $mode === 'modification'
-    ? $this->url('famille', ['action' => 'edit', 'id' => $item['id_famille'] ?? null])
-    : $this->url('famille', ['action' => 'add']);
+    ? $this->url('famille', [
+        'action' => 'edit',
+        'id' => $item['id_famille'] ?? null,
+    ])
+    : $this->url('famille', [
+        'action' => 'add',
+    ]);
 ?>
+
 <div class="dashboard">
+
     <div class="dashboard-title">
         <div>
-             <a href="<?= $this->url('famille') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
-            <h1><?= $mode === 'modification' ? 'Modifier la famille' : 'Ajouter une famille' ?></h1>
+
+            <h1>
+                <?= $mode === 'modification'
+                    ? 'Modifier la famille'
+                    : 'Ajouter une famille'
+                ?>
+            </h1>
+
+            <p>
+                <?= $mode === 'modification'
+                    ? 'Modifiez les informations de la famille.'
+                    : 'Enregistrez une nouvelle famille.'
+                ?>
+            </p>
+
         </div>
     </div>
 
-    <div class="dashboard-panel" style="max-width:480px;">
-        <?php if ($erreur): ?>
-            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
-        <?php endif; ?>
+    <div class="dashboard-panel form-panel">
 
-        <form method="post" action="<?= $action ?>">
-            <div class="auth-field">
-                <label for="nom_famille">Nom de la famille</label>
-                <input type="text" id="nom_famille" name="nom_famille"
-                       value="<?= $this->escapeHtmlAttr($item['nom_famille'] ?? '') ?>" required autofocus>
+        <div class="form-card">
+
+            <div class="form-card-header">
+
+                <div class="form-card-icon"></div>
+
+                <div>
+                    <h4>Famille</h4>
+                </div>
+
             </div>
-            <button type="submit" class="auth-submit">Enregistrer</button>
-        </form>
+
+            <?php if ($erreur): ?>
+
+                <div class="auth-error form-error">
+                    <?= $this->escapeHtml($erreur) ?>
+                </div>
+
+            <?php endif; ?>
+
+            <form
+                method="post"
+                action="<?= $this->escapeHtmlAttr($action) ?>"
+                class="ibs-form"
+            >
+
+                <div class="auth-field">
+
+                    <label for="nom_famille">
+                        Nom de la famille
+                    </label>
+
+                    <input
+                        type="text"
+                        id="nom_famille"
+                        name="nom_famille"
+                        value="<?= $this->escapeHtmlAttr(
+                            (string) ($item['nom_famille'] ?? '')
+                        ) ?>"
+                        placeholder="Ex. Centrale d’oxygène"
+                        required
+                        autofocus
+                    >
+
+                </div>
+
+                <div class="form-actions">
+
+                    <a
+                        href="<?= $this->url('famille') ?>"
+                        class="form-cancel-button"
+                    >
+                        Annuler
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="auth-submit form-submit-button"
+                    >
+                        <?= $mode === 'modification'
+                            ? 'Enregistrer les modifications'
+                            : 'Enregistrer la famille'
+                        ?>
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
     </div>
+
 </div>

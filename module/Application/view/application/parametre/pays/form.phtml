@@ -1,32 +1,113 @@
 <?php
 /** @var Laminas\View\Renderer\PhpRenderer $this */
+
 $erreur = $erreur ?? null;
-$item = $item ?? ['nom_pays' => ''];
+
+$item = $item ?? [
+    'nom_pays' => '',
+];
+
 $mode = $mode ?? 'ajout';
+
 $action = $mode === 'modification'
-    ? $this->url('pays', ['action' => 'edit', 'id' => $item['id_pays'] ?? null])
-    : $this->url('pays', ['action' => 'add']);
+    ? $this->url('pays', [
+        'action' => 'edit',
+        'id' => $item['id_pays'] ?? null,
+    ])
+    : $this->url('pays', [
+        'action' => 'add',
+    ]);
 ?>
+
 <div class="dashboard">
+
     <div class="dashboard-title">
         <div>
-            <a href="<?= $this->url('pays') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
-            <h1><?= $mode === 'modification' ? 'Modifier le pays' : 'Ajouter un pays' ?></h1>
+            
+
+            <h1>
+                <?= $mode === 'modification'
+                    ? 'Modifier le pays'
+                    : 'Ajouter un pays'
+                ?>
+            </h1>
+
+            <p>
+                <?= $mode === 'modification'
+                    ? 'Modifiez les informations du pays.'
+                    : 'Enregistrez un nouveau pays.'
+                ?>
+            </p>
         </div>
     </div>
 
-    <div class="dashboard-panel" style="max-width:480px;">
-        <?php if ($erreur): ?>
-            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
-        <?php endif; ?>
+    <div class="dashboard-panel form-panel">
 
-        <form method="post" action="<?= $action ?>">
-            <div class="auth-field">
-                <label for="nom_pays">Nom du pays</label>
-                <input type="text" id="nom_pays" name="nom_pays"
-                       value="<?= $this->escapeHtmlAttr($item['nom_pays'] ?? '') ?>" required autofocus>
+        <div class="form-card">
+
+            <div class="form-card-header">
+                <div class="form-card-icon"></div>
+
+                <div>
+                    <h4>Informations du pays</h4>
+                </div>
             </div>
-            <button type="submit" class="auth-submit">Enregistrer</button>
-        </form>
+
+            <?php if ($erreur): ?>
+                <div class="auth-error form-error">
+                    <?= $this->escapeHtml($erreur) ?>
+                </div>
+            <?php endif; ?>
+
+            <form
+                method="post"
+                action="<?= $action ?>"
+                class="ibs-form"
+            >
+
+                <div class="auth-field">
+                    <label for="nom_pays">Nom du pays</label>
+
+                    <input
+                        type="text"
+                        id="nom_pays"
+                        name="nom_pays"
+                        value="<?= $this->escapeHtmlAttr(
+                            (string) ($item['nom_pays'] ?? '')
+                        ) ?>"
+                        placeholder="Ex. Burkina Faso"
+                        autocomplete="country-name"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div class="form-actions">
+
+
+                    <a
+                        href="<?= $this->url('pays') ?>"
+                        class="form-cancel-button"
+                    >
+                        Annuler
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="auth-submit form-submit-button"
+                    >
+                        <?= $mode === 'modification'
+                            ? 'Enregistrer les modifications'
+                            : 'Enregistrer le pays'
+                        ?>
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
     </div>
+
 </div>

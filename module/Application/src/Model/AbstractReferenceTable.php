@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Application\Model;
 
 use Laminas\Db\Adapter\Adapter;
+use Laminas\Db\Adapter\Exception\InvalidQueryException;
+use RuntimeException;
 
 abstract class AbstractReferenceTable
 {
@@ -53,9 +55,6 @@ abstract class AbstractReferenceTable
 
     /**
      * Recherche un enregistrement par son ID.
-     *
-     * Utilise ->toArray() plutôt que ->current() : évite le problème
-     * d'ArrayObject rencontré ailleurs, sans dépendre d'un trait externe.
      */
     public function getById(int $id): ?array
     {
@@ -86,9 +85,7 @@ abstract class AbstractReferenceTable
     }
 
     /**
-     * NOUVEAU — alias attendu par FamilleController/PaysController/
-     * VilleController/SiteController/CentraleController/
-     * TypeEquipementController (ils appellent find(), pas getById()).
+     * Alias utilisé par les contrôleurs.
      */
     public function find(int $id): ?array
     {
@@ -96,13 +93,16 @@ abstract class AbstractReferenceTable
     }
 
     /**
-     * NOUVEAU — manquait complètement, cause de
-     * "Call to undefined method insert()".
+     * Insère un enregistrement.
      */
     public function insert(array $data): int
     {
         $colonnes = array_keys($data);
-        $marqueurs = implode(', ', array_fill(0, count($colonnes), '?'));
+
+        $marqueurs = implode(
+            ', ',
+            array_fill(0, count($colonnes), '?')
+        );
 
         $sql = sprintf(
             'INSERT INTO %s (%s) VALUES (%s) RETURNING %s',
@@ -113,30 +113,49 @@ abstract class AbstractReferenceTable
         );
 
         $result = $this->adapter
-            ->query($sql, array_values($data))
+            ->query(
+                $sql,
+                array_values($data)
+            )
             ->toArray();
 
         return (int) $result[0][$this->primaryKey];
     }
 
     /**
-     * NOUVEAU — manquait complètement, nécessaire pour les actions
-     * "edit" de tous les contrôleurs de référence.
+     * Met à jour un enregistrement.
      */
     public function update(int $id, array $data): void
     {
         $sets = implode(
             ', ',
-            array_map(static fn ($colonne) => "{$colonne} = ?", array_keys($data))
+            array_map(
+                static fn ($colonne) => "{$colonne} = ?",
+                array_keys($data)
+            )
         );
 
-        $sql = "UPDATE {$this->table} SET {$sets} WHERE {$this->primaryKey} = ?";
+        $sql = sprintf(
+            'UPDATE %s SET %s WHERE %s = ?',
+            $this->table,
+            $sets,
+            $this->primaryKey
+        );
 
-        $this->adapter->query($sql, [...array_values($data), $id]);
+        $this->adapter->query(
+            $sql,
+            [...array_values($data), $id]
+        );
     }
 
     /**
      * Supprime un enregistrement.
+     *
+     * Si l'enregistrement est encore référencé par une autre table,
+     * PostgreSQL lève une violation de clé étrangère.
+     *
+     * On transforme cette erreur en RuntimeException afin que les
+     * contrôleurs puissent afficher un message propre à l'utilisateur.
      */
     public function delete(int $id): void
     {
@@ -147,10 +166,30 @@ abstract class AbstractReferenceTable
             $this->primaryKey
         );
 
-        $this->adapter->query(
-            $sql,
-            [$id]
-        );
+        try {
+            $this->adapter->query(
+                $sql,
+                [$id]
+            );
+        } catch (InvalidQueryException $e) {
+
+            $message = $e->getMessage();
+
+            if (
+                str_contains($message, '23503')
+                || str_contains($message, 'Foreign key violation')
+                || str_contains($message, 'clé étrangère')
+                || str_contains($message, 'foreign key')
+            ) {
+                throw new RuntimeException(
+                    'Impossible de supprimer cet élément car il est encore utilisé par d’autres données.',
+                    0,
+                    $e
+                );
+            }
+
+            throw $e;
+        }
     }
 
     /**

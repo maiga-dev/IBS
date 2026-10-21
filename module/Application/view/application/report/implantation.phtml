@@ -1,0 +1,229 @@
+<?php
+
+$this->headTitle('Implantation - Rapports - IBS Pulse');
+
+$rapportUrl = $this->url('rapport', [
+    'action' => 'index',
+]);
+
+$parcUrl = $this->url('rapport', [
+    'action' => 'parc',
+]);
+?>
+
+<div class="report-page">
+
+    <div class="report-header">
+
+        <div class="report-header-left">
+
+            <div class="report-breadcrumb">
+
+                <a href="<?= $rapportUrl ?>">
+                    Rapports
+                </a>
+
+                <span>/</span>
+
+                <span>Implantation</span>
+
+            </div>
+
+            <div class="report-kicker">
+                EXPLORATION GÉOGRAPHIQUE
+            </div>
+
+            <h1 class="report-title">
+                Implantation
+            </h1>
+
+            <p class="report-subtitle">
+                Explorez l'implantation du parc biomédical
+                par pays, ville et site.
+            </p>
+
+        </div>
+
+        <div class="report-header-action">
+
+            <a
+                href="<?= $rapportUrl ?>"
+                class="report-back-button"
+            >
+                ← Retour aux rapports
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="report-context-bar">
+
+        <div class="report-context-icon">
+            🌍
+        </div>
+
+        <div class="report-context-content">
+
+            <strong>
+                Organisation géographique
+            </strong>
+
+            <span>
+                Consultez les implantations du parc biomédical.
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <section class="report-section">
+
+        <div class="report-section-heading">
+
+            <div>
+
+                <span class="report-section-kicker">
+                    EXPLORATION
+                </span>
+
+                <h2>
+                    Parcours géographique
+                </h2>
+
+                <p>
+                    Le parcours s'effectue progressivement
+                    jusqu'au site.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="report-family-grid">
+
+            <a
+                href="<?= $parcUrl ?>"
+                class="report-family-card"
+            >
+
+                <div class="report-family-card-top">
+
+                    <span class="report-family-number">
+                        01
+                    </span>
+
+                    <span class="report-family-arrow">
+                        →
+                    </span>
+
+                </div>
+
+                <div class="report-family-icon">
+                    🌍
+                </div>
+
+                <div class="report-family-content">
+
+                    <h3>
+                        Parc biomédical
+                    </h3>
+
+                    <p>
+                        Accéder aux familles, centrales,
+                        pays, villes et sites.
+                    </p>
+
+                </div>
+
+                <div class="report-family-footer">
+
+                    <span>
+                        Commencer l'exploration
+                    </span>
+
+                    <span class="report-family-footer-arrow">
+                        →
+                    </span>
+
+                </div>
+
+            </a>
+
+
+            <div class="report-family-card">
+
+                <div class="report-family-card-top">
+
+                    <span class="report-family-number">
+                        02
+                    </span>
+
+                    <span class="report-family-arrow">
+                        ✓
+                    </span>
+
+                </div>
+
+                <div class="report-family-icon">
+                    ◉
+                </div>
+
+                <div class="report-family-content">
+
+                    <h3>
+                        Vue géographique
+                    </h3>
+
+                    <p>
+                        Pays → Ville → Site → Équipements
+                    </p>
+
+                </div>
+
+                <div class="report-family-footer">
+
+                    <span>
+                        Parcours disponible
+                    </span>
+
+                    <span class="report-family-footer-arrow">
+                        ✓
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="report-exploration-help">
+
+        <div class="report-exploration-help-icon">
+            ⓘ
+        </div>
+
+        <div class="report-exploration-help-content">
+
+            <strong>
+                Comment utiliser cette section ?
+            </strong>
+
+            <p>
+                Utilisez le parcours du parc biomédical pour
+                partir d'une famille, sélectionner une centrale,
+                puis consulter son implantation jusqu'aux
+                équipements présents sur chaque site.
+            </p>
+
+        </div>
+
+    </section>
+
+</div>

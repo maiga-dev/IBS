@@ -1,0 +1,435 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ * @var array $equipement
+ * @var array $releves
+ * @var int $idEquipement
+ */
+
+$equipement = $equipement ?? [];
+$releves = $releves ?? [];
+$idEquipement = (int) ($idEquipement ?? 0);
+
+
+$designation = trim(
+    (string) (
+        $equipement['designation'] ?? ''
+    )
+);
+
+$designation = $designation !== ''
+    ? $designation
+    : 'Équipement biomédical';
+
+?>
+
+
+<div class="dashboard">
+
+
+    <!-- =========================================================
+         EN-TÊTE
+    ========================================================== -->
+
+    <div class="dashboard-title">
+
+        <div>
+
+            <h1>
+                Relevés
+            </h1>
+
+            <p>
+                <?= $this->escapeHtml($designation) ?>
+            </p>
+
+        </div>
+
+
+        <a
+            href="<?= $this->url(
+                'releve',
+                [
+                    'id'     => $idEquipement,
+                    'action' => 'add',
+                ]
+            ) ?>"
+            class="auth-submit form-header-button"
+        >
+            + Ajouter un relevé
+        </a>
+
+    </div>
+
+
+    <!-- =========================================================
+         CONTENU
+    ========================================================== -->
+
+    <div class="dashboard-panel">
+
+
+        <?php if (empty($releves)): ?>
+
+
+            <!-- =================================================
+                 AUCUN RELEVÉ
+            ================================================== -->
+
+            <div class="empty-dashboard">
+
+                <div class="empty-dashboard-icon">
+                    ✓
+                </div>
+
+                <strong>
+                    Aucun relevé enregistré
+                </strong>
+
+                <p>
+                    Ajoutez le premier relevé de cet équipement.
+                </p>
+
+                <a
+                    href="<?= $this->url(
+                        'releve',
+                        [
+                            'id'     => $idEquipement,
+                            'action' => 'add',
+                        ]
+                    ) ?>"
+                    class="auth-submit empty-action-button"
+                >
+                    + Ajouter un relevé
+                </a>
+
+            </div>
+
+
+        <?php else: ?>
+
+
+            <!-- =================================================
+                 EN-TÊTE DU TABLEAU
+            ================================================== -->
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h3>
+                        Historique des relevés
+                    </h3>
+
+                    <p>
+                        <?= count($releves) ?>
+                        relevé<?= count($releves) > 1 ? 's' : '' ?>
+                        enregistré<?= count($releves) > 1 ? 's' : '' ?>.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 TABLEAU
+            ================================================== -->
+
+            <div class="table-wrapper">
+
+                <table class="ibs-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                N°
+                            </th>
+
+                            <th>
+                                Date / heure
+                            </th>
+
+                            <th>
+                                Heures total
+                            </th>
+
+                            <th>
+                                Heures production
+                            </th>
+
+                            <th>
+                                Pression
+                            </th>
+
+                            <th>
+                                Pureté
+                            </th>
+
+                            <th>
+                                Observation
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    <?php foreach (
+                        $releves as $index => $releve
+                    ): ?>
+
+
+                        <tr>
+
+
+                            <!-- N° -->
+
+                            <td>
+
+                                <span class="table-id">
+                                    <?= $index + 1 ?>
+                                </span>
+
+                            </td>
+
+
+                            <!-- DATE -->
+
+                            <td>
+
+                                <?php
+
+                                $date =
+                                    $releve['date_releve']
+                                    ?? null;
+
+                                if ($date) {
+
+                                    try {
+
+                                        echo $this->escapeHtml(
+                                            (new DateTime(
+                                                (string) $date
+                                            ))->format(
+                                                'd/m/Y H:i'
+                                            )
+                                        );
+
+                                    } catch (Throwable) {
+
+                                        echo '—';
+                                    }
+
+                                } else {
+
+                                    echo '—';
+                                }
+
+                                ?>
+
+                            </td>
+
+
+                            <!-- HEURES TOTAL -->
+
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    (string) (
+                                        $releve['heure_total']
+                                        ?? '—'
+                                    )
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- HEURES PRODUCTION -->
+
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    (string) (
+                                        $releve[
+                                            'heure_production'
+                                        ]
+                                        ?? '—'
+                                    )
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- PRESSION -->
+
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    (string) (
+                                        $releve['pression']
+                                        ?? '—'
+                                    )
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- PURETÉ -->
+
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    (string) (
+                                        $releve['purete']
+                                        ?? '—'
+                                    )
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- OBSERVATION -->
+
+                            <td>
+
+                                <?php
+
+                                $observation = trim(
+                                    (string) (
+                                        $releve[
+                                            'observation'
+                                        ] ?? ''
+                                    )
+                                );
+
+                                ?>
+
+                                <?= $observation !== ''
+                                    ? $this->escapeHtml(
+                                        $observation
+                                    )
+                                    : '—'
+                                ?>
+
+                            </td>
+
+
+                            <!-- ACTIONS -->
+
+                            <td>
+
+                                <div class="action-buttons">
+
+
+                                    <!-- MODIFIER -->
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'releve',
+                                            [
+                                                'id' =>
+                                                    $idEquipement,
+
+                                                'action' =>
+                                                    'edit',
+
+                                                'releve' =>
+                                                    (int) (
+                                                        $releve[
+                                                            'id_releve'
+                                                        ] ?? 0
+                                                    ),
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Modifier"
+                                        aria-label="Modifier"
+                                    >
+                                        ✎
+                                    </a>
+
+
+                                    <!-- SUPPRIMER -->
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'releve',
+                                            [
+                                                'id' =>
+                                                    $idEquipement,
+
+                                                'action' =>
+                                                    'delete',
+
+                                                'releve' =>
+                                                    (int) (
+                                                        $releve[
+                                                            'id_releve'
+                                                        ] ?? 0
+                                                    ),
+                                            ]
+                                        ) ?>"
+                                        class="action-btn action-btn-delete"
+                                        title="Supprimer"
+                                        aria-label="Supprimer"
+                                        onclick="return confirm(
+                                            'Voulez-vous vraiment supprimer ce relevé ?'
+                                        );"
+                                    >
+                                        🗑
+                                    </a>
+
+
+                                </div>
+
+                            </td>
+
+
+                        </tr>
+
+
+                    <?php endforeach; ?>
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- =================================================
+                 RETOUR
+            ================================================== -->
+
+            <div class="form-actions">
+
+                <a
+                    href="<?= $this->url('equipement') ?>"
+                    class="form-cancel-button"
+                >
+                    Retour
+                </a>
+
+            </div>
+
+
+        <?php endif; ?>
+
+
+    </div>
+
+</div>

@@ -23,7 +23,10 @@ class CentraleTable extends AbstractReferenceTable
     public function getAll(): array
     {
         return $this->adapter->query(
-            'SELECT *
+            'SELECT
+                id_centrale,
+                type_centrale,
+                id_famille
              FROM centrale
              ORDER BY id_centrale DESC',
             Adapter::QUERY_MODE_EXECUTE
@@ -31,34 +34,24 @@ class CentraleTable extends AbstractReferenceTable
     }
 
     /**
-     * Liste les centrales d'un site.
-     */
-    public function findBySite(int $idSite): array
-    {
-        return $this->adapter->query(
-            'SELECT *
-             FROM centrale
-             WHERE id_site = ?
-             ORDER BY id_centrale DESC',
-            [$idSite]
-        )->toArray();
-    }
-
-    /**
-     * Liste enrichie.
+     * Liste détaillée des centrales.
+     *
+     * Une centrale n'est pas rattachée à un site.
+     * Le site sera déterminé au niveau de l'équipement.
      */
     public function findAllDetaille(): array
     {
         $sql = "
             SELECT
-                c.*,
-                s.nom_site,
+                c.id_centrale,
+                c.type_centrale,
+                c.id_famille,
                 f.nom_famille
             FROM centrale c
-            LEFT JOIN site s
-                ON s.id_site = c.id_site
+
             LEFT JOIN famille f
                 ON f.id_famille = c.id_famille
+
             ORDER BY c.id_centrale DESC
         ";
 

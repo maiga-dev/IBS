@@ -35,22 +35,19 @@ class FamilleController extends AbstractActionController
      */
     public function addAction(): ViewModel
     {
-        $error = null;
+        $erreur = null;
 
         if ($this->getRequest()->isPost()) {
 
             $data = $this->params()->fromPost();
 
             $nomFamille = trim(
-                (string) (
-                    $data['nom_famille']
-                    ?? ''
-                )
+                (string) ($data['nom_famille'] ?? '')
             );
 
             if ($nomFamille === '') {
 
-                $error = 'Le nom de la famille est obligatoire.';
+                $erreur = 'Le nom de la famille est obligatoire.';
 
             } else {
 
@@ -65,13 +62,17 @@ class FamilleController extends AbstractActionController
 
                 } catch (\Throwable $e) {
 
-                    $error = 'Impossible d’enregistrer la famille.';
+                    $erreur = 'Impossible d’enregistrer la famille.';
                 }
             }
         }
 
         return new ViewModel([
-            'error' => $error,
+            'item' => [
+                'nom_famille' => '',
+            ],
+            'mode' => 'ajout',
+            'erreur' => $erreur,
         ]);
     }
 
@@ -95,22 +96,22 @@ class FamilleController extends AbstractActionController
                 ->toRoute('famille');
         }
 
-        $error = null;
+        $erreur = null;
 
+        /*
+         * Modification
+         */
         if ($this->getRequest()->isPost()) {
 
             $data = $this->params()->fromPost();
 
             $nomFamille = trim(
-                (string) (
-                    $data['nom_famille']
-                    ?? ''
-                )
+                (string) ($data['nom_famille'] ?? '')
             );
 
             if ($nomFamille === '') {
 
-                $error = 'Le nom de la famille est obligatoire.';
+                $erreur = 'Le nom de la famille est obligatoire.';
 
             } else {
 
@@ -128,14 +129,21 @@ class FamilleController extends AbstractActionController
 
                 } catch (\Throwable $e) {
 
-                    $error = 'Impossible de modifier la famille.';
+                    $erreur = 'Impossible de modifier la famille.';
                 }
             }
+
+            /*
+             * On conserve la valeur saisie dans le formulaire
+             * en cas d'erreur.
+             */
+            $famille['nom_famille'] = $nomFamille;
         }
 
         return new ViewModel([
-            'famille' => $famille,
-            'error' => $error,
+            'item' => $famille,
+            'mode' => 'modification',
+            'erreur' => $erreur,
         ]);
     }
 

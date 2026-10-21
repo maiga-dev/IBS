@@ -1,0 +1,375 @@
+<?php
+
+$this->headTitle('Équipements - Rapport - IBS Pulse');
+
+$villeUrl = $this->url(
+    'rapport/ville',
+    [
+        'idCentrale' => (int) $centrale['id_centrale'],
+        'idPays' => (int) $site['id_pays'],
+        'idVille' => (int) $site['id_ville'],
+    ]
+);
+?>
+
+<div class="report-page">
+
+    <div class="report-header">
+
+        <div class="report-header-left">
+
+            <div class="report-breadcrumb">
+
+                <a href="<?= $this->url('rapport') ?>">
+                    Rapports
+                </a>
+
+                <span>/</span>
+
+                <a href="<?= $villeUrl ?>">
+                    <?= $this->escapeHtml(
+                        (string) $site['nom_ville']
+                    ) ?>
+                </a>
+
+                <span>/</span>
+
+                <span>
+                    <?= $this->escapeHtml(
+                        (string) $site['nom_site']
+                    ) ?>
+                </span>
+
+            </div>
+
+            <div class="report-kicker">
+                NIVEAU 06 · PARC TECHNIQUE
+            </div>
+
+            <h1 class="report-title">
+                <?= $this->escapeHtml(
+                    (string) $site['nom_site']
+                ) ?>
+            </h1>
+
+            <p class="report-subtitle">
+                Inventaire des équipements associés à cette
+                centrale et à ce site.
+            </p>
+
+        </div>
+
+        <div class="report-header-action">
+
+            <a
+                href="<?= $villeUrl ?>"
+                class="report-back-button"
+            >
+                ← Retour aux sites
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         INFORMATIONS SITE
+    ====================================================== -->
+
+    <div class="report-site-summary">
+
+        <div class="report-site-summary-main">
+
+            <div class="report-site-summary-icon">
+                ⌂
+            </div>
+
+            <div>
+
+                <span class="report-site-summary-label">
+                    SITE
+                </span>
+
+                <h2>
+                    <?= $this->escapeHtml(
+                        (string) $site['nom_site']
+                    ) ?>
+                </h2>
+
+                <p>
+                    <?= $this->escapeHtml(
+                        (string) $site['nom_ville']
+                    ) ?>,
+                    <?= $this->escapeHtml(
+                        (string) $site['nom_pays']
+                    ) ?>
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="report-site-summary-details">
+
+            <?php if (!empty($site['adresse'])): ?>
+
+                <div>
+                    <span>Adresse</span>
+                    <strong>
+                        <?= $this->escapeHtml(
+                            (string) $site['adresse']
+                        ) ?>
+                    </strong>
+                </div>
+
+            <?php endif; ?>
+
+            <?php if (!empty($site['telephone'])): ?>
+
+                <div>
+                    <span>Téléphone</span>
+                    <strong>
+                        <?= $this->escapeHtml(
+                            (string) $site['telephone']
+                        ) ?>
+                    </strong>
+                </div>
+
+            <?php endif; ?>
+
+            <div>
+                <span>Centrale</span>
+                <strong>
+                    <?= $this->escapeHtml(
+                        (string) $centrale['type_centrale']
+                    ) ?>
+                </strong>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TABLEAU
+    ====================================================== -->
+
+    <section class="report-section">
+
+        <div class="report-section-heading">
+
+            <div>
+
+                <span class="report-section-kicker">
+                    INVENTAIRE TECHNIQUE
+                </span>
+
+                <h2>
+                    Équipements
+                </h2>
+
+                <p>
+                    Informations techniques disponibles
+                    dans le parc.
+                </p>
+
+            </div>
+
+            <div class="report-table-count">
+
+                <strong>
+                    <?= count($equipements) ?>
+                </strong>
+
+                <span>
+                    équipement<?= count($equipements) > 1 ? 's' : '' ?>
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <?php if (empty($equipements)): ?>
+
+            <div class="report-empty-state">
+
+                <div class="report-empty-icon">
+                    ▦
+                </div>
+
+                <h3>
+                    Aucun équipement
+                </h3>
+
+                <p>
+                    Aucun équipement n'est actuellement
+                    associé à cette centrale sur ce site.
+                </p>
+
+            </div>
+
+        <?php else: ?>
+
+            <div class="report-table-wrapper">
+
+                <table class="report-equipment-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                N°
+                            </th>
+
+                            <th>
+                                Équipement
+                            </th>
+
+                            <th>
+                                Type
+                            </th>
+
+                            <th>
+                                Marque
+                            </th>
+
+                            <th>
+                                Modèle
+                            </th>
+
+                            <th>
+                                N° série
+                            </th>
+
+                            <th>
+                                Mise en service
+                            </th>
+
+                            <th>
+                                Maintenance
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <?php foreach ($equipements as $index => $equipement): ?>
+
+                            <tr>
+
+                                <td>
+                                    <span class="report-row-number">
+                                        <?= $index + 1 ?>
+                                    </span>
+                                </td>
+
+                                <td>
+
+                                    <div class="report-equipment-name">
+
+                                        <strong>
+                                            <?= $this->escapeHtml(
+                                                (string) (
+                                                    $equipement['designation']
+                                                    ?: 'Équipement non renseigné'
+                                                )
+                                            ) ?>
+                                        </strong>
+
+                                        <small>
+                                            ID #<?= (int) $equipement['id_equipement'] ?>
+                                        </small>
+
+                                    </div>
+
+                                </td>
+
+                                <td>
+
+                                    <?php if (!empty($equipement['nom_type'])): ?>
+
+                                        <span class="report-type-badge">
+                                            <?= $this->escapeHtml(
+                                                (string) $equipement['nom_type']
+                                            ) ?>
+                                        </span>
+
+                                    <?php else: ?>
+
+                                        <span class="report-missing">
+                                            Non renseigné
+                                        </span>
+
+                                    <?php endif; ?>
+
+                                </td>
+
+                                <td>
+                                    <?= !empty($equipement['marque'])
+                                        ? $this->escapeHtml((string) $equipement['marque'])
+                                        : '<span class="report-missing">Non renseignée</span>'
+                                    ?>
+                                </td>
+
+                                <td>
+                                    <?= !empty($equipement['modele'])
+                                        ? $this->escapeHtml((string) $equipement['modele'])
+                                        : '<span class="report-missing">Non renseigné</span>'
+                                    ?>
+                                </td>
+
+                                <td>
+                                    <?= !empty($equipement['numero_serie'])
+                                        ? $this->escapeHtml((string) $equipement['numero_serie'])
+                                        : '<span class="report-missing">Non renseigné</span>'
+                                    ?>
+                                </td>
+
+                                <td>
+                                    <?= !empty($equipement['date_mise_en_service'])
+                                        ? $this->escapeHtml((string) $equipement['date_mise_en_service'])
+                                        : '<span class="report-missing">Non renseignée</span>'
+                                    ?>
+                                </td>
+
+                                <td>
+
+                                    <?php if (!empty($equipement['date_prochaine_maintenance'])): ?>
+
+                                        <span class="report-maintenance-date">
+                                            <?= $this->escapeHtml(
+                                                (string) $equipement['date_prochaine_maintenance']
+                                            ) ?>
+                                        </span>
+
+                                    <?php else: ?>
+
+                                        <span class="report-missing">
+                                            Non planifiée
+                                        </span>
+
+                                    <?php endif; ?>
+
+                                </td>
+
+                            </tr>
+
+                        <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        <?php endif; ?>
+
+    </section>
+
+</div>

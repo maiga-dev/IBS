@@ -45,17 +45,24 @@ class SiteTable extends AbstractReferenceTable
     }
 
     /**
-     * Liste enrichie avec le nom de la ville.
+     * Liste détaillée des sites
+     * avec le nom de la ville et le nom du pays.
      */
     public function findAllDetaille(): array
     {
         $sql = "
             SELECT
                 s.*,
-                v.nom_ville
+                v.nom_ville,
+                p.nom_pays
             FROM site s
+
             LEFT JOIN ville v
                 ON v.id_ville = s.id_ville
+
+            LEFT JOIN pays p
+                ON p.id_pays = v.id_pays
+
             ORDER BY s.nom_site ASC
         ";
 

@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 /**
@@ -8,282 +7,175 @@ declare(strict_types=1);
  */
 
 $equipements = $equipements ?? [];
-
 ?>
 
 <div class="dashboard">
 
-    <div class="dashboard-header">
+    <div class="dashboard-title">
 
         <div>
-
-            <h1>
-                Équipements
-            </h1>
-
-            <p>
-                Gestion des équipements biomédicaux.
-            </p>
-
+            <h1>Équipements</h1>
+            <p>Gestion des équipements biomédicaux.</p>
         </div>
 
-        <div>
-
-            <a
-                href="<?= $this->url(
-                    'equipement',
-                    ['action' => 'add']
-                ) ?>"
-                class="btn-ibs"
-            >
-                + Ajouter un équipement
-            </a>
-
-        </div>
+        <a
+            href="<?= $this->url('equipement', ['action' => 'add']) ?>"
+            class="auth-submit"
+        >
+            + Ajouter
+        </a>
 
     </div>
-
 
     <div class="dashboard-panel">
 
         <?php if (empty($equipements)): ?>
 
-            <div class="empty-state">
-
-                <h3>
-                    Aucun équipement
-                </h3>
-
-                <p>
-                    Aucun équipement n'est actuellement enregistré.
-                </p>
-
-                <a
-                    href="<?= $this->url(
-                        'equipement',
-                        ['action' => 'add']
-                    ) ?>"
-                    class="btn-ibs"
-                >
-                    Ajouter le premier équipement
-                </a>
-
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">✓</div>
+                <strong>Aucun équipement enregistré</strong>
             </div>
 
         <?php else: ?>
 
-            <div class="table-responsive">
+            <div class="users-actions-toolbar">
 
-                <table class="ibs-table">
+                <div class="users-actions-label">
+                    Recherche :
+                </div>
+
+                <div class="users-action-search">
+
+                    <span class="users-action-search-icon">
+                        ⌕
+                    </span>
+
+                    <input
+                        type="text"
+                        id="equipementSearch"
+                        placeholder="Rechercher..."
+                        autocomplete="off"
+                        aria-label="Rechercher un équipement"
+                    >
+
+                </div>
+
+            </div>
+
+            
+
+            <div class="table-wrapper">
+
+                <table
+                    class="ibs-table"
+                    id="tableEquipements"
+                >
 
                     <thead>
 
                         <tr>
-
-                            <th>
-                                Désignation
-                            </th>
-
-                            <th>
-                                Type
-                            </th>
-
-                            <th>
-                                N° série
-                            </th>
-
-                            <th>
-                                Marque
-                            </th>
-
-                            <th>
-                                Modèle
-                            </th>
-
-                            <th>
-                                Site
-                            </th>
-
-                            <th>
-                                Centrale
-                            </th>
-
-                            <th>
-                                Actions
-                            </th>
-
+                            <th>N°</th>
+                            <th>Désignation</th>
+                            <th>Type</th>
+                            <th>N° série</th>
+                            <th>Marque</th>
+                            <th>Modèle</th>
+                            <th>Site</th>
+                            <th>Centrale</th>
+                            <th></th>
                         </tr>
 
                     </thead>
 
                     <tbody>
 
-                        <?php foreach (
-                            $equipements
-                            as $equipement
-                        ): ?>
+                    <?php foreach ($equipements as $index => $e): ?>
 
-                            <?php
+                        <?php $idEquipement = (int) ($e['id_equipement'] ?? 0); ?>
 
-                            $id = (int) (
-                                $equipement[
-                                    'id_equipement'
-                                ] ?? 0
-                            );
+                        <tr>
 
-                            ?>
+                            <td>
+                                <?= $this->escapeHtml((string) ($index + 1)) ?>
+                            </td>
 
-                            <tr>
+                            <td>
+                                <?= $this->escapeHtml($e['designation'] ?? '—') ?>
+                            </td>
 
-                                <td>
+                            <td>
+                                <?= $this->escapeHtml($e['nom_type'] ?? '—') ?>
+                            </td>
 
-                                    <strong>
-                                        <?= $this->escapeHtml(
-                                            $equipement[
-                                                'designation'
-                                            ] ?? '-'
-                                        ) ?>
-                                    </strong>
+                            <td>
+                                <?= $this->escapeHtml($e['numero_serie'] ?? '—') ?>
+                            </td>
 
-                                </td>
+                            <td>
+                                <?= $this->escapeHtml($e['marque'] ?? '—') ?>
+                            </td>
 
-                                <td>
+                            <td>
+                                <?= $this->escapeHtml($e['modele'] ?? '—') ?>
+                            </td>
 
-                                    <?= $this->escapeHtml(
-                                        $equipement[
-                                            'nom_type'
-                                        ] ?? '-'
-                                    ) ?>
+                            <td>
+                                <?= $this->escapeHtml($e['nom_site'] ?? '—') ?>
+                            </td>
 
-                                </td>
+                            <td>
+                                <?= $this->escapeHtml($e['type_centrale'] ?? '—') ?>
+                            </td>
 
-                                <td>
+                            <td>
+                                <div class="action-buttons">
 
-                                    <?= $this->escapeHtml(
-                                        $equipement[
-                                            'numero_serie'
-                                        ] ?? '-'
-                                    ) ?>
+                                    <a
+                                        href="<?= $this->url(
+                                            'equipement',
+                                            [
+                                                'action' => 'view',
+                                                'id' => $idEquipement
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Voir"
+                                        aria-label="Voir"
+                                    >👁</a>
 
-                                </td>
+                                    <a
+                                        href="<?= $this->url(
+                                            'equipement',
+                                            [
+                                                'action' => 'edit',
+                                                'id' => $idEquipement
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Modifier"
+                                        aria-label="Modifier"
+                                    >✎</a>
 
-                                <td>
+                                    <a
+                                        href="<?= $this->url(
+                                            'equipement',
+                                            [
+                                                'action' => 'delete',
+                                                'id' => $idEquipement
+                                            ]
+                                        ) ?>"
+                                        class="action-btn action-btn-delete"
+                                        title="Supprimer"
+                                        aria-label="Supprimer"
+                                        onclick="return confirm('Supprimer cet équipement ?');"
+                                    >🗑</a>
 
-                                    <?= $this->escapeHtml(
-                                        $equipement[
-                                            'marque'
-                                        ] ?? '-'
-                                    ) ?>
+                                </div>
+                            </td>
 
-                                </td>
+                        </tr>
 
-                                <td>
-
-                                    <?= $this->escapeHtml(
-                                        $equipement[
-                                            'modele'
-                                        ] ?? '-'
-                                    ) ?>
-
-                                </td>
-
-                                <td>
-
-                                    <?= $this->escapeHtml(
-                                        $equipement[
-                                            'nom_site'
-                                        ] ?? '-'
-                                    ) ?>
-
-                                </td>
-
-                                <td>
-
-                                    <?= $this->escapeHtml(
-                                        $equipement[
-                                            'type_centrale'
-                                        ] ?? '-'
-                                    ) ?>
-
-                                </td>
-
-                                <td>
-
-                                    <div class="action-buttons">
-
-                                        <!-- DÉTAIL -->
-
-                                        <a
-                                            href="<?= $this->url(
-                                                'equipement',
-                                                [
-                                                    'action' => 'view',
-                                                    'id' => $id,
-                                                ]
-                                            ) ?>"
-                                            class="btn-secondary"
-                                        >
-                                            Détail
-                                        </a>
-
-
-                                        <!-- HISTORIQUE -->
-
-                                        <a
-                                            href="<?= $this->url(
-                                                'equipement',
-                                                [
-                                                    'action' => 'historique',
-                                                    'id' => $id,
-                                                ]
-                                            ) ?>"
-                                            class="btn-secondary"
-                                        >
-                                            Historique
-                                        </a>
-
-
-                                        <!-- MODIFIER -->
-
-                                        <a
-                                            href="<?= $this->url(
-                                                'equipement',
-                                                [
-                                                    'action' => 'edit',
-                                                    'id' => $id,
-                                                ]
-                                            ) ?>"
-                                            class="btn-secondary"
-                                        >
-                                            Modifier
-                                        </a>
-
-
-                                        <!-- SUPPRIMER -->
-
-                                        <a
-                                            href="<?= $this->url(
-                                                'equipement',
-                                                [
-                                                    'action' => 'delete',
-                                                    'id' => $id,
-                                                ]
-                                            ) ?>"
-                                            class="btn-danger"
-                                            onclick="return confirm(
-                                                'Voulez-vous vraiment supprimer cet équipement ?'
-                                            );"
-                                        >
-                                            Supprimer
-                                        </a>
-
-                                    </div>
-
-                                </td>
-
-                            </tr>
-
-                        <?php endforeach; ?>
+                    <?php endforeach; ?>
 
                     </tbody>
 
@@ -291,8 +183,82 @@ $equipements = $equipements ?? [];
 
             </div>
 
+            <div
+                id="equipementNoResult"
+                class="empty-dashboard"
+                style="display:none;"
+            >
+                <div class="empty-dashboard-icon">⌕</div>
+                <strong>Aucun équipement correspondant à votre recherche.</strong>
+            </div>
+
         <?php endif; ?>
 
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const searchInput = document.getElementById('equipementSearch');
+    const table = document.getElementById('tableEquipements');
+    const message = document.getElementById('equipementSearchMessage');
+    const noResult = document.getElementById('equipementNoResult');
+
+    if (!searchInput || !table) {
+        return;
+    }
+
+    const rows = Array.from(
+        table.querySelectorAll('tbody tr')
+    );
+
+    function normaliser(texte) {
+        return String(texte || '')
+            .toLocaleLowerCase('fr-FR')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function rechercher() {
+
+        const recherche = normaliser(
+            searchInput.value.trim()
+        );
+
+        let nombreVisible = 0;
+
+        rows.forEach(function (row) {
+
+            const contenu = normaliser(
+                row.textContent
+            );
+
+            const visible =
+                recherche === ''
+                || contenu.includes(recherche);
+
+            row.style.display = visible ? '' : 'none';
+
+            if (visible) {
+                nombreVisible++;
+            }
+        });
+
+        if (noResult) {
+            noResult.style.display =
+                nombreVisible === 0 ? 'flex' : 'none';
+        }
+
+        if (message) {
+            message.textContent =
+                recherche === ''
+                    ? 'La recherche porte sur toutes les informations affichées.'
+                    : nombreVisible + ' équipement(s) correspondant(s).';
+        }
+    }
+
+    searchInput.addEventListener('input', rechercher);
+});
+</script>

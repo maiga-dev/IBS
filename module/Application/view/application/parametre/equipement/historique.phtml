@@ -16,16 +16,14 @@ $idEquipement = (int) (
     $equipement['id_equipement'] ?? 0
 );
 
-$nom = trim(
+$designation = trim(
     (string) (
-        ($equipement['marque'] ?? '')
-        . ' '
-        . ($equipement['modele'] ?? '')
+        $equipement['designation'] ?? ''
     )
 );
 
-if ($nom === '') {
-    $nom = 'Équipement biomédical';
+if ($designation === '') {
+    $designation = 'Équipement biomédical';
 }
 
 $numeroSerie = trim(
@@ -34,31 +32,44 @@ $numeroSerie = trim(
     )
 );
 
+$nombreInterventions = count(
+    $maintenances
+);
+
 ?>
 
-<div class="dashboard">
+<div class="dashboard equipment-history-page">
+
+    <!-- =====================================================
+         EN-TÊTE
+         ===================================================== -->
 
     <div class="dashboard-header">
 
         <div>
 
+            
+
+
             <h1>
-                Historique de l'équipement
+                Historique de maintenance
             </h1>
 
             <p>
 
-                <?= $this->escapeHtml($nom) ?>
+                Équipement n° <?= $idEquipement ?> :
+                <?= $this->escapeHtml(
+                    $designation
+                ) ?>
 
                 <?php if ($numeroSerie !== ''): ?>
 
-                    —
-
-                    N° série :
-
-                    <?= $this->escapeHtml(
-                        $numeroSerie
-                    ) ?>
+                    <span class="maintenance-history-serial">
+                        · N° série :
+                        <?= $this->escapeHtml(
+                            $numeroSerie
+                        ) ?>
+                    </span>
 
                 <?php endif; ?>
 
@@ -66,30 +77,16 @@ $numeroSerie = trim(
 
         </div>
 
-
-        <div>
-
-            <a
-                href="<?= $this->url(
-                    'equipement',
-                    [
-                        'action' => 'view',
-                        'id' => $idEquipement,
-                    ]
-                ) ?>"
-                class="btn-secondary"
-            >
-                ← Retour à l'équipement
-            </a>
-
-        </div>
-
     </div>
 
 
+    <!-- =====================================================
+         RESUME
+         ===================================================== -->
+
     <div class="dashboard-panel">
 
-        <div class="filter-header">
+        <div class="maintenance-history-summary">
 
             <div>
 
@@ -98,31 +95,44 @@ $numeroSerie = trim(
                 </h2>
 
                 <p>
-
-                    <?= count($maintenances) ?>
-
-                    intervention(s)
-
+                    Suivi des opérations réalisées sur
+                    cet équipement.
                 </p>
 
             </div>
 
+
+            <div class="maintenance-history-count">
+                <?= $nombreInterventions ?>
+                intervention<?= $nombreInterventions > 1
+                    ? 's'
+                    : '' ?>
+            </div>
+
         </div>
 
+    </div>
+
+
+    <!-- =====================================================
+         HISTORIQUE
+         ===================================================== -->
+
+    <div class="dashboard-panel">
 
         <?php if (empty($maintenances)): ?>
 
-            <div class="empty-state">
+            <div class="empty-dashboard">
 
-                <div class="empty-icon">
-                    🔧
+                <div class="empty-dashboard-icon">
+                    ✓
                 </div>
 
-                <h3>
+                <strong>
                     Aucun historique
-                </h3>
+                </strong>
 
-                <p>
+                <p class="maintenance-history-empty-text">
                     Aucune intervention n'est encore
                     enregistrée pour cet équipement.
                 </p>
@@ -133,7 +143,7 @@ $numeroSerie = trim(
 
             <div class="table-responsive">
 
-                <table class="ibs-table">
+                <table class="ibs-table maintenance-history-table">
 
                     <thead>
 
@@ -181,33 +191,50 @@ $numeroSerie = trim(
 
                         <?php
 
-                        $statut = strtolower(
-                            trim(
-                                (string) (
-                                    $maintenance[
-                                        'statut'
-                                    ] ?? ''
-                                )
+                        $statutBrut = trim(
+                            (string) (
+                                $maintenance[
+                                    'statut'
+                                ] ?? ''
                             )
                         );
 
-                        $classe =
+                        $statut = strtolower(
+                            $statutBrut
+                        );
+
+                        $classeStatut =
                             'status-neutral';
+
+                        $statutAffiche =
+                            $statutBrut !== ''
+                                ? $statutBrut
+                                : '—';
 
                         if (
                             $statut === 'terminee'
+                            || $statut === 'terminée'
                         ) {
 
-                            $classe =
+                            $classeStatut =
                                 'status-success';
+
+                            $statutAffiche =
+                                'Terminée';
 
                         } elseif (
                             $statut === 'en_cours'
+                            || $statut === 'en cours'
                         ) {
 
-                            $classe =
+                            $classeStatut =
                                 'status-warning';
+
+                            $statutAffiche =
+                                'En cours';
+
                         }
+
 
                         $technicien = trim(
                             (string) (
@@ -226,9 +253,29 @@ $numeroSerie = trim(
                             )
                         );
 
+
+                        $diagnostic = trim(
+                            (string) (
+                                $maintenance[
+                                    'diagnostic'
+                                ] ?? ''
+                            )
+                        );
+
+
+                        $compteRendu = trim(
+                            (string) (
+                                $maintenance[
+                                    'compte_rendu'
+                                ] ?? ''
+                            )
+                        );
+
                         ?>
 
                         <tr>
+
+                            <!-- DATE -->
 
                             <td>
 
@@ -240,7 +287,8 @@ $numeroSerie = trim(
                                     )
                                 ): ?>
 
-                                    <?= $this->escapeHtml(
+                                    <?=
+                                    $this->escapeHtml(
                                         date(
                                             'd/m/Y',
                                             strtotime(
@@ -250,7 +298,8 @@ $numeroSerie = trim(
                                                 ]
                                             )
                                         )
-                                    ) ?>
+                                    )
+                                    ?>
 
                                 <?php else: ?>
 
@@ -260,6 +309,8 @@ $numeroSerie = trim(
 
                             </td>
 
+
+                            <!-- TYPE -->
 
                             <td>
 
@@ -272,6 +323,8 @@ $numeroSerie = trim(
                             </td>
 
 
+                            <!-- TECHNICIEN -->
+
                             <td>
 
                                 <?= $this->escapeHtml(
@@ -283,34 +336,63 @@ $numeroSerie = trim(
                             </td>
 
 
+                            <!-- DIAGNOSTIC -->
+
                             <td>
 
-                                <?= $this->escapeHtml(
-                                    $maintenance[
-                                        'diagnostic'
-                                    ]
-                                    ?? '—'
-                                ) ?>
+                                <?php if (
+                                    $diagnostic !== ''
+                                ): ?>
+
+                                    <div class="maintenance-history-text">
+                                        <?= $this->escapeHtml(
+                                            $diagnostic
+                                        ) ?>
+                                    </div>
+
+                                <?php else: ?>
+
+                                    —
+
+                                <?php endif; ?>
 
                             </td>
 
 
+                            <!-- COMPTE RENDU -->
+
                             <td>
 
-                                <?= $this->escapeHtml(
-                                    $maintenance[
-                                        'compte_rendu'
-                                    ]
-                                    ?? 'Aucun compte rendu'
-                                ) ?>
+                                <?php if (
+                                    $compteRendu !== ''
+                                ): ?>
+
+                                    <div class="maintenance-history-text">
+
+                                        <?= $this->escapeHtml(
+                                            $compteRendu
+                                        ) ?>
+
+                                    </div>
+
+                                <?php else: ?>
+
+                                    <span class="maintenance-history-text is-empty">
+                                        Aucun compte rendu
+                                    </span>
+
+                                <?php endif; ?>
 
                             </td>
 
+
+                            <!-- STATUT -->
 
                             <td>
 
                                 <span
-                                    class="status-badge <?= $classe ?>"
+                                    class="status-badge
+                                    <?= $classeStatut ?>"
                                 >
 
                                     <span
@@ -318,15 +400,15 @@ $numeroSerie = trim(
                                     ></span>
 
                                     <?= $this->escapeHtml(
-                                        $maintenance[
-                                            'statut'
-                                        ] ?? '—'
+                                        $statutAffiche
                                     ) ?>
 
                                 </span>
 
                             </td>
 
+
+                            <!-- FIN -->
 
                             <td>
 
@@ -338,7 +420,8 @@ $numeroSerie = trim(
                                     )
                                 ): ?>
 
-                                    <?= $this->escapeHtml(
+                                    <?=
+                                    $this->escapeHtml(
                                         date(
                                             'd/m/Y',
                                             strtotime(
@@ -348,7 +431,8 @@ $numeroSerie = trim(
                                                 ]
                                             )
                                         )
-                                    ) ?>
+                                    )
+                                    ?>
 
                                 <?php else: ?>
 
@@ -372,4 +456,31 @@ $numeroSerie = trim(
 
     </div>
 
+
+    <!-- =====================================================
+         RETOUR
+         ===================================================== -->
+
+    <div class="dashboard-panel">
+
+        <div class="form-actions">
+
+            <a
+                href="<?= $this->url(
+                    'equipement',
+                    [
+                        'action' => 'view',
+                        'id' => $idEquipement,
+                    ]
+                ) ?>"
+                class="btn-secondary"
+            >
+                Retour à l'équipement
+            </a>
+
+        </div>
+
+    </div>
+
 </div>
+

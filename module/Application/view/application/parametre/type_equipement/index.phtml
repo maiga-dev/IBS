@@ -1,43 +1,145 @@
 <?php
 /** @var Laminas\View\Renderer\PhpRenderer $this */
+
+$types = $types ?? ($typesEquipement ?? []);
+?>
+<?php
+/** @var Laminas\View\Renderer\PhpRenderer $this */
+
 $types = $types ?? [];
 ?>
+
 <div class="dashboard">
+
     <div class="dashboard-title">
         <div>
-            <h1>Types d'équipement</h1>
-            <p>Catalogue générique (Compresseur, Sécheur, Pompe, PSA, Station...).</p>
+            <h1>Nom d'équipement</h1>
+            <p>.</p>
         </div>
-        <a href="<?= $this->url('type_equipement', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+
+        <a
+            href="<?= $this->url('type_equipement', ['action' => 'add']) ?>"
+            class="auth-submit"
+        >
             + Ajouter
         </a>
     </div>
 
     <div class="dashboard-panel">
+
         <?php if (empty($types)): ?>
+
             <div class="empty-dashboard">
                 <div class="empty-dashboard-icon">✓</div>
                 <strong>Aucun type d'équipement enregistré</strong>
             </div>
+
         <?php else: ?>
+
+            <div class="users-actions-toolbar">
+                <div class="users-actions-label">Recherche :</div>
+
+                <div class="users-action-search">
+                    <span class="users-action-search-icon">⌕</span>
+                    <input
+                        type="text"
+                        id="searchTypes"
+                        placeholder="Rechercher un type d'équipement..."
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+
             <div class="table-wrapper">
-                <table class="ibs-table">
-                    <thead><tr><th>Nom</th><th></th></tr></thead>
-                    <tbody>
-                    <?php foreach ($types as $t): ?>
+                <table class="ibs-table" id="tableTypes">
+                    <thead>
                         <tr>
-                            <td><?= $this->escapeHtml($t['nom_type']) ?></td>
-                            <td style="text-align:right;">
-                                <a href="<?= $this->url('type_equipement', ['action' => 'edit', 'id' => $t['id_type_equipement']]) ?>">Modifier</a>
-                                &nbsp;·&nbsp;
-                                <a href="<?= $this->url('type_equipement', ['action' => 'delete', 'id' => $t['id_type_equipement']]) ?>"
-                                   onclick="return confirm('Supprimer ce type d\'équipement ?');">Supprimer</a>
+                            <th>N°</th>
+                            <th>Nom</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    <?php foreach ($types as $index => $t): ?>
+                        <?php
+                        $idType = $t['id_type'] ?? $t['id_type_equipement'] ?? 0;
+                        $nomType = $t['nom_type'] ?? $t['nom_type_equipement'] ?? '—';
+                        ?>
+                        <tr>
+                            <td><?= $index + 1 ?></td>
+                            <td><?= $this->escapeHtml((string) $nomType) ?></td>
+                            <td>
+                                <div class="action-buttons">
+                                   
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'type_equipement',
+                                            [
+                                                'action' => 'edit',
+                                                'id' => $idType
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Modifier"
+                                        aria-label="Modifier"
+                                    >✎</a>
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'type_equipement',
+                                            [
+                                                'action' => 'delete',
+                                                'id' => $idType
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Supprimer"
+                                        aria-label="Supprimer"
+                                        onclick="return confirm('Supprimer ce type d’équipement ?');"
+                                    >🗑</a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+
         <?php endif; ?>
+
     </div>
 </div>
+
+<?php if (!empty($types)): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchTypes');
+    const rows = Array.from(
+        document.querySelectorAll('#tableTypes tbody tr')
+    );
+
+    function normaliser(texte) {
+        return String(texte || '')
+            .toLocaleLowerCase('fr-FR')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function rechercher() {
+        const recherche = normaliser(searchInput.value.trim());
+
+        rows.forEach(function (row) {
+            const contenu = normaliser(row.textContent);
+            row.style.display =
+                recherche === '' || contenu.includes(recherche)
+                    ? ''
+                    : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', rechercher);
+});
+</script>
+<?php endif; ?>

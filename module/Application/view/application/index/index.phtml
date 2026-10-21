@@ -1,73 +1,76 @@
+<?php declare(strict_types=1); ?>
+
 <?php
 /**
- * IBS Pulse
- * Tableau de bord
+ * @var Laminas\View\Renderer\PhpRenderer $this
  *
- * IMPORTANT :
- * Aucune donnée fictive n'est créée ici.
- *
- * Les variables doivent venir du contrôleur.
+ * @var int   $totalEquipements
+ * @var int   $equipementsActifs
+ * @var int   $maintenancesEnAttente
+ * @var int   $santeParc
+ * @var array $maintenancesRecentes
+ * @var int   $nombrePays
+ * @var int   $nombreSites
+ * @var array $repartitionPays
+ * @var array $repartitionVille
+ * @var array $repartitionSite
+ * @var array $repartitionCentrale
  */
 
-$equipmentCount = isset($equipmentCount) ? (int) $equipmentCount : 0;
-$maintenanceCount = isset($maintenanceCount) ? (int) $maintenanceCount : 0;
-$pendingCount = isset($pendingCount) ? (int) $pendingCount : 0;
-$completedCount = isset($completedCount) ? (int) $completedCount : 0;
-
-$recentInterventions = isset($recentInterventions)
-    ? $recentInterventions
-    : [];
+$libellesStatuts = [
+    'planifiee' => 'Planifiée',
+    'affectee'  => 'Affectée',
+    'en_cours'  => 'En cours',
+    'terminee'  => 'Terminée',
+];
 ?>
 
-<!-- =========================================================
-     DASHBOARD HEADER
-========================================================== -->
+<!-- ============================================================
+     TITRE
+============================================================ -->
 
 <div class="dashboard-title">
 
     <div>
-        <h1>Tableau de bord</h1>
-
-        <p>
-            Bon retour ! Voici l'état de vos équipements.
-        </p>
+        <h2>Tableau de bord</h2>
     </div>
 
 </div>
 
 
-<!-- =========================================================
-     STATISTIQUES
-========================================================== -->
+<!-- ============================================================
+     CARTES STATISTIQUES
+============================================================ -->
 
 <div class="stats-grid">
 
     <!-- ÉQUIPEMENTS -->
+
     <div class="stat-card">
 
-        <div class="stat-icon green">
-            ♡
+        <div
+            class="dashboard-stat-icon dashboard-stat-icon-equipment"
+            aria-hidden="true"
+        >
+            
         </div>
 
         <div>
 
             <div class="stat-label">
-                Équipements actifs
+                Équipements enregistrés
             </div>
 
             <div class="stat-value">
-                <?= $equipmentCount ?>
+                <?= $totalEquipements ?>
             </div>
 
-            <?php if ($equipmentCount > 0): ?>
-                <div class="stat-description">
-                    Équipements enregistrés
-                </div>
-            <?php else: ?>
-                <div class="stat-description">
-                    Aucun équipement
-                </div>
-            <?php endif; ?>
+            <div class="stat-description">
+                <?= $totalEquipements > 0
+                    ? ''
+                    : 'Aucun équipement'
+                ?>
+            </div>
 
         </div>
 
@@ -75,10 +78,14 @@ $recentInterventions = isset($recentInterventions)
 
 
     <!-- MAINTENANCES -->
+
     <div class="stat-card">
 
-        <div class="stat-icon red">
-            ▣
+        <div
+            class="dashboard-stat-icon dashboard-stat-icon-maintenance"
+            aria-hidden="true"
+        >
+            
         </div>
 
         <div>
@@ -88,17 +95,19 @@ $recentInterventions = isset($recentInterventions)
             </div>
 
             <div class="stat-value">
-                <?= $maintenanceCount ?>
+                <?= $maintenancesEnAttente ?>
             </div>
 
-            <?php if ($maintenanceCount > 0): ?>
-                <div class="stat-description">
-                    Maintenance à traiter
-                </div>
+            <?php if ($maintenancesEnAttente > 0): ?>
+
+               
+
             <?php else: ?>
+
                 <div class="stat-description good">
                     Aucune maintenance en attente
                 </div>
+
             <?php endif; ?>
 
         </div>
@@ -106,51 +115,57 @@ $recentInterventions = isset($recentInterventions)
     </div>
 
 
-    <!-- PLANIFIÉES -->
+    <!-- SANTÉ -->
+
     <div class="stat-card">
 
-        <div class="stat-icon orange">
-            ◷
+        <div
+            class="dashboard-stat-icon dashboard-stat-icon-health"
+            aria-hidden="true"
+        >
+            
         </div>
 
         <div>
 
             <div class="stat-label">
-                Maintenances planifiées
+                Santé du parc
             </div>
 
             <div class="stat-value">
-                <?= $pendingCount ?>
+                <?= $santeParc ?>%
             </div>
 
-            <div class="stat-description">
-                Maintenance planifiée
-            </div>
+            
 
         </div>
 
     </div>
 
 
-    <!-- TERMINÉES -->
+    <!-- SITES -->
+
     <div class="stat-card">
 
-        <div class="stat-icon green">
-            ✓
+        <div
+            class="dashboard-stat-icon dashboard-stat-icon-sites"
+            aria-hidden="true"
+        >
+            
         </div>
 
         <div>
 
             <div class="stat-label">
-                Maintenances terminées
+                Sites suivis
             </div>
 
             <div class="stat-value">
-                <?= $completedCount ?>
+                <?= $nombreSites ?>
             </div>
 
             <div class="stat-description">
-                Interventions terminées
+                <?= $nombrePays ?> pays couvert(s)
             </div>
 
         </div>
@@ -160,143 +175,312 @@ $recentInterventions = isset($recentInterventions)
 </div>
 
 
-<!-- =========================================================
-     INTERVENTIONS RÉCENTES
-========================================================== -->
+<!-- ============================================================
+     CONTENU PRINCIPAL
+============================================================ -->
 
-<div class="dashboard-panel">
-
-    <div class="panel-title">
-
-        <h2>
-            Interventions récentes
-        </h2>
-
-    </div>
+<div class="dashboard-row">
 
 
-    <?php if (!empty($recentInterventions)): ?>
+    <!-- ========================================================
+         INTERVENTIONS RÉCENTES
+    ========================================================= -->
+
+    <div class="dashboard-panel recent-maintenance">
+
+        <div class="panel-title">
+
+            <h4>
+                Interventions récentes
+            </h4>
+
+        </div>
+
 
         <div class="table-wrapper">
 
             <table class="ibs-table">
 
                 <thead>
+
                     <tr>
-                        <th>ÉQUIPEMENT</th>
+
+                        <th>TYPE D'EQUIPEMENT</th>
+
+                        <th>SITE</th>
+
                         <th>STATUT</th>
+
                         <th>DATE</th>
+
                         <th>TYPE</th>
+
                         <th></th>
+
                     </tr>
+
                 </thead>
 
-                <tbody>
 
-                <?php foreach ($recentInterventions as $intervention): ?>
+                <tbody id="maintenance-table-body">
 
-                    <?php
-                    $equipmentName = $intervention['equipment_name']
-                        ?? $intervention['equipment']
-                        ?? '';
+                <?php if (!empty($maintenancesRecentes)): ?>
 
-                    $status = $intervention['status']
-                        ?? '';
 
-                    $date = $intervention['date']
-                        ?? $intervention['maintenance_date']
-                        ?? '';
+                    <?php foreach ($maintenancesRecentes as $m): ?>
 
-                    $type = $intervention['type']
-                        ?? '';
+                        <?php
 
-                    $id = $intervention['id']
-                        ?? null;
-                    ?>
+                        /*
+                         * ------------------------------------------------
+                         * LOCALISATION
+                         * ------------------------------------------------
+                         */
+
+                        $pays = trim(
+                            (string)($m['nom_pays'] ?? '')
+                        );
+
+                        $ville = trim(
+                            (string)($m['nom_ville'] ?? '')
+                        );
+
+                        $site = trim(
+                            (string)($m['nom_site'] ?? '')
+                        );
+
+                        $centrale = trim(
+                            (string)($m['type_centrale'] ?? '')
+                        );
+
+
+                        /*
+                         * ------------------------------------------------
+                         * STATUT
+                         * ------------------------------------------------
+                         */
+
+                        $statut = trim(
+                            (string)($m['statut'] ?? 'planifiee')
+                        );
+
+                        $libelleStatut =
+                            $libellesStatuts[$statut]
+                            ?? $statut;
+
+
+                        /*
+                         * ------------------------------------------------
+                         * CLASSE DU STATUT
+                         * ------------------------------------------------
+                         */
+
+                        $statusClass = match ($statut) {
+
+                            'terminee'
+                                => 'status-terminee',
+
+                            'en_cours'
+                                => 'status-en-cours',
+
+                            'affectee'
+                                => 'status-affectee',
+
+                            'planifiee'
+                                => 'status-planifiee',
+
+                            default
+                                => 'status-neutral',
+                        };
+
+
+                        /*
+                         * ------------------------------------------------
+                         * DATE
+                         * ------------------------------------------------
+                         */
+
+                        $dateMaintenance = '—';
+
+                        if (!empty($m['date_maintenance'])) {
+
+                            $timestamp = strtotime(
+                                (string)$m['date_maintenance']
+                            );
+
+                            if ($timestamp !== false) {
+
+                                $dateMaintenance = date(
+                                    'd/m/Y',
+                                    $timestamp
+                                );
+                            }
+                        }
+
+
+                        /*
+                         * ------------------------------------------------
+                         * TYPE DE MAINTENANCE
+                         * ------------------------------------------------
+                         */
+
+                        $typeMaintenance = trim(
+                            (string)(
+                                $m['type_maintenance'] ?? ''
+                            )
+                        );
+
+
+                        /*
+                         * ------------------------------------------------
+                         * ID SESSION
+                         * ------------------------------------------------
+                         *
+                         * Le détail d'une maintenance doit partir
+                         * de sa session.
+                         * ------------------------------------------------
+                         */
+
+                        $idSession = (int)(
+                            $m['id_session'] ?? 0
+                        );
+
+                        ?>
+
+                        <tr
+                            data-pays="<?= $this->escapeHtmlAttr($pays) ?>"
+                            data-ville="<?= $this->escapeHtmlAttr($ville) ?>"
+                            data-site="<?= $this->escapeHtmlAttr($site) ?>"
+                            data-centrale="<?= $this->escapeHtmlAttr($centrale) ?>"
+                        >
+
+                            <!-- CENTRALE -->
+
+                            <td>
+
+                                <strong class="maintenance-central-name">
+
+                                    <?= $this->escapeHtml(
+                                        $centrale ?: '—'
+                                    ) ?>
+
+                                </strong>
+
+                            </td>
+
+
+                            <!-- SITE -->
+
+                            <td>
+
+                                <span class="maintenance-site-name">
+
+                                    <?= $this->escapeHtml(
+                                        $site ?: '—'
+                                    ) ?>
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- STATUT -->
+
+                            <td>
+
+                                <span
+                                    class="status <?= $statusClass ?>"
+                                >
+
+                                    <?= $this->escapeHtml(
+                                        $libelleStatut
+                                    ) ?>
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- DATE -->
+
+                            <td class="date-cell">
+
+                                <?= $this->escapeHtml(
+                                    $dateMaintenance
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- TYPE -->
+
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    $typeMaintenance ?: '—'
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- DÉTAIL -->
+
+                            <td>
+
+                                <?php if ($idSession > 0): ?>
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'maintenance',
+                                            [
+                                                'action' => 'detail',
+                                                'id'     => $idSession,
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Voir le détail de la maintenance"
+                                        aria-label="Voir le détail"
+                                    >
+                                        →
+                                    </a>
+
+                                <?php else: ?>
+
+                                    <span
+                                        class="action-btn disabled"
+                                        title="Détail indisponible"
+                                    >
+                                        →
+                                    </span>
+
+                                <?php endif; ?>
+
+                            </td>
+
+                        </tr>
+
+
+                    <?php endforeach; ?>
+
+
+                <?php else: ?>
+
 
                     <tr>
 
-                        <td>
+                        <td
+                            colspan="6"
+                            class="empty-dashboard"
+                        >
 
-                            <div class="equipment-name">
-
-                                <div class="equipment-icon">
-                                    ▭
-                                </div>
-
-                                <div>
-                                    <strong>
-                                        <?= $this->escapeHtml($equipmentName) ?>
-                                    </strong>
-                                </div>
-
-                            </div>
-
-                        </td>
-
-
-                        <td>
-
-                            <?php
-                            $statusClass = 'status-neutral';
-
-                            if (
-                                mb_strtolower($status) === 'terminée' ||
-                                mb_strtolower($status) === 'terminee'
-                            ) {
-                                $statusClass = 'status-terminee';
-                            }
-
-                            if (
-                                mb_strtolower($status) === 'en cours'
-                            ) {
-                                $statusClass = 'status-en-cours';
-                            }
-
-                            if (
-                                mb_strtolower($status) === 'planifiée' ||
-                                mb_strtolower($status) === 'planifiee'
-                            ) {
-                                $statusClass = 'status-planifiee';
-                            }
-                            ?>
-
-                            <span class="status <?= $statusClass ?>">
-                                <?= $this->escapeHtml($status) ?>
-                            </span>
-
-                        </td>
-
-
-                        <td class="date-cell">
-                            <?= $this->escapeHtml($date) ?>
-                        </td>
-
-
-                        <td>
-                            <?= $this->escapeHtml($type) ?>
-                        </td>
-
-
-                        <td>
-
-                            <?php if ($id !== null): ?>
-
-                                <a
-                                    href="#"
-                                    class="action-btn"
-                                    title="Voir"
-                                >
-                                    →
-                                </a>
-
-                            <?php endif; ?>
+                            Aucune maintenance enregistrée.
 
                         </td>
 
                     </tr>
 
-                <?php endforeach; ?>
+
+                <?php endif; ?>
 
                 </tbody>
 
@@ -304,28 +488,884 @@ $recentInterventions = isset($recentInterventions)
 
         </div>
 
-    <?php else: ?>
 
-        <!-- =================================================
-             AUCUNE DONNÉE
-        ================================================== -->
+        <!-- MESSAGE FILTRE -->
 
-        <div class="empty-dashboard">
-
-            <div class="empty-dashboard-icon">
-                ▭
-            </div>
+        <div
+            id="no-maintenance-result"
+            class="empty-dashboard"
+            hidden
+        >
 
             <h3>
-                Aucune intervention récente
+                Aucune maintenance trouvée
             </h3>
 
             <p>
-                Les interventions enregistrées apparaîtront ici.
+                Aucune intervention ne correspond aux filtres sélectionnés.
             </p>
 
         </div>
 
-    <?php endif; ?>
+    </div>
+
+
+
+    <!-- ========================================================
+         FILTRES
+    ========================================================= -->
+
+    <div class="dashboard-panel localisation-maintenance">
+
+        <div class="panel-title">
+
+            <h4>
+                Filtre
+            </h4>
+
+        </div>
+
+
+        <div class="localisation-filters">
+
+
+            <!-- TOUS -->
+
+            <div class="filter-group">
+
+                <button
+                    type="button"
+                    class="filter-title filter-all active"
+                    data-filter="tous"
+                >
+
+                    <span>
+                        Tous
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <!-- PAYS -->
+
+            <div class="filter-group">
+
+                <button
+                    type="button"
+                    class="filter-title"
+                    data-filter="pays"
+                >
+
+                    <span>
+                        Pays
+                    </span>
+
+                    <span class="filter-arrow">
+                        ▼
+                    </span>
+
+                </button>
+
+
+                <div
+                    class="filter-options"
+                    id="options-pays"
+                >
+
+                    <?php if (!empty($repartitionPays)): ?>
+
+                        <?php foreach ($repartitionPays as $pays): ?>
+
+                            <?php
+                            $libelle = trim(
+                                (string)($pays['libelle'] ?? '')
+                            );
+
+                            $total = (int)(
+                                $pays['total'] ?? 0
+                            );
+                            ?>
+
+                            <?php if ($libelle !== ''): ?>
+
+                                <div
+                                    class="filter-option"
+                                    data-niveau="pays"
+                                    data-valeur="<?= $this->escapeHtmlAttr($libelle) ?>"
+                                >
+
+                                    <span>
+                                        <?= $this->escapeHtml($libelle) ?>
+                                    </span>
+
+                                    <strong>
+                                        <?= $total ?>
+                                    </strong>
+
+                                </div>
+
+                            <?php endif; ?>
+
+                        <?php endforeach; ?>
+
+                    <?php else: ?>
+
+                        <div class="filter-option disabled">
+                            Aucune donnée disponible
+                        </div>
+
+                    <?php endif; ?>
+
+                </div>
+
+            </div>
+
+
+            <!-- VILLE -->
+
+            <div class="filter-group">
+
+                <button
+                    type="button"
+                    class="filter-title"
+                    data-filter="ville"
+                >
+
+                    <span>
+                        Ville
+                    </span>
+
+                    <span class="filter-arrow">
+                        ▼
+                    </span>
+
+                </button>
+
+
+                <div
+                    class="filter-options"
+                    id="options-ville"
+                >
+
+                    <?php if (!empty($repartitionVille)): ?>
+
+                        <?php foreach ($repartitionVille as $ville): ?>
+
+                            <?php
+                            $libelle = trim(
+                                (string)($ville['libelle'] ?? '')
+                            );
+
+                            $total = (int)(
+                                $ville['total'] ?? 0
+                            );
+                            ?>
+
+                            <?php if ($libelle !== ''): ?>
+
+                                <div
+                                    class="filter-option"
+                                    data-niveau="ville"
+                                    data-valeur="<?= $this->escapeHtmlAttr($libelle) ?>"
+                                >
+
+                                    <span>
+                                        <?= $this->escapeHtml($libelle) ?>
+                                    </span>
+
+                                    <strong>
+                                        <?= $total ?>
+                                    </strong>
+
+                                </div>
+
+                            <?php endif; ?>
+
+                        <?php endforeach; ?>
+
+                    <?php else: ?>
+
+                        <div class="filter-option disabled">
+                            Aucune donnée disponible
+                        </div>
+
+                    <?php endif; ?>
+
+                </div>
+
+            </div>
+
+
+            <!-- SITE -->
+
+            <div class="filter-group">
+
+                <button
+                    type="button"
+                    class="filter-title"
+                    data-filter="site"
+                >
+
+                    <span>
+                        Site
+                    </span>
+
+                    <span class="filter-arrow">
+                        ▼
+                    </span>
+
+                </button>
+
+
+                <div
+                    class="filter-options"
+                    id="options-site"
+                >
+
+                    <?php if (!empty($repartitionSite)): ?>
+
+                        <?php foreach ($repartitionSite as $site): ?>
+
+                            <?php
+                            $libelle = trim(
+                                (string)($site['libelle'] ?? '')
+                            );
+
+                            $total = (int)(
+                                $site['total'] ?? 0
+                            );
+                            ?>
+
+                            <?php if ($libelle !== ''): ?>
+
+                                <div
+                                    class="filter-option"
+                                    data-niveau="site"
+                                    data-valeur="<?= $this->escapeHtmlAttr($libelle) ?>"
+                                >
+
+                                    <span>
+                                        <?= $this->escapeHtml($libelle) ?>
+                                    </span>
+
+                                    <strong>
+                                        <?= $total ?>
+                                    </strong>
+
+                                </div>
+
+                            <?php endif; ?>
+
+                        <?php endforeach; ?>
+
+                    <?php else: ?>
+
+                        <div class="filter-option disabled">
+                            Aucune donnée disponible
+                        </div>
+
+                    <?php endif; ?>
+
+                </div>
+
+            </div>
+
+
+            <!-- CENTRALE -->
+
+            <div class="filter-group">
+
+                <button
+                    type="button"
+                    class="filter-title"
+                    data-filter="centrale"
+                >
+
+                    <span>
+                        Centrale
+                    </span>
+
+                    <span class="filter-arrow">
+                        ▼
+                    </span>
+
+                </button>
+
+
+                <div
+                    class="filter-options"
+                    id="options-centrale"
+                >
+
+                    <?php if (!empty($repartitionCentrale)): ?>
+
+                        <?php foreach ($repartitionCentrale as $centrale): ?>
+
+                            <?php
+                            $libelle = trim(
+                                (string)($centrale['libelle'] ?? '')
+                            );
+
+                            $total = (int)(
+                                $centrale['total'] ?? 0
+                            );
+                            ?>
+
+                            <?php if ($libelle !== ''): ?>
+
+                                <div
+                                    class="filter-option"
+                                    data-niveau="centrale"
+                                    data-valeur="<?= $this->escapeHtmlAttr($libelle) ?>"
+                                >
+
+                                    <span>
+                                        <?= $this->escapeHtml($libelle) ?>
+                                    </span>
+
+                                    <strong>
+                                        <?= $total ?>
+                                    </strong>
+
+                                </div>
+
+                            <?php endif; ?>
+
+                        <?php endforeach; ?>
+
+                    <?php else: ?>
+
+                        <div class="filter-option disabled">
+                            Aucune donnée disponible
+                        </div>
+
+                    <?php endif; ?>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- FILTRE ACTIF -->
+
+        <div
+            id="active-filter"
+            class="active-filter"
+            hidden
+        >
+
+            <span id="active-filter-text"></span>
+
+            <button
+                type="button"
+                id="clear-filter"
+                title="Supprimer les filtres"
+            >
+                ×
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
+
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+
+<script>
+
+(() => {
+
+    const tableBody =
+        document.getElementById('maintenance-table-body');
+
+    const noResult =
+        document.getElementById('no-maintenance-result');
+
+    const activeFilter =
+        document.getElementById('active-filter');
+
+    const activeFilterText =
+        document.getElementById('active-filter-text');
+
+    const clearFilter =
+        document.getElementById('clear-filter');
+
+
+    if (!tableBody) {
+        return;
+    }
+
+
+    /*
+     * ------------------------------------------------------------
+     * ÉTAT DES FILTRES
+     * ------------------------------------------------------------
+     */
+
+    const state = {
+        pays: '',
+        ville: '',
+        site: '',
+        centrale: ''
+    };
+
+
+    const labels = {
+        pays: 'Pays',
+        ville: 'Ville',
+        site: 'Site',
+        centrale: 'Centrale'
+    };
+
+
+    const ordre = [
+        'pays',
+        'ville',
+        'site',
+        'centrale'
+    ];
+
+
+    /*
+     * ------------------------------------------------------------
+     * NORMALISATION
+     * ------------------------------------------------------------
+     */
+
+    function normaliser(value) {
+
+        return String(value || '')
+            .toLocaleLowerCase('fr-FR')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
+
+    }
+
+
+    /*
+     * ------------------------------------------------------------
+     * LIGNES DU TABLEAU
+     * ------------------------------------------------------------
+     */
+
+    function rows() {
+
+        return Array.from(
+            tableBody.querySelectorAll(
+                'tr[data-pays]'
+            )
+        );
+
+    }
+
+
+    /*
+     * ------------------------------------------------------------
+     * UNE LIGNE CORRESPOND-ELLE AUX FILTRES ?
+     * ------------------------------------------------------------
+     */
+
+    function ligneCorrespond(ligne) {
+
+        return ordre.every((niveau) => {
+
+            const filtre =
+                normaliser(state[niveau]);
+
+            if (!filtre) {
+                return true;
+            }
+
+            return (
+                normaliser(
+                    ligne.dataset[niveau]
+                ) === filtre
+            );
+
+        });
+
+    }
+
+
+    /*
+     * ------------------------------------------------------------
+     * APPLICATION DES FILTRES
+     * ------------------------------------------------------------
+     */
+
+    function appliquerFiltres() {
+
+        let nombreVisible = 0;
+
+
+        rows().forEach((ligne) => {
+
+            const visible =
+                ligneCorrespond(ligne);
+
+            ligne.hidden = !visible;
+
+            if (visible) {
+                nombreVisible++;
+            }
+
+        });
+
+
+        if (noResult) {
+
+            noResult.hidden =
+                nombreVisible !== 0;
+
+        }
+
+
+        afficherEtatActif();
+
+
+        /*
+         * Bouton "Tous"
+         */
+
+        const tousActif =
+            ordre.every(
+                (niveau) => !state[niveau]
+            );
+
+
+        const boutonTous =
+            document.querySelector(
+                '.filter-all'
+            );
+
+
+        if (boutonTous) {
+
+            boutonTous.classList.toggle(
+                'active',
+                tousActif
+            );
+
+        }
+
+
+        /*
+         * Boutons des filtres
+         */
+
+        document
+            .querySelectorAll(
+                '.filter-title:not(.filter-all)'
+            )
+            .forEach((button) => {
+
+                const niveau =
+                    button.dataset.filter;
+
+                button.classList.toggle(
+                    'active',
+                    Boolean(state[niveau])
+                );
+
+            });
+
+    }
+
+
+    /*
+     * ------------------------------------------------------------
+     * AFFICHAGE DU FILTRE ACTIF
+     * ------------------------------------------------------------
+     */
+
+    function afficherEtatActif() {
+
+        if (
+            !activeFilter ||
+            !activeFilterText
+        ) {
+            return;
+        }
+
+
+        const actifs =
+            ordre
+                .filter(
+                    (niveau) =>
+                        state[niveau] !== ''
+                )
+                .map(
+                    (niveau) =>
+                        labels[niveau]
+                        + ' : '
+                        + state[niveau]
+                );
+
+
+        activeFilter.hidden =
+            actifs.length === 0;
+
+
+        activeFilterText.textContent =
+            actifs.join(' · ');
+
+    }
+
+
+    /*
+     * ------------------------------------------------------------
+     * OUVERTURE / FERMETURE DES FILTRES
+     * ------------------------------------------------------------
+     */
+
+    document
+        .querySelectorAll('.filter-title')
+        .forEach((button) => {
+
+            button.addEventListener(
+                'click',
+                function () {
+
+                    const niveau =
+                        this.dataset.filter;
+
+
+                    /*
+                     * TOUS
+                     */
+
+                    if (niveau === 'tous') {
+
+                        ordre.forEach(
+                            (key) => {
+                                state[key] = '';
+                            }
+                        );
+
+
+                        document
+                            .querySelectorAll(
+                                '.filter-group'
+                            )
+                            .forEach(
+                                (group) => {
+                                    group.classList
+                                        .remove('open');
+                                }
+                            );
+
+
+                        appliquerFiltres();
+
+                        return;
+                    }
+
+
+                    const groupe =
+                        this.closest(
+                            '.filter-group'
+                        );
+
+
+                    /*
+                     * Fermer les autres
+                     */
+
+                    document
+                        .querySelectorAll(
+                            '.filter-group'
+                        )
+                        .forEach(
+                            (group) => {
+
+                                if (
+                                    group !== groupe
+                                ) {
+
+                                    group.classList
+                                        .remove(
+                                            'open'
+                                        );
+
+                                }
+
+                            }
+                        );
+
+
+                    /*
+                     * Ouvrir celui demandé
+                     */
+
+                    if (groupe) {
+
+                        groupe.classList.toggle(
+                            'open'
+                        );
+
+                    }
+
+                }
+            );
+
+        });
+
+
+    /*
+     * ------------------------------------------------------------
+     * CHOIX D'UNE OPTION
+     * ------------------------------------------------------------
+     */
+
+    document.addEventListener(
+        'click',
+        function (event) {
+
+            const option =
+                event.target.closest(
+                    '.filter-option'
+                );
+
+
+            if (!option) {
+                return;
+            }
+
+
+            if (
+                option.classList.contains(
+                    'disabled'
+                )
+            ) {
+                return;
+            }
+
+
+            const niveau =
+                option.dataset.niveau;
+
+            const valeur =
+                option.dataset.valeur || '';
+
+
+            if (!niveau) {
+                return;
+            }
+
+
+            state[niveau] = valeur;
+
+
+            /*
+             * Hiérarchie :
+             *
+             * Pays
+             *   ↓
+             * Ville
+             *   ↓
+             * Site
+             *   ↓
+             * Centrale
+             *
+             * Lorsqu'on change un niveau,
+             * les niveaux inférieurs sont remis à zéro.
+             */
+
+            const index =
+                ordre.indexOf(niveau);
+
+
+            if (index >= 0) {
+
+                ordre
+                    .slice(index + 1)
+                    .forEach(
+                        (key) => {
+                            state[key] = '';
+                        }
+                    );
+
+            }
+
+
+            /*
+             * Fermer les menus
+             */
+
+            document
+                .querySelectorAll(
+                    '.filter-group'
+                )
+                .forEach(
+                    (group) => {
+                        group.classList
+                            .remove('open');
+                    }
+                );
+
+
+            appliquerFiltres();
+
+        }
+    );
+
+
+    /*
+     * ------------------------------------------------------------
+     * SUPPRIMER LES FILTRES
+     * ------------------------------------------------------------
+     */
+
+    if (clearFilter) {
+
+        clearFilter.addEventListener(
+            'click',
+            function () {
+
+                ordre.forEach(
+                    (key) => {
+                        state[key] = '';
+                    }
+                );
+
+
+                document
+                    .querySelectorAll(
+                        '.filter-group'
+                    )
+                    .forEach(
+                        (group) => {
+                            group.classList
+                                .remove('open');
+                        }
+                    );
+
+
+                appliquerFiltres();
+
+            }
+        );
+
+    }
+
+
+    /*
+     * ------------------------------------------------------------
+     * INITIALISATION
+     * ------------------------------------------------------------
+     */
+
+    appliquerFiltres();
+
+})();
+
+</script>

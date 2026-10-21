@@ -10,10 +10,12 @@ use Laminas\View\Model\ViewModel;
 
 class UtilisateurController extends AbstractActionController
 {
+    use RoleTrait;
+
     public const ROLES = [
         'administrateur',
-        'responsable',
         'technicien',
+        'consultant',
     ];
 
     public function __construct(
@@ -22,20 +24,35 @@ class UtilisateurController extends AbstractActionController
     }
 
     /**
-     * Liste des utilisateurs
+     * Liste des utilisateurs.
+     * Accessible uniquement à l'administrateur.
      */
     public function indexAction(): ViewModel
     {
+        $acces = $this->exigerRole(['administrateur']);
+
+        if ($acces !== null) {
+            return $acces;
+        }
+
         return new ViewModel([
-            'utilisateurs' => $this->utilisateurTable->findAll('nom'),
+            'utilisateurs' =>
+                $this->utilisateurTable->findAll('nom'),
         ]);
     }
 
     /**
-     * Ajouter un utilisateur
+     * Ajouter un utilisateur.
+     * Accessible uniquement à l'administrateur.
      */
     public function addAction(): ViewModel
     {
+        $acces = $this->exigerRole(['administrateur']);
+
+        if ($acces !== null) {
+            return $acces;
+        }
+
         $erreur = null;
 
         $item = [
@@ -43,7 +60,7 @@ class UtilisateurController extends AbstractActionController
             'prenom'     => '',
             'telephone'  => '',
             'email'      => '',
-            'role'       => 'technicien',
+            'role'       => 'consultant',
         ];
 
         if ($this->getRequest()->isPost()) {
@@ -51,34 +68,45 @@ class UtilisateurController extends AbstractActionController
             $valeurs = $this->valeursFormulaire();
 
             $motDePasse = trim(
-                (string) $this->params()->fromPost('mot_de_passe')
+                (string) $this->params()
+                    ->fromPost('mot_de_passe')
             );
 
-            // Conserver les valeurs saisies dans le formulaire
-            $item = array_merge($item, $valeurs);
+            $item = array_merge(
+                $item,
+                $valeurs
+            );
 
             if (
                 $valeurs['nom'] === ''
                 || $valeurs['prenom'] === ''
                 || $valeurs['email'] === ''
             ) {
-                $erreur = 'Nom, prénom et email sont obligatoires.';
+                $erreur =
+                    'Nom, prénom et email sont obligatoires.';
 
             } elseif (
-                !filter_var($valeurs['email'], FILTER_VALIDATE_EMAIL)
+                !filter_var(
+                    $valeurs['email'],
+                    FILTER_VALIDATE_EMAIL
+                )
             ) {
-                $erreur = 'Adresse email invalide.';
+                $erreur =
+                    'Adresse email invalide.';
 
             } elseif (
                 $motDePasse === ''
                 || strlen($motDePasse) < 8
             ) {
-                $erreur = 'Le mot de passe doit contenir au moins 8 caractères.';
+                $erreur =
+                    'Le mot de passe doit contenir au moins 8 caractères.';
 
             } elseif (
-                $this->utilisateurTable->findByEmail($valeurs['email'])
+                $this->utilisateurTable
+                    ->findByEmail($valeurs['email'])
             ) {
-                $erreur = 'Un compte existe déjà avec cet email.';
+                $erreur =
+                    'Un compte existe déjà avec cet email.';
 
             } else {
 
@@ -87,7 +115,8 @@ class UtilisateurController extends AbstractActionController
                     'mot_de_passe' => $motDePasse,
                 ]);
 
-                return $this->redirect()->toRoute('utilisateur');
+                return $this->redirect()
+                    ->toRoute('utilisateur');
             }
         }
 
@@ -98,24 +127,33 @@ class UtilisateurController extends AbstractActionController
             'mode'   => 'ajout',
         ]);
 
-        // Vue située dans :
-        // view/application/parametre/utilisateur/add.phtml
-        $view->setTemplate('application/utilisateur/add');
+        $view->setTemplate(
+            'application/utilisateur/add'
+        );
 
         return $view;
     }
 
     /**
-     * Modifier un utilisateur
+     * Modifier un utilisateur.
+     * Accessible uniquement à l'administrateur.
      */
     public function editAction(): ViewModel
     {
-        $id = (int) $this->params()->fromRoute('id');
+        $acces = $this->exigerRole(['administrateur']);
+
+        if ($acces !== null) {
+            return $acces;
+        }
+
+        $id = (int) $this->params()
+            ->fromRoute('id');
 
         $item = $this->utilisateurTable->find($id);
 
         if (!$item) {
-            return $this->redirect()->toRoute('utilisateur');
+            return $this->redirect()
+                ->toRoute('utilisateur');
         }
 
         $erreur = null;
@@ -125,45 +163,61 @@ class UtilisateurController extends AbstractActionController
             $valeurs = $this->valeursFormulaire();
 
             $motDePasse = trim(
-                (string) $this->params()->fromPost('mot_de_passe')
+                (string) $this->params()
+                    ->fromPost('mot_de_passe')
             );
 
-            // Conserver les valeurs saisies
-            $item = array_merge($item, $valeurs);
+            $item = array_merge(
+                $item,
+                $valeurs
+            );
 
             if (
                 $valeurs['nom'] === ''
                 || $valeurs['prenom'] === ''
                 || $valeurs['email'] === ''
             ) {
-                $erreur = 'Nom, prénom et email sont obligatoires.';
+                $erreur =
+                    'Nom, prénom et email sont obligatoires.';
 
             } elseif (
-                !filter_var($valeurs['email'], FILTER_VALIDATE_EMAIL)
+                !filter_var(
+                    $valeurs['email'],
+                    FILTER_VALIDATE_EMAIL
+                )
             ) {
-                $erreur = 'Adresse email invalide.';
+                $erreur =
+                    'Adresse email invalide.';
 
             } else {
 
-                $existant = $this->utilisateurTable
-                    ->findByEmail($valeurs['email']);
+                $existant =
+                    $this->utilisateurTable
+                        ->findByEmail(
+                            $valeurs['email']
+                        );
 
                 if (
                     $existant
                     && (int) $existant['id'] !== $id
                 ) {
-                    $erreur = 'Un autre compte utilise déjà cet email.';
+                    $erreur =
+                        'Un autre compte utilise déjà cet email.';
 
                 } else {
 
+                    /*
+                     * Mise à jour des informations
+                     * et du rôle.
+                     */
                     $this->utilisateurTable->update(
                         $id,
                         $valeurs
                     );
 
                     /*
-                     * Le mot de passe est facultatif lors
-                     * de la modification.
+                     * Le mot de passe est facultatif
+                     * lors d'une modification.
                      */
                     if ($motDePasse !== '') {
 
@@ -197,52 +251,79 @@ class UtilisateurController extends AbstractActionController
             'mode'   => 'modification',
         ]);
 
-        // Vue située dans :
-        // view/application/parametre/utilisateur/edit.phtml
-        $view->setTemplate('application/utilisateur/edit');
+        $view->setTemplate(
+            'application/utilisateur/edit'
+        );
 
         return $view;
     }
 
     /**
-     * Supprimer un utilisateur
+     * Supprimer un utilisateur.
+     * Accessible uniquement à l'administrateur.
      */
     public function deleteAction()
     {
-        $id = (int) $this->params()->fromRoute('id');
+        $acces = $this->exigerRole(['administrateur']);
 
-        $this->utilisateurTable->delete($id);
+        if ($acces !== null) {
+            return $acces;
+        }
 
-        return $this->redirect()->toRoute('utilisateur');
+        $id = (int) $this->params()
+            ->fromRoute('id');
+
+        if ($id > 0) {
+            $this->utilisateurTable->delete($id);
+        }
+
+        return $this->redirect()
+            ->toRoute('utilisateur');
     }
 
     /**
-     * Récupération et validation des données du formulaire
+     * Récupération et validation des données
+     * du formulaire.
      */
     private function valeursFormulaire(): array
     {
-        $role = (string) $this->params()
-            ->fromPost('role', 'technicien');
+        $role = strtolower(
+            trim(
+                (string) $this->params()
+                    ->fromPost(
+                        'role',
+                        'consultant'
+                    )
+            )
+        );
 
-        if (!in_array($role, self::ROLES, true)) {
-            $role = 'technicien';
+        if (!in_array(
+            $role,
+            self::ROLES,
+            true
+        )) {
+            $role = 'consultant';
         }
 
         return [
             'nom' => trim(
-                (string) $this->params()->fromPost('nom')
+                (string) $this->params()
+                    ->fromPost('nom')
             ),
 
             'prenom' => trim(
-                (string) $this->params()->fromPost('prenom')
+                (string) $this->params()
+                    ->fromPost('prenom')
             ),
 
             'telephone' => trim(
-                (string) $this->params()->fromPost('telephone')
+                (string) $this->params()
+                    ->fromPost('telephone')
             ) ?: null,
 
             'email' => trim(
-                (string) $this->params()->fromPost('email')
+                (string) $this->params()
+                    ->fromPost('email')
             ),
 
             'role' => $role,

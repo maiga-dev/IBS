@@ -1,45 +1,146 @@
 <?php
 /** @var Laminas\View\Renderer\PhpRenderer $this */
+
 $sites = $sites ?? [];
 ?>
+
 <div class="dashboard">
+
     <div class="dashboard-title">
         <div>
             <h1>Sites</h1>
-            <p>Établissements de santé.</p>
+            <p>Sites rattachés à une ville.</p>
         </div>
-        <a href="<?= $this->url('site', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
+
+        <a
+            href="<?= $this->url('site', ['action' => 'add']) ?>"
+            class="auth-submit"
+        >
             + Ajouter
         </a>
     </div>
 
     <div class="dashboard-panel">
+
         <?php if (empty($sites)): ?>
+
             <div class="empty-dashboard">
                 <div class="empty-dashboard-icon">✓</div>
                 <strong>Aucun site enregistré</strong>
             </div>
+
         <?php else: ?>
+
+            <div class="users-actions-toolbar">
+                <div class="users-actions-label">Recherche :</div>
+
+                <div class="users-action-search">
+                    <span class="users-action-search-icon">⌕</span>
+                    <input
+                        type="text"
+                        id="searchSites"
+                        placeholder="Rechercher un site..."
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+
             <div class="table-wrapper">
-                <table class="ibs-table">
-                    <thead><tr><th>Nom</th><th>Adresse</th><th>Ville</th><th></th></tr></thead>
-                    <tbody>
-                    <?php foreach ($sites as $s): ?>
+                <table class="ibs-table" id="tableSites">
+                    <thead>
                         <tr>
-                            <td><?= $this->escapeHtml($s['nom_site']) ?></td>
-                            <td><?= $this->escapeHtml((string) ($s['adresse'] ?? '—')) ?></td>
+                            <th>N°</th>
+                            <th>Nom</th>
+                            <th>Pays</th>
+                            <th>Ville</th>
+                            <th>Téléphone</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    <?php foreach ($sites as $index => $s): ?>
+                        <tr>
+                            <td><?= $index + 1 ?></td>
+                            <td><?= $this->escapeHtml((string) ($s['nom_site'] ?? '—')) ?></td>
+                            <td><?= $this->escapeHtml((string) ($s['nom_pays'] ?? '—')) ?></td>
                             <td><?= $this->escapeHtml((string) ($s['nom_ville'] ?? '—')) ?></td>
-                            <td style="text-align:right;">
-                                <a href="<?= $this->url('site', ['action' => 'edit', 'id' => $s['id_site']]) ?>">Modifier</a>
-                                &nbsp;·&nbsp;
-                                <a href="<?= $this->url('site', ['action' => 'delete', 'id' => $s['id_site']]) ?>"
-                                   onclick="return confirm('Supprimer ce site ?');">Supprimer</a>
+                            <td><?= $this->escapeHtml((string) ($s['telephone'] ?? '—')) ?></td>
+                            <td><?= $this->escapeHtml((string) ($s['latitude'] ?? '—')) ?></td>
+                            <td><?= $this->escapeHtml((string) ($s['longitude'] ?? '—')) ?></td>
+                            <td>
+                                <div class="action-buttons">
+                                   
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'site',
+                                            [
+                                                'action' => 'edit',
+                                                'id' => $s['id_site']
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Modifier"
+                                        aria-label="Modifier"
+                                    >✎</a>
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'site',
+                                            [
+                                                'action' => 'delete',
+                                                'id' => $s['id_site']
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Supprimer"
+                                        aria-label="Supprimer"
+                                        onclick="return confirm('Supprimer ce site ?');"
+                                    >🗑</a>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
+
         <?php endif; ?>
+
     </div>
 </div>
+
+<?php if (!empty($sites)): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchSites');
+    const rows = Array.from(
+        document.querySelectorAll('#tableSites tbody tr')
+    );
+
+    function normaliser(texte) {
+        return String(texte || '')
+            .toLocaleLowerCase('fr-FR')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function rechercher() {
+        const recherche = normaliser(searchInput.value.trim());
+
+        rows.forEach(function (row) {
+            const contenu = normaliser(row.textContent);
+            row.style.display =
+                recherche === '' || contenu.includes(recherche)
+                    ? ''
+                    : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', rechercher);
+});
+</script>
+<?php endif; ?>

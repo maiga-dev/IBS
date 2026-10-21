@@ -1,32 +1,126 @@
 <?php
 /** @var Laminas\View\Renderer\PhpRenderer $this */
+
 $erreur = $erreur ?? null;
-$item = $item ?? ['nom_type' => ''];
+
+$item = $item ?? [
+    'nom_type' => '',
+];
+
 $mode = $mode ?? 'ajout';
+
+$nomType = $item['nom_type'] ?? '';
+
 $action = $mode === 'modification'
-    ? $this->url('type_equipement', ['action' => 'edit', 'id' => $item['id_type_equipement'] ?? null])
-    : $this->url('type_equipement', ['action' => 'add']);
+    ? $this->url('type_equipement', [
+        'action' => 'edit',
+        'id' => $item['id_type_equipement'] ?? null,
+    ])
+    : $this->url('type_equipement', [
+        'action' => 'add',
+    ]);
 ?>
+
 <div class="dashboard">
+
     <div class="dashboard-title">
         <div>
-            <a href="<?= $this->url('type_equipement') ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la liste</a>
-            <h1><?= $mode === 'modification' ? "Modifier le type d'équipement" : "Ajouter un type d'équipement" ?></h1>
+
+            
+
+            <h1>
+                <?= $mode === 'modification'
+                    ? 'Modifier le type d’équipement'
+                    : 'Ajouter un type d’équipement'
+                ?>
+            </h1>
+
+            <p>
+                <?= $mode === 'modification'
+                    ? 'Modifiez le type d’équipement.'
+                    : 'Enregistrez un nouveau type d’équipement.'
+                ?>
+            </p>
+
         </div>
     </div>
 
-    <div class="dashboard-panel" style="max-width:480px;">
-        <?php if ($erreur): ?>
-            <div class="auth-error"><?= $this->escapeHtml($erreur) ?></div>
-        <?php endif; ?>
+    <div class="dashboard-panel form-panel">
 
-        <form method="post" action="<?= $action ?>">
-            <div class="auth-field">
-                <label for="nom_type">Nom du type</label>
-                <input type="text" id="nom_type" name="nom_type"
-                       value="<?= $this->escapeHtmlAttr($item['nom_type'] ?? '') ?>" required autofocus>
+        <div class="form-card">
+
+            <div class="form-card-header">
+
+                <div class="form-card-icon">
+                    
+                </div>
+
+                <div>
+                    <h5>équipement</h5>
+
+                </div>
+
             </div>
-            <button type="submit" class="auth-submit">Enregistrer</button>
-        </form>
+
+            <?php if ($erreur): ?>
+
+                <div class="auth-error form-error">
+                    <?= $this->escapeHtml($erreur) ?>
+                </div>
+
+            <?php endif; ?>
+
+            <form
+                method="post"
+                action="<?= $action ?>"
+                class="ibs-form"
+            >
+
+                <div class="auth-field">
+
+                    <label for="nom_type">
+                        Nom de l'équipement
+                    </label>
+
+                    <input
+                        type="text"
+                        id="nom_type"
+                        name="nom_type"
+                        value="<?= $this->escapeHtmlAttr(
+                            (string) $nomType
+                        ) ?>"
+                        placeholder="Ex. Échographe"
+                        required
+                        autofocus
+                    >
+
+                </div>
+
+                <div class="form-actions">
+
+                    <a
+                        href="<?= $this->url('type_equipement') ?>"
+                        class="form-cancel-button"
+                    >
+                        Annuler
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="auth-submit form-submit-button"
+                    >
+                        <?= $mode === 'modification'
+                            ? 'Enregistrer les modifications'
+                            : 'Enregistrer le type'
+                        ?>
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
     </div>
+
 </div>

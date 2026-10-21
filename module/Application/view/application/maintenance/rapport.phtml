@@ -1,48 +1,817 @@
 <?php
-/** @var Laminas\View\Renderer\PhpRenderer $this */
+
 $session = $session ?? [];
 $equipements = $equipements ?? [];
 
-$libellesStatut = [
-    'planifiee' => 'Planifiée', 'en_cours' => 'En cours', 'suspendue' => 'Suspendue',
-    'arretee' => 'Arrêtée', 'terminee' => 'Terminée',
+/*
+|--------------------------------------------------------------------------
+| STATUTS
+|--------------------------------------------------------------------------
+*/
+
+$statuts = [
+    'planifiee' => 'Planifiée',
+    'affectee'  => 'Affectée',
+    'en_cours'  => 'En cours',
+    'suspendue' => 'Suspendue',
+    'arretee'   => 'Arrêtée',
+    'terminee'  => 'Terminée',
 ];
+
+$statut = strtolower(
+    trim((string) ($session['statut'] ?? ''))
+);
+
+$statutLabel = $statuts[$statut] ?? 'Non défini';
+
+/*
+|--------------------------------------------------------------------------
+| INFORMATIONS PRINCIPALES
+|--------------------------------------------------------------------------
+*/
+
+$technicien = trim(
+    (string) ($session['technicien_prenom'] ?? '')
+    . ' '
+    . (string) ($session['technicien_nom'] ?? '')
+);
+
+if ($technicien === '') {
+    $technicien = 'Non affecté';
+}
+
+$centrale = trim(
+    (string) ($session['type_centrale'] ?? '')
+);
+
+$site = trim(
+    (string) ($session['nom_site'] ?? '')
+);
+
+$dateDebut = trim(
+    (string) ($session['date_session'] ?? '')
+);
+
+$dateFin = trim(
+    (string) ($session['date_fin'] ?? '')
+);
+
+$typeMaintenance = trim(
+    (string) ($session['type_maintenance'] ?? '')
+);
+
+$diagnosticInitial = trim(
+    (string) ($session['diagnostic_initial'] ?? '')
+);
+
+$diagnosticFinal = trim(
+    (string) ($session['diagnostic_final'] ?? '')
+);
+
+$compteRendu = trim(
+    (string) ($session['compte_rendu'] ?? '')
+);
+
+$commentaire = trim(
+    (string) ($session['commentaire'] ?? '')
+);
+
+$telephoneSite = trim(
+    (string) ($session['telephone_site'] ?? '')
+);
+
+$idSession = (int) ($session['id_session'] ?? 0);
+
 ?>
-<div class="dashboard">
-    <div class="dashboard-title">
-        <div>
-            <a href="<?= $this->url('maintenance', ['action' => 'detail', 'id' => $session['id_session']]) ?>" class="panel-link" style="display:inline-block;margin-bottom:8px;">← Retour à la session</a>
-            <h1>Rapport — Session #<?= (int) $session['id_session'] ?></h1>
-            <p>
-                <?= $this->escapeHtml((string) ($session['type_centrale'] ?? '—')) ?>
-                <?= $session['nom_site'] ? ' — ' . $this->escapeHtml($session['nom_site']) : '' ?>
-                · <?= $this->escapeHtml(date('d/m/Y', strtotime($session['date_session']))) ?>
-                <?= $session['technicien_nom'] ? ' · Technicien : ' . $this->escapeHtml($session['technicien_prenom'] . ' ' . $session['technicien_nom']) : '' ?>
-            </p>
-        </div>
-        <button onclick="window.print()" class="auth-submit" style="width:auto;padding:10px 18px;">Imprimer / PDF</button>
-    </div>
 
-    <div class="dashboard-panel">
-        <?php foreach ($equipements as $eq): ?>
-            <?php $nomEquipement = trim(($eq['marque'] ?? '') . ' ' . ($eq['modele'] ?? '')) ?: $eq['type_equipement']; ?>
-            <div style="border-bottom:1px solid #E7E9EC;padding:14px 0;">
-                <strong><?= $this->escapeHtml($nomEquipement) ?></strong>
-                — <span class="status"><?= $this->escapeHtml($libellesStatut[$eq['statut']] ?? $eq['statut']) ?></span>
-                <p class="stat-description">N° série : <?= $this->escapeHtml((string) ($eq['numero_serie'] ?? '—')) ?></p>
+<div class="maintenance-report">
 
-                <?php if (! empty($eq['diagnostic'])): ?>
-                    <p><b>Diagnostic :</b> <?= nl2br($this->escapeHtml($eq['diagnostic'])) ?></p>
-                <?php endif; ?>
+    <!-- =========================================================
+         EN-TÊTE DU RAPPORT
+         ========================================================= -->
 
-                <?php if (! empty($eq['compte_rendu'])): ?>
-                    <p><b>Compte-rendu :</b> <?= nl2br($this->escapeHtml($eq['compte_rendu'])) ?></p>
-                <?php endif; ?>
+    <div class="maintenance-report-header">
 
-                <?php if ($eq['technicien_nom']): ?>
-                    <p class="stat-description">Technicien : <?= $this->escapeHtml($eq['technicien_prenom'] . ' ' . $eq['technicien_nom']) ?></p>
-                <?php endif; ?>
+        <div class="maintenance-report-heading">
+
+            <div>
+
+                <span class="maintenance-report-kicker">
+                    RAPPORT DE MAINTENANCE
+                </span>
+
+               
+
+                <p>
+                    <?= $this->escapeHtml(
+                        $site !== ''
+                            ? $site
+                            : 'Site non renseigné'
+                    ) ?>
+
+                    <span class="report-separator">•</span>
+
+                    Maintenance
+                    <?= $idSession > 0
+                        ? 'N° ' . $this->escapeHtml((string) $idSession)
+                        : ''
+                    ?>
+                </p>
+
+                <!-- STATUT PRINCIPAL -->
+                <div class="maintenance-report-status-wrapper">
+
+                    <span class="report-status-label">
+                     
+                    </span>
+
+                    <span
+                        class="maintenance-report-status status-<?= $this->escapeHtmlAttr(
+                            $statut
+                        ) ?>"
+                    >
+                        <?= $this->escapeHtml($statutLabel) ?>
+                    </span>
+
+                </div>
+
             </div>
-        <?php endforeach; ?>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+        <div class="maintenance-report-actions">
+
+            <a
+                href="<?= $this->url(
+                    'maintenance',
+                    [
+                        'action' => 'detail',
+                        'id' => $idSession,
+                    ]
+                ) ?>"
+                class="btn-secondary report-action-button no-print"
+            >
+                ← Retour
+            </a>
+
+            <button
+                type="button"
+                class="btn-primary report-action-button no-print"
+                onclick="window.print()"
+            >
+                🖨 Imprimer
+            </button>
+
+        </div>
+
     </div>
+
+
+    <!-- =========================================================
+         IDENTIFICATION DE LA MAINTENANCE
+         ========================================================= -->
+
+    <div class="maintenance-report-summary">
+
+        <div class="report-summary-item">
+
+            <span class="report-summary-label">
+                Centrale
+            </span>
+
+            <strong>
+                <?= $this->escapeHtml(
+                    $centrale !== ''
+                        ? $centrale
+                        : '—'
+                ) ?>
+            </strong>
+
+        </div>
+
+
+        <div class="report-summary-item">
+
+            <span class="report-summary-label">
+                Site
+            </span>
+
+            <strong>
+                <?= $this->escapeHtml(
+                    $site !== ''
+                        ? $site
+                        : '—'
+                ) ?>
+            </strong>
+
+        </div>
+
+
+        <div class="report-summary-item">
+
+            <span class="report-summary-label">
+                Date de début
+            </span>
+
+            <strong>
+                <?= $this->escapeHtml(
+                    $dateDebut !== ''
+                        ? $dateDebut
+                        : '—'
+                ) ?>
+            </strong>
+
+        </div>
+
+
+        <div class="report-summary-item">
+
+            <span class="report-summary-label">
+                Date de fin
+            </span>
+
+            <strong>
+
+                <?php if ($dateFin !== ''): ?>
+
+                    <?= $this->escapeHtml($dateFin) ?>
+
+                <?php else: ?>
+
+                    <span class="date-not-finished">
+                        En cours
+                    </span>
+
+                <?php endif; ?>
+
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         01 — INFORMATIONS DE LA MAINTENANCE
+         ========================================================= -->
+
+    <section class="maintenance-report-section">
+
+        <div class="maintenance-report-section-title">
+
+            <div class="section-number">
+                01
+            </div>
+
+            <div>
+
+                <h2>
+                    Informations de la maintenance
+                </h2>
+
+                <p>
+                    Identification de la session
+                    et de l'intervention.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="maintenance-info-grid">
+
+            <!-- TYPE DE MAINTENANCE -->
+            <div class="maintenance-info-card">
+
+                <span class="info-card-label">
+                    Type de maintenance
+                </span>
+
+                <strong>
+                    <?= $this->escapeHtml(
+                        $typeMaintenance !== ''
+                            ? $typeMaintenance
+                            : '—'
+                    ) ?>
+                </strong>
+
+            </div>
+
+
+            <!-- TECHNICIEN -->
+            <div class="maintenance-info-card">
+
+                <span class="info-card-label">
+                    Technicien affecté
+                </span>
+
+                <strong>
+                    <?= $this->escapeHtml($technicien) ?>
+                </strong>
+
+            </div>
+
+
+            <!-- TELEPHONE -->
+            <?php if ($telephoneSite !== ''): ?>
+
+                <div class="maintenance-info-card">
+
+                    <span class="info-card-label">
+                        Téléphone du site
+                    </span>
+
+                    <strong>
+                        <?= $this->escapeHtml($telephoneSite) ?>
+                    </strong>
+
+                </div>
+
+            <?php endif; ?>
+
+
+            <!-- REFERENCE -->
+            <?php if ($idSession > 0): ?>
+
+                <div class="maintenance-info-card">
+
+                    <span class="info-card-label">
+                        Référence
+                    </span>
+
+                    <strong>
+                        MT-<?= $this->escapeHtml(
+                            (string) $idSession
+                        ) ?>
+                    </strong>
+
+                </div>
+
+            <?php endif; ?>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         02 — DIAGNOSTIC INITIAL
+         ========================================================= -->
+
+    <section class="maintenance-report-section">
+
+        <div class="maintenance-report-section-title">
+
+            <div class="section-number">
+                02
+            </div>
+
+            <div>
+
+                <h2>
+                    Diagnostic initial
+                </h2>
+
+                <p>
+                    État constaté avant le début
+                    des opérations de maintenance.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="maintenance-text-card initial">
+
+            <div class="maintenance-text-card-label">
+                Diagnostic avant intervention
+            </div>
+
+            <div class="maintenance-text">
+
+                <?php if ($diagnosticInitial !== ''): ?>
+
+                    <?= nl2br(
+                        $this->escapeHtml(
+                            $diagnosticInitial
+                        )
+                    ) ?>
+
+                <?php else: ?>
+
+                    <span class="empty-value">
+                        Aucun diagnostic initial
+                        n'a été renseigné.
+                    </span>
+
+                <?php endif; ?>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         03 — BILAN DE LA MAINTENANCE
+         ========================================================= -->
+
+    <section class="maintenance-report-section">
+
+        <div class="maintenance-report-section-title">
+
+            <div class="section-number">
+                03
+            </div>
+
+            <div>
+
+                <h2>
+                    Bilan de la maintenance
+                </h2>
+
+                <p>
+                    Résultats et observations
+                    après intervention.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="maintenance-result-grid">
+
+            <!-- DIAGNOSTIC FINAL -->
+            <div class="maintenance-text-card">
+
+                <div class="maintenance-text-card-label">
+                    Diagnostic final
+                </div>
+
+                <div class="maintenance-text">
+
+                    <?php if ($diagnosticFinal !== ''): ?>
+
+                        <?= nl2br(
+                            $this->escapeHtml(
+                                $diagnosticFinal
+                            )
+                        ) ?>
+
+                    <?php else: ?>
+
+                        <span class="empty-value">
+                            Aucun diagnostic final
+                            n'a été renseigné.
+                        </span>
+
+                    <?php endif; ?>
+
+                </div>
+
+            </div>
+
+
+            <!-- COMPTE RENDU -->
+            <div class="maintenance-text-card">
+
+                <div class="maintenance-text-card-label">
+                    Compte rendu
+                </div>
+
+                <div class="maintenance-text">
+
+                    <?php if ($compteRendu !== ''): ?>
+
+                        <?= nl2br(
+                            $this->escapeHtml(
+                                $compteRendu
+                            )
+                        ) ?>
+
+                    <?php else: ?>
+
+                        <span class="empty-value">
+                            Aucun compte rendu
+                            n'a été renseigné.
+                        </span>
+
+                    <?php endif; ?>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- COMMENTAIRE -->
+        <div class="maintenance-text-card comment-card">
+
+            <div class="maintenance-text-card-label">
+                Commentaire
+            </div>
+
+            <div class="maintenance-text">
+
+                <?php if ($commentaire !== ''): ?>
+
+                    <?= nl2br(
+                        $this->escapeHtml(
+                            $commentaire
+                        )
+                    ) ?>
+
+                <?php else: ?>
+
+                    <span class="empty-value">
+                        Aucun commentaire.
+                    </span>
+
+                <?php endif; ?>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         04 — EQUIPEMENTS
+         ========================================================= -->
+
+    <section class="maintenance-report-section">
+
+        <div class="maintenance-report-section-title">
+
+            <div class="section-number">
+                04
+            </div>
+
+            <div>
+
+                <h2>
+                    Équipements de la centrale
+                </h2>
+
+                <p>
+                    Équipements associés à cette
+                    session de maintenance.
+                </p>
+
+            </div>
+
+            <div class="equipment-total">
+
+                <?= count($equipements) ?>
+
+                équipement<?= count($equipements) > 1 ? 's' : '' ?>
+
+            </div>
+
+        </div>
+
+
+        <?php if (!empty($equipements)): ?>
+
+            <div class="maintenance-equipment-table">
+
+                <table class="ibs-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                N°
+                            </th>
+
+                            <th>
+                                Équipement
+                            </th>
+
+                            <th>
+                                Marque
+                            </th>
+
+                            <th>
+                                Modèle
+                            </th>
+
+                            <th>
+                                N° série
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                    <?php foreach (
+                        $equipements
+                        as $index => $equipement
+                    ): ?>
+
+                        <tr>
+
+                            <!-- NUMERO -->
+                            <td>
+
+                                <span class="equipment-number">
+
+                                    <?= $this->escapeHtml(
+                                        (string) ($index + 1)
+                                    ) ?>
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- EQUIPEMENT -->
+                            <td>
+
+                                <strong>
+
+                                    <?php
+
+                                    $typeEquipement = trim(
+                                        (string) (
+                                            $equipement[
+                                                'type_equipement'
+                                            ] ?? ''
+                                        )
+                                    );
+
+                                    ?>
+
+                                    <?= $this->escapeHtml(
+                                        $typeEquipement !== ''
+                                            ? $typeEquipement
+                                            : 'Équipement non renseigné'
+                                    ) ?>
+
+                                </strong>
+
+                            </td>
+
+
+                            <!-- MARQUE -->
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    trim(
+                                        (string) (
+                                            $equipement['marque']
+                                            ?? ''
+                                        )
+                                    ) !== ''
+                                        ? (string) (
+                                            $equipement['marque']
+                                        )
+                                        : '—'
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- MODELE -->
+                            <td>
+
+                                <?= $this->escapeHtml(
+                                    trim(
+                                        (string) (
+                                            $equipement['modele']
+                                            ?? ''
+                                        )
+                                    ) !== ''
+                                        ? (string) (
+                                            $equipement['modele']
+                                        )
+                                        : '—'
+                                ) ?>
+
+                            </td>
+
+
+                            <!-- NUMERO DE SERIE -->
+                            <td>
+
+                                <?php
+
+                                $numeroSerie = trim(
+                                    (string) (
+                                        $equipement[
+                                            'numero_serie'
+                                        ]
+                                        ?? $equipement[
+                                            'num_serie'
+                                        ]
+                                        ?? ''
+                                    )
+                                );
+
+                                ?>
+
+                                <?= $this->escapeHtml(
+                                    $numeroSerie !== ''
+                                        ? $numeroSerie
+                                        : '—'
+                                ) ?>
+
+                            </td>
+
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        <?php else: ?>
+
+            <div class="maintenance-empty">
+
+                <div class="maintenance-empty-icon">
+                    —
+                </div>
+
+                <strong>
+                    Aucun équipement
+                </strong>
+
+                <p>
+                    Aucun équipement n'est associé
+                    à cette centrale pour cette maintenance.
+                </p>
+
+            </div>
+
+        <?php endif; ?>
+
+    </section>
+
+
+    <!-- =========================================================
+         PIED DU RAPPORT
+         ========================================================= -->
+
+    <div class="maintenance-report-footer">
+
+        <div>
+
+            <strong>
+                IBS
+            </strong>
+
+            <span>
+                Rapport de maintenance
+            </span>
+
+        </div>
+
+
+        <div>
+
+            <?php if ($dateDebut !== ''): ?>
+
+                <?= $this->escapeHtml($dateDebut) ?>
+
+            <?php endif; ?>
+
+        </div>
+
+    </div>
+
 </div>
+
+
+<!-- =============================================================
+     IMPRESSION
+     ============================================================= -->
+
+<script>
+(function () {
+
+    window.addEventListener('beforeprint', function () {
+        document.body.classList.add('printing-maintenance-report');
+    });
+
+    window.addEventListener('afterprint', function () {
+        document.body.classList.remove('printing-maintenance-report');
+    });
+
+})();
+</script>

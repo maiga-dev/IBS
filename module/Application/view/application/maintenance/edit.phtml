@@ -1,0 +1,642 @@
+<?php
+
+$session = $session ?? [];
+
+$pays = $pays ?? [];
+$villes = $villes ?? [];
+$sites = $sites ?? [];
+$centrales = $centrales ?? [];
+
+$postData = $postData ?? [];
+$erreurs = $erreurs ?? [];
+
+$selectedCentrale = (string) (
+    $postData['id_centrale']
+    ?? $session['id_centrale']
+    ?? ''
+);
+
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-header">
+
+        <div>
+            <h1>Modifier la maintenance</h1>
+
+            <p>
+                Modifier les informations de la session de maintenance.
+            </p>
+        </div>
+
+    </div>
+
+    <?php if ($erreurs): ?>
+
+        <div class="alert alert-danger">
+
+            <?php foreach ($erreurs as $erreur): ?>
+
+                <div>
+                    <?= $this->escapeHtml($erreur) ?>
+                </div>
+
+            <?php endforeach; ?>
+
+        </div>
+
+    <?php endif; ?>
+
+    <div class="dashboard-panel">
+
+        <form
+            method="post"
+            enctype="multipart/form-data"
+            id="maintenanceEditForm"
+        >
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="<?= $this->escapeHtmlAttr($csrf_token ?? '') ?>"
+            >
+
+            <div class="form-grid">
+
+                <!-- PAYS -->
+                <div class="form-group">
+
+                    <label for="id_pays">
+                        Pays
+                    </label>
+
+                    <select
+                        id="id_pays"
+                        class="ibs-input"
+                    >
+
+                        <option value="">
+                            Sélectionner un pays
+                        </option>
+
+                        <?php foreach ($pays as $paysRow): ?>
+
+                            <option
+                                value="<?= $this->escapeHtmlAttr(
+                                    (string) ($paysRow['id_pays'] ?? '')
+                                ) ?>"
+                            >
+                                <?= $this->escapeHtml(
+                                    (string) ($paysRow['nom_pays'] ?? '')
+                                ) ?>
+                            </option>
+
+                        <?php endforeach; ?>
+
+                    </select>
+
+                </div>
+
+                <!-- VILLE -->
+                <div class="form-group">
+
+                    <label for="id_ville">
+                        Ville
+                    </label>
+
+                    <select
+                        id="id_ville"
+                        class="ibs-input"
+                        disabled
+                    >
+
+                        <option value="">
+                            Sélectionner une ville
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- SITE -->
+                <div class="form-group">
+
+                    <label for="id_site">
+                        Site
+                    </label>
+
+                    <select
+                        id="id_site"
+                        class="ibs-input"
+                        disabled
+                    >
+
+                        <option value="">
+                            Sélectionner un site
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- CENTRALE -->
+                <div class="form-group">
+
+                    <label for="id_centrale">
+                        Centrale
+                    </label>
+
+                    <select
+                        name="id_centrale"
+                        id="id_centrale"
+                        class="ibs-input"
+                        required
+                        disabled
+                    >
+
+                        <option value="">
+                            Sélectionner une centrale
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- TYPE MAINTENANCE -->
+                <div class="form-group">
+
+                    <label for="type_maintenance">
+                        Type de maintenance
+                    </label>
+
+                    <input
+                        type="text"
+                        name="type_maintenance"
+                        id="type_maintenance"
+                        class="ibs-input"
+                        value="<?= $this->escapeHtmlAttr(
+                            (string) (
+                                $postData['type_maintenance'] ?? ''
+                            )
+                        ) ?>"
+                        placeholder="Préventive, corrective..."
+                    >
+
+                </div>
+
+                <!-- DATE -->
+                <div class="form-group">
+
+                    <label for="date_session">
+                        Date
+                    </label>
+
+                    <input
+                        type="date"
+                        name="date_session"
+                        id="date_session"
+                        class="ibs-input"
+                        required
+                        value="<?= $this->escapeHtmlAttr(
+                            substr(
+                                (string) (
+                                    $postData['date_session'] ?? ''
+                                ),
+                                0,
+                                10
+                            )
+                        ) ?>"
+                    >
+
+                </div>
+
+            </div>
+
+            <!-- DIAGNOSTIC -->
+            <div class="form-group">
+
+                <label for="diagnostic_initial">
+                    Premier diagnostic
+                </label>
+
+                <textarea
+                    name="diagnostic_initial"
+                    id="diagnostic_initial"
+                    class="ibs-input"
+                    rows="5"
+                    required
+                ><?= $this->escapeHtml(
+                    (string) (
+                        $postData['diagnostic_initial'] ?? ''
+                    )
+                ) ?></textarea>
+
+            </div>
+
+            <div class="form-grid">
+
+                <!-- COMPTE RENDU -->
+                <div class="form-group">
+
+                    <label for="compte_rendu">
+                        Compte rendu
+                    </label>
+
+                    <textarea
+                        name="compte_rendu"
+                        id="compte_rendu"
+                        class="ibs-input"
+                        rows="4"
+                    ><?= $this->escapeHtml(
+                        (string) (
+                            $postData['compte_rendu'] ?? ''
+                        )
+                    ) ?></textarea>
+
+                </div>
+
+                <!-- COMMENTAIRE -->
+                <div class="form-group">
+
+                    <label for="commentaire">
+                        Commentaire
+                    </label>
+
+                    <textarea
+                        name="commentaire"
+                        id="commentaire"
+                        class="ibs-input"
+                        rows="4"
+                    ><?= $this->escapeHtml(
+                        (string) (
+                            $postData['commentaire'] ?? ''
+                        )
+                    ) ?></textarea>
+
+                </div>
+
+            </div>
+
+            <!-- FICHIER -->
+            <div class="form-group">
+
+                <label for="fichier">
+                    Ajouter une photo ou un PDF
+                </label>
+
+                <input
+                    type="file"
+                    name="fichier"
+                    id="fichier"
+                    class="ibs-input"
+                    accept=".jpg,.jpeg,.png,.webp,.pdf"
+                >
+
+                <small>
+                    Facultatif — JPG, PNG, WEBP ou PDF, 10 Mo maximum.
+                </small>
+
+            </div>
+
+            <div class="form-actions">
+
+                <a
+                    href="<?= $this->url(
+                        'maintenance',
+                        [
+                            'action' => 'index',
+                            'id' => (int) (
+                                $session['id_session'] ?? 0
+                            ),
+                        ]
+                    ) ?>"
+                    class="btn-secondary"
+                >
+                    Annuler
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn-ibs"
+                >
+                    Enregistrer les modifications
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const paysData = <?= json_encode(
+        $pays,
+        JSON_HEX_TAG
+        | JSON_HEX_APOS
+        | JSON_HEX_QUOT
+        | JSON_HEX_AMP
+    ) ?>;
+
+    const villesData = <?= json_encode(
+        $villes,
+        JSON_HEX_TAG
+        | JSON_HEX_APOS
+        | JSON_HEX_QUOT
+        | JSON_HEX_AMP
+    ) ?>;
+
+    const sitesData = <?= json_encode(
+        $sites,
+        JSON_HEX_TAG
+        | JSON_HEX_APOS
+        | JSON_HEX_QUOT
+        | JSON_HEX_AMP
+    ) ?>;
+
+    const centralesData = <?= json_encode(
+        $centrales,
+        JSON_HEX_TAG
+        | JSON_HEX_APOS
+        | JSON_HEX_QUOT
+        | JSON_HEX_AMP
+    ) ?>;
+
+    const pays = document.getElementById('id_pays');
+    const ville = document.getElementById('id_ville');
+    const site = document.getElementById('id_site');
+    const centrale = document.getElementById('id_centrale');
+
+    const selectedCentrale =
+        <?= json_encode($selectedCentrale) ?>;
+
+    function resetSelect(select, placeholder) {
+
+        select.innerHTML = '';
+
+        select.appendChild(
+            new Option(
+                placeholder,
+                ''
+            )
+        );
+
+        select.disabled = true;
+    }
+
+    function remplirSelect(
+        select,
+        rows,
+        valueKey,
+        labelKey,
+        placeholder,
+        selectedValue = ''
+    ) {
+
+        select.innerHTML = '';
+
+        select.appendChild(
+            new Option(
+                placeholder,
+                ''
+            )
+        );
+
+        const valeurs = new Set();
+
+        rows.forEach(function (row) {
+
+            const value = String(
+                row[valueKey] ?? ''
+            );
+
+            const label = String(
+                row[labelKey] ?? ''
+            );
+
+            if (!value || valeurs.has(value)) {
+                return;
+            }
+
+            valeurs.add(value);
+
+            const option = new Option(
+                label,
+                value
+            );
+
+            if (
+                selectedValue !== ''
+                && value === String(selectedValue)
+            ) {
+                option.selected = true;
+            }
+
+            select.appendChild(option);
+        });
+
+        select.disabled =
+            select.options.length <= 1;
+    }
+
+    function chargerVilles(
+        idPays,
+        selectedVille = '',
+        selectedSite = '',
+        selectedIdCentrale = ''
+    ) {
+
+        resetSelect(
+            ville,
+            'Sélectionner une ville'
+        );
+
+        resetSelect(
+            site,
+            'Sélectionner un site'
+        );
+
+        resetSelect(
+            centrale,
+            'Sélectionner une centrale'
+        );
+
+        if (!idPays) {
+            return;
+        }
+
+        const rows = villesData.filter(function (row) {
+
+            return String(
+                row.id_pays ?? ''
+            ) === String(idPays);
+
+        });
+
+        remplirSelect(
+            ville,
+            rows,
+            'id_ville',
+            'nom_ville',
+            'Sélectionner une ville',
+            selectedVille
+        );
+
+        if (selectedVille) {
+
+            chargerSites(
+                selectedVille,
+                selectedSite,
+                selectedIdCentrale
+            );
+        }
+    }
+
+    function chargerSites(
+        idVille,
+        selectedSite = '',
+        selectedIdCentrale = ''
+    ) {
+
+        resetSelect(
+            site,
+            'Sélectionner un site'
+        );
+
+        resetSelect(
+            centrale,
+            'Sélectionner une centrale'
+        );
+
+        if (!idVille) {
+            return;
+        }
+
+        const rows = sitesData.filter(function (row) {
+
+            return String(
+                row.id_ville ?? ''
+            ) === String(idVille);
+
+        });
+
+        remplirSelect(
+            site,
+            rows,
+            'id_site',
+            'nom_site',
+            'Sélectionner un site',
+            selectedSite
+        );
+
+        if (selectedSite) {
+
+            chargerCentrales(
+                selectedSite,
+                selectedIdCentrale
+            );
+        }
+    }
+
+    function chargerCentrales(
+        idSite,
+        selectedIdCentrale = ''
+    ) {
+
+        resetSelect(
+            centrale,
+            'Sélectionner une centrale'
+        );
+
+        if (!idSite) {
+            return;
+        }
+
+        const rows = centralesData.filter(function (row) {
+
+            return String(
+                row.id_site ?? ''
+            ) === String(idSite);
+
+        });
+
+        remplirSelect(
+            centrale,
+            rows,
+            'id_centrale',
+            'type_centrale',
+            'Sélectionner une centrale',
+            selectedIdCentrale
+        );
+    }
+
+    pays.addEventListener('change', function () {
+
+        chargerVilles(
+            this.value
+        );
+
+    });
+
+    ville.addEventListener('change', function () {
+
+        chargerSites(
+            this.value
+        );
+
+    });
+
+    site.addEventListener('change', function () {
+
+        chargerCentrales(
+            this.value
+        );
+
+    });
+
+    /*
+     * Restauration automatique de la hiérarchie
+     * lors de l'ouverture de la modification.
+     */
+    if (selectedCentrale) {
+
+        const centraleSelectionnee =
+            centralesData.find(function (row) {
+
+                return String(
+                    row.id_centrale ?? ''
+                ) === String(selectedCentrale);
+
+            });
+
+        if (centraleSelectionnee) {
+
+            const idPays = String(
+                centraleSelectionnee.id_pays ?? ''
+            );
+
+            const idVille = String(
+                centraleSelectionnee.id_ville ?? ''
+            );
+
+            const idSite = String(
+                centraleSelectionnee.id_site ?? ''
+            );
+
+            pays.value = idPays;
+
+            chargerVilles(
+                idPays,
+                idVille,
+                idSite,
+                selectedCentrale
+            );
+        }
+    }
+
+});
+</script>

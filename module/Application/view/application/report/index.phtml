@@ -1,0 +1,63 @@
+
+<?php
+$this->headTitle('Rapport');
+
+$formatNombre = static fn ($n): string =>
+    $n === null ? '—' : number_format((int) $n, 0, ',', ' ');
+?>
+
+<div class="rapport-page">
+    <header class="rapport-header">
+        <div>
+            <h1 class="rapport-title">Rapport</h1>
+            <p class="rapport-header-description">
+                Consultez le parc biomédical et les rapports des interventions techniques.
+            </p>
+        </div>
+    </header>
+
+    <section class="rapport-stats">
+        <article class="rapport-stat">
+            <span>Familles</span>
+            <strong><?= $this->escapeHtml($formatNombre($nombreFamilles ?? null)) ?></strong>
+        </article>
+        <article class="rapport-stat">
+            <span>Type d'équipements</span>
+            <strong><?= $this->escapeHtml($formatNombre($nombreCentrales ?? null)) ?></strong>
+        </article>
+        <article class="rapport-stat">
+            <span>Sites</span>
+            <strong><?= $this->escapeHtml($formatNombre($nombreSites ?? null)) ?></strong>
+        </article>
+        <article class="rapport-stat">
+            <span>Maintenances</span>
+            <strong><?= $this->escapeHtml($formatNombre($nombreMaintenance ?? null)) ?></strong>
+        </article>
+    </section>
+
+    <section class="rapport-home-grid">
+       
+        <!-- Parc biomédical -->
+        <a href="<?= $this->url('rapport/explorer', [], [
+            'query' => [
+                'mode' => 'parc',
+                'niveau' => 'familles',
+            ],
+        ]) ?>" class="rapport-home-card rapport-home-card--green">
+            <span class="rapport-home-icon">01</span>
+            <h2>Parc biomédical</h2>
+            <p>Familles, centrales, équipements, pays, villes et sites.</p>
+            <span class="rapport-home-link">Consulter le parc →</span>
+        </a>
+
+        <!-- Maintenances -->
+        <a href="<?= $this->url('rapport/maintenance') ?>"
+        class="rapport-home-card rapport-home-card--coral">
+            <span class="rapport-home-icon">02</span>
+            <h2>Maintenances et rapports</h2>
+            <p>Interventions des techniciens et comptes rendus de fin de maintenance.</p>
+            <span class="rapport-home-link">Consulter les rapports →</span>
+        </a>
+
+    </section>
+</div>

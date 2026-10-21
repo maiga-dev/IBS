@@ -1,115 +1,414 @@
 <?php
-/** @var Laminas\View\Renderer\PhpRenderer $this */
+declare(strict_types=1);
+
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ * @var array $sessions
+ */
+
 $sessions = $sessions ?? [];
-
-$libellesStatut = [
-    'planifiee' => 'Planifiée', 'en_cours' => 'En cours', 'suspendue' => 'Suspendue',
-    'arretee' => 'Arrêtée', 'terminee' => 'Terminée',
-];
-
-// Compte par statut, pour afficher un nombre sur chaque bouton.
-$compteurs = array_fill_keys(array_keys($libellesStatut), 0);
-foreach ($sessions as $s) {
-    if (isset($compteurs[$s['statut']])) {
-        $compteurs[$s['statut']]++;
-    }
-}
 ?>
+
 <div class="dashboard">
+
     <div class="dashboard-title">
+
         <div>
-            <h1>Sessions de maintenance</h1>
-            <p>Une session = une visite technicien sur une centrale, à une date.</p>
+            <h2>Maintenances</h2>
+            <p>Gestion et suivi des sessions de maintenance.</p>
         </div>
-        <a href="<?= $this->url('maintenance', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
-            + Nouvelle session
+
+        <a
+            href="<?= $this->url('maintenance', ['action' => 'add']) ?>"
+            class="auth-submit"
+        >
+            + Ajouter
         </a>
+
     </div>
 
     <div class="dashboard-panel">
 
-        <!-- FILTRES PAR STATUT -->
-        <div id="filtres-statut" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-            <button type="button" class="filtre-btn actif" data-statut="tous" onclick="filtrerParStatut('tous', this)">
-                Toutes <span class="filtre-count"><?= count($sessions) ?></span>
-            </button>
-            <?php foreach ($libellesStatut as $valeur => $libelle): ?>
-                <button type="button" class="filtre-btn" data-statut="<?= $valeur ?>" onclick="filtrerParStatut('<?= $valeur ?>', this)">
-                    <?= $this->escapeHtml($libelle) ?> <span class="filtre-count"><?= $compteurs[$valeur] ?></span>
-                </button>
-            <?php endforeach; ?>
-        </div>
-
         <?php if (empty($sessions)): ?>
+
             <div class="empty-dashboard">
-                <div class="empty-dashboard-icon">✓</div>
-                <strong>Aucune session enregistrée</strong>
+
+                <div class="empty-dashboard-icon">
+                    ✓
+                </div>
+
+                <strong>
+                    Aucune session de maintenance enregistrée
+                </strong>
+
             </div>
+
         <?php else: ?>
-            <div class="table-wrapper">
-                <table class="ibs-table" id="table-sessions">
-                    <thead>
-                        <tr><th>Centrale</th><th>Site</th><th>Technicien</th><th>Avancement</th><th>Statut</th><th>Date</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($sessions as $s): ?>
-                        <tr data-statut="<?= $this->escapeHtmlAttr($s['statut']) ?>">
-                            <td><?= $this->escapeHtml((string) ($s['type_centrale'] ?? '—')) ?></td>
-                            <td><?= $this->escapeHtml((string) ($s['nom_site'] ?? '—')) ?></td>
-                            <td><?= $s['technicien_nom'] ? $this->escapeHtml($s['technicien_prenom'] . ' ' . $s['technicien_nom']) : 'Non affecté' ?></td>
-                            <td><?= (int) $s['nb_terminees'] ?> / <?= (int) $s['nb_equipements'] ?> équipements</td>
-                            <td><span class="status"><?= $this->escapeHtml($libellesStatut[$s['statut']] ?? $s['statut']) ?></span></td>
-                            <td class="date-cell"><?= $this->escapeHtml(date('d/m/Y', strtotime($s['date_session']))) ?></td>
-                            <td style="text-align:right;white-space:nowrap;">
-                                <a href="<?= $this->url('maintenance', ['action' => 'detail', 'id' => $s['id_session']]) ?>">Ouvrir</a>
-                                &nbsp;·&nbsp;
-                                <form method="post" action="<?= $this->url('maintenance', ['action' => 'delete', 'id' => $s['id_session']]) ?>"
-                                      style="display:inline;"
-                                      onsubmit="return confirm('Supprimer définitivement cette session et toutes ses maintenances ?');">
-                                    <input type="hidden" name="csrf_token" value="<?= $this->escapeHtmlAttr($csrf_token ?? '') ?>">
-                                    <button type="submit" style="background:none;border:none;color:#E94C3C;cursor:pointer;font-size:14px;padding:0;font-family:inherit;">Supprimer</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
+
+            <div class="users-actions-toolbar">
+
+                <div class="users-actions-label">
+                    Recherche :
+                </div>
+
+                <div class="users-action-search">
+
+                    <span class="users-action-search-icon">
+                        ⌕
+                    </span>
+
+                    <input
+                        type="text"
+                        id="maintenanceSearch"
+                        placeholder="Rechercher dans toutes les informations..."
+                        autocomplete="off"
+                        aria-label="Rechercher une maintenance"
+                    >
+
+                </div>
+
+                <select
+                    id="maintenanceStatusFilter"
+                    class="form-select"
+                    aria-label="Filtrer par statut"
+                >
+                    <option value="">Tous les statuts</option>
+                    <option value="planifiee">Planifiées</option>
+                    <option value="en_cours">En cours</option>
+                    <option value="suspendue">Suspendues</option>
+                    <option value="arretee">Arrêtées</option>
+                    <option value="terminee">Terminées</option>
+                </select>
+
             </div>
-            <p id="filtre-vide" class="stat-description" style="display:none;margin-top:12px;">
-                Aucune session avec ce statut.
-            </p>
+
+            
+
+            <div class="table-wrapper">
+
+                <table
+                    class="ibs-table"
+                    id="tableMaintenances"
+                >
+
+                    <thead>
+
+                        <tr>
+                            <th>N°</th>
+                            <th>Type d'équipement</th>
+                            <th>Site</th>
+                            <th>Date</th>
+                            <th>Technicien</th>
+                            <th>Équipements</th>
+                            <th>Statut</th>
+                            <th></th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    <?php foreach ($sessions as $index => $session): ?>
+
+                        <?php
+                        $idSession = (int) ($session['id_session'] ?? 0);
+
+                        $nomCentrale = (string) (
+                            $session['type_centrale'] ?? '—'
+                        );
+
+                        $nomSite = (string) (
+                            $session['nom_site'] ?? '—'
+                        );
+
+                        $dateSession = (string) (
+                            $session['date_session'] ?? '—'
+                        );
+
+                        if (
+                            $dateSession !== ''
+                            && $dateSession !== '—'
+                        ) {
+                            try {
+                                $dateAffichee =
+                                    (new DateTime($dateSession))
+                                    ->format('d/m/Y');
+                            } catch (Throwable $e) {
+                                $dateAffichee = $dateSession;
+                            }
+                        } else {
+                            $dateAffichee = '—';
+                        }
+
+                        $technicienPrenom = trim(
+                            (string) (
+                                $session['technicien_prenom'] ?? ''
+                            )
+                        );
+
+                        $technicienNom = trim(
+                            (string) (
+                                $session['technicien_nom'] ?? ''
+                            )
+                        );
+
+                        $technicien = trim(
+                            $technicienPrenom
+                            . ' '
+                            . $technicienNom
+                        );
+
+                        $technicienAffiche =
+                            $technicien !== ''
+                                ? $technicien
+                                : 'Non affecté';
+
+                        $nbEquipements = (int) (
+                            $session['nb_equipements'] ?? 0
+                        );
+
+                        $statut = strtolower(
+                            trim(
+                                (string) (
+                                    $session['statut']
+                                    ?? 'planifiee'
+                                )
+                            )
+                        );
+
+                        $statuts = [
+                            'planifiee' => 'Planifiée',
+                            'en_cours' => 'En cours',
+                            'suspendue' => 'Suspendue',
+                            'arretee' => 'Arrêtée',
+                            'terminee' => 'Terminée',
+                        ];
+
+                        $statutAffiche =
+                            $statuts[$statut]
+                            ?? ucfirst(
+                                str_replace(
+                                    '_',
+                                    ' ',
+                                    $statut
+                                )
+                            );
+                        ?>
+
+                        <tr data-status="<?= $this->escapeHtmlAttr($statut) ?>">
+
+                            <td>
+                                <?= $this->escapeHtml((string) ($index + 1)) ?>
+                            </td>
+
+                            <td>
+                                <?= $this->escapeHtml($nomCentrale) ?>
+                            </td>
+
+                            <td>
+                                <?= $this->escapeHtml($nomSite) ?>
+                            </td>
+
+                            <td>
+                                <?= $this->escapeHtml($dateAffichee) ?>
+                            </td>
+
+                            <td>
+                                <?= $this->escapeHtml($technicienAffiche) ?>
+                            </td>
+
+                            <td>
+                                <?= $this->escapeHtml((string) $nbEquipements) ?>
+                            </td>
+
+                            <td>
+                                <?= $this->escapeHtml($statutAffiche) ?>
+                            </td>
+
+                            <td>
+                                <div class="action-buttons">
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'maintenance',
+                                            [
+                                                'action' => 'detail',
+                                                'id' => $idSession
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Voir"
+                                        aria-label="Voir"
+                                    >👁</a>
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'maintenance',
+                                            [
+                                                'action' => 'edit',
+                                                'id' => $idSession
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Modifier"
+                                        aria-label="Modifier"
+                                    >✎</a>
+
+                                    <form
+                                        method="post"
+                                        action="<?= $this->url(
+                                            'maintenance',
+                                            [
+                                                'action' => 'delete',
+                                                'id' => $idSession
+                                            ]
+                                        ) ?>"
+                                        class="action-delete-form"
+                                        onsubmit="return confirm('Supprimer cette session de maintenance ?');"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="id_session"
+                                            value="<?= $this->escapeHtmlAttr((string) $idSession) ?>"
+                                        >
+
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="<?= $this->escapeHtmlAttr((string) ($csrf_token ?? '')) ?>"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="action-btn action-btn-delete"
+                                            title="Supprimer"
+                                            aria-label="Supprimer"
+                                        >🗑</button>
+
+                                    </form>
+
+                                </div>
+                            </td>
+
+                        </tr>
+
+                    <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <div
+                id="maintenanceNoResult"
+                class="empty-dashboard"
+                style="display:none;"
+            >
+                <div class="empty-dashboard-icon">⌕</div>
+                <strong>Aucune maintenance correspondant à votre recherche.</strong>
+            </div>
+
         <?php endif; ?>
+
     </div>
+
 </div>
 
-<style>
-.filtre-btn{
-    padding:8px 14px;border:1px solid #E7E9EC;border-radius:20px;
-    background:#fff;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
-    cursor:pointer;color:#4B5563;
-}
-.filtre-btn .filtre-count{color:#64748B;font-weight:500;}
-.filtre-btn.actif{background:#2E6A50;border-color:#2E6A50;color:#fff;}
-.filtre-btn.actif .filtre-count{color:#EAF3EF;}
-</style>
-
 <script>
-function filtrerParStatut(statut, bouton) {
-    document.querySelectorAll('#filtres-statut .filtre-btn').forEach(function (b) {
-        b.classList.remove('actif');
-    });
-    bouton.classList.add('actif');
+document.addEventListener('DOMContentLoaded', function () {
 
-    let visibles = 0;
-    document.querySelectorAll('#table-sessions tbody tr').forEach(function (ligne) {
-        const correspond = statut === 'tous' || ligne.dataset.statut === statut;
-        ligne.style.display = correspond ? '' : 'none';
-        if (correspond) visibles++;
-    });
+    const searchInput =
+        document.getElementById('maintenanceSearch');
 
-    const messageVide = document.getElementById('filtre-vide');
-    if (messageVide) {
-        messageVide.style.display = visibles === 0 ? 'block' : 'none';
+    const statusFilter =
+        document.getElementById('maintenanceStatusFilter');
+
+    const table =
+        document.getElementById('tableMaintenances');
+
+    const message =
+        document.getElementById('maintenanceSearchMessage');
+
+    const noResult =
+        document.getElementById('maintenanceNoResult');
+
+    if (!searchInput || !statusFilter || !table) {
+        return;
     }
-}
+
+    const rows = Array.from(
+        table.querySelectorAll('tbody tr')
+    );
+
+    function normaliser(texte) {
+        return String(texte || '')
+            .toLocaleLowerCase('fr-FR')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function filtrer() {
+
+        const recherche = normaliser(
+            searchInput.value.trim()
+        );
+
+        const statutRecherche = normaliser(
+            statusFilter.value.trim()
+        );
+
+        let nombreVisible = 0;
+
+        rows.forEach(function (row) {
+
+            const contenu = normaliser(
+                row.textContent
+            );
+
+            const rowStatus = normaliser(
+                row.dataset.status || ''
+            );
+
+            const correspondRecherche =
+                recherche === ''
+                || contenu.includes(recherche);
+
+            const correspondStatut =
+                statutRecherche === ''
+                || rowStatus === statutRecherche;
+
+            const visible =
+                correspondRecherche
+                && correspondStatut;
+
+            row.style.display =
+                visible ? '' : 'none';
+
+            if (visible) {
+                nombreVisible++;
+            }
+        });
+
+        if (noResult) {
+            noResult.style.display =
+                nombreVisible === 0 ? 'flex' : 'none';
+        }
+
+        if (message) {
+
+            if (recherche === '' && statutRecherche === '') {
+                message.textContent =
+                    'La recherche porte sur toutes les informations affichées.';
+            } else {
+                message.textContent =
+                    nombreVisible
+                    + ' maintenance(s) correspondant aux critères.';
+            }
+        }
+    }
+
+    searchInput.addEventListener('input', filtrer);
+    statusFilter.addEventListener('change', filtrer);
+});
 </script>

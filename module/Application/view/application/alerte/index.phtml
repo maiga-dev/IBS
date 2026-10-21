@@ -1,77 +1,230 @@
-<div class="container-fluid py-4">
+<?php
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+declare(strict_types=1);
+
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ * @var array $notifications
+ */
+
+$this->headTitle('Alertes');
+
+$notifications = $notifications ?? [];
+
+$libelles = [
+    'maintenance_affectee'       => 'Maintenance affectée',
+    'maintenance_planifiee'      => 'Maintenance planifiée',
+    'maintenance_terminee'       => 'Maintenance terminée',
+    'maintenance_suspendue'      => 'Maintenance suspendue',
+    'maintenance_demarree'       => 'Maintenance démarrée',
+    'maintenance_en_cours'       => 'Maintenance en cours',
+    'maintenance_arretee'        => 'Maintenance arrêtée',
+    'maintenance_a_faire_j7'     => 'Maintenance à prévoir dans 7 jours',
+    'maintenance_a_faire_j3'     => 'Maintenance à prévoir dans 3 jours',
+    'maintenance_a_faire_j1'     => 'Maintenance à prévoir demain',
+    'maintenance_preventive_j7'  => 'Maintenance préventive — J-7',
+    'maintenance_preventive_j3'  => 'Maintenance préventive — J-3',
+    'maintenance_preventive_j1'  => 'Maintenance préventive — J-1',
+];
+
+$echapper = fn ($val): string =>
+    $this->escapeHtml((string) ($val ?? ''));
+
+$total = count($notifications);
+$nonLues = 0;
+
+foreach ($notifications as $notification) {
+    $statut = strtolower(trim((string) (
+        $notification['statut_notification']
+        ?? $notification['statut']
+        ?? 'non lue'
+    )));
+
+    if (!in_array($statut, ['lue', 'lu', 'read'], true)) {
+        $nonLues++;
+    }
+}
+
+?>
+
+<div class="dashboard">
+
+    <div class="dashboard-title">
         <div>
-            <h1 class="h3 mb-1">Alertes</h1>
-            <p class="text-muted mb-0">
-                Notifications et alertes de maintenance
-            </p>
+            <h1>Alertes</h1>
+            <p>Suivez les notifications et les échéances de maintenance.</p>
         </div>
     </div>
 
-    <?php if (empty($notifications)): ?>
+    <div class="dashboard-panel">
 
-        <div class="alert alert-success">
-            <strong>✓ Aucune alerte</strong>
-            <p class="mb-0">
-                Vous n'avez aucune notification non lue.
-            </p>
-        </div>
-
-    <?php else: ?>
-
-        <div class="card shadow-sm">
-            <div class="card-header">
-                <strong>Notifications non lues</strong>
-                <span class="badge bg-danger">
-                    <?= count($notifications) ?>
-                </span>
-            </div>
-
-            <div class="card-body p-0">
-
-                <?php foreach ($notifications as $notification): ?>
-
-                    <div class="border-bottom p-3">
-
-                        <div class="d-flex justify-content-between">
-
-                            <div>
-                                <strong>
-                                    ⚠️ Notification
-                                </strong>
-
-                                <div class="text-muted small mt-1">
-                                    Type :
-                                    <?= $this->escapeHtml($notification['type'] ?? '') ?>
-                                </div>
-
-                                <?php if (!empty($notification['id_equipement'])): ?>
-                                    <div class="text-muted small">
-                                        Équipement :
-                                        <?= $this->escapeHtml(
-                                            (string) $notification['id_equipement']
-                                        ) ?>
-                                    </div>
-                                <?php endif; ?>
-
-                            </div>
-
-                            <div class="text-muted small">
-                                <?= $this->escapeHtml(
-                                    $notification['date_creation'] ?? ''
-                                ) ?>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                <?php endforeach; ?>
-
+        <div class="panel-header">
+            <div>
+                <h2>Liste des alertes</h2>
+                <p>
+                    <?= $total ?>
+                    notification<?= $total > 1 ? 's' : '' ?>
+                    · <?= $nonLues ?> non lue<?= $nonLues > 1 ? 's' : '' ?>
+                </p>
             </div>
         </div>
 
-    <?php endif; ?>
+        <?php if (empty($notifications)): ?>
+
+            <div class="empty-dashboard">
+                <div class="empty-dashboard-icon">!</div>
+                <h3>Aucune alerte pour le moment</h3>
+                <p>Les notifications de maintenance apparaîtront ici.</p>
+            </div>
+
+        <?php else: ?>
+
+            <div class="table-wrapper">
+                <table class="ibs-table">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Notification</th>
+                            <th>Équipement</th>
+                            <th>Site</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <?php foreach ($notifications as $notification): ?>
+
+                            <?php
+                            $id = (int) (
+                                $notification['id_notification'] ?? 0
+                            );
+
+                            $type = (string) (
+                                $notification['type_notification']
+                                ?? $notification['type']
+                                ?? 'notification'
+                            );
+
+                            $titre = $libelles[$type]
+                                ?? ucfirst(str_replace(
+                                    ['_', '-'],
+                                    ' ',
+                                    $type
+                                ));
+
+                            $statut = strtolower(trim((string) (
+                                $notification['statut_notification']
+                                ?? $notification['statut']
+                                ?? 'non lue'
+                            )));
+
+                            $estLue = in_array(
+                                $statut,
+                                ['lue', 'lu', 'read'],
+                                true
+                            );
+
+                            $equipement = $notification['designation']
+                                ?? $notification['nom_equipement']
+                                ?? $notification['nom_type']
+                                ?? null;
+
+                            if (empty($equipement)) {
+                                $numero = $notification['id_equipement']
+                                    ?? $notification['equipement_id']
+                                    ?? null;
+
+                                $equipement = $numero
+                                    ? 'Équipement n° ' . $numero
+                                    : '—';
+                            }
+
+                            $site = $notification['nom_site'] ?? '—';
+
+                            $dateBrute = $notification['date_creation']
+                                ?? $notification['date_notification']
+                                ?? null;
+
+                            $date = '—';
+
+                            if (!empty($dateBrute)) {
+                                try {
+                                    $date = (new DateTimeImmutable(
+                                        (string) $dateBrute
+                                    ))->format('d/m/Y H:i');
+                                } catch (\Throwable $e) {
+                                    $date = (string) $dateBrute;
+                                }
+                            }
+
+                            $estEcheance = str_contains(
+                                strtolower($type),
+                                'j7'
+                            ) || str_contains(
+                                strtolower($type),
+                                'j3'
+                            ) || str_contains(
+                                strtolower($type),
+                                'j1'
+                            ) || str_contains(
+                                strtolower($type),
+                                'preventive'
+                            );
+                            ?>
+
+                            <tr>
+                                <td>
+                                    <span class="table-id">
+                                        <?= $id > 0 ? '#' . $id : '—' ?>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="table-main-value">
+                                        <?= $echapper($titre) ?>
+                                    </span>
+                                    <?php if ($estEcheance): ?>
+                                        <div class="table-muted">
+                                            Échéance de maintenance
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+
+                                <td>
+                                    <span class="table-main-value">
+                                        <?= $echapper($equipement) ?>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="table-muted">
+                                        <?= $echapper($site) ?>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="table-muted">
+                                        <?= $echapper($date) ?>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="badge <?= $estLue
+                                        ? 'badge-success'
+                                        : 'badge-warning' ?>">
+                                        <?= $estLue ? 'Lue' : 'Non lue' ?>
+                                    </span>
+                                </td>
+                            </tr>
+
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+
+        <?php endif; ?>
+
+    </div>
 
 </div>

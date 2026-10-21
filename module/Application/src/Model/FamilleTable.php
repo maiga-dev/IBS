@@ -48,8 +48,4 @@ class FamilleTable extends AbstractReferenceTable
 
         return $rows[0] ?? null;
     }
-
-    // insert()/update()/delete() ne sont plus redéfinis ici : hérités
-    // d'AbstractReferenceTable (format tableau), compatibles avec le
-    // parent ET avec FamilleController qui appelle insert(['nom_famille' => ...]).
 }

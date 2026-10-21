@@ -1,45 +1,266 @@
 <?php
-/** @var Laminas\View\Renderer\PhpRenderer $this */
+
+declare(strict_types=1);
+
+/**
+ * @var Laminas\View\Renderer\PhpRenderer $this
+ * @var array $centrales
+ */
+
 $centrales = $centrales ?? [];
+
 ?>
+
 <div class="dashboard">
+
+    <!-- EN-TÊTE -->
+
     <div class="dashboard-title">
+
         <div>
-            <h1>Centrales</h1>
-            <p>Centrales installées par site.</p>
+
+            <h1>
+                Type d'Equipement
+            </h1>
+
+            <p>
+                Gérez les centrales disponibles dans le parc
+                d'équipements.
+            </p>
+
         </div>
-        <a href="<?= $this->url('centrale', ['action' => 'add']) ?>" class="auth-submit" style="width:auto;padding:10px 18px;text-decoration:none;display:inline-block;">
-            + Ajouter
-        </a>
+
+        <div class="users-actions-toolbar">
+
+            <a
+                href="<?= $this->url(
+                    'centrale',
+                    [
+                        'action' => 'add',
+                    ]
+                ) ?>"
+                class="auth-submit form-header-button"
+            >
+                + Ajouter
+            </a>
+
+        </div>
+
     </div>
 
+
+    <!-- CONTENU -->
+
     <div class="dashboard-panel">
+
+        <div class="panel-header">
+
+            <div>
+
+                <h3>
+                    Liste des centrales
+                </h3>
+
+            </div>
+
+        </div>
+
+
         <?php if (empty($centrales)): ?>
+
             <div class="empty-dashboard">
-                <div class="empty-dashboard-icon">✓</div>
-                <strong>Aucune centrale enregistrée</strong>
+
+                <div class="empty-dashboard-icon">
+                    ⚙
+                </div>
+
+                <strong>
+                    Aucune centrale
+                </strong>
+
+                <p>
+                    Aucune centrale n'a encore été enregistrée.
+                </p>
+
+                <a
+                    href="<?= $this->url(
+                        'centrale',
+                        [
+                            'action' => 'add',
+                        ]
+                    ) ?>"
+                    class="auth-submit empty-action-button"
+                >
+                    + Ajouter une centrale
+                </a>
+
             </div>
+
         <?php else: ?>
+
             <div class="table-wrapper">
+
                 <table class="ibs-table">
-                    <thead><tr><th>Type</th><th>Site</th><th>Famille</th><th></th></tr></thead>
-                    <tbody>
-                    <?php foreach ($centrales as $c): ?>
+
+                    <thead>
+
                         <tr>
-                            <td><?= $this->escapeHtml((string) ($c['type_centrale'] ?? '—')) ?></td>
-                            <td><?= $this->escapeHtml((string) ($c['nom_site'] ?? '—')) ?></td>
-                            <td><?= $this->escapeHtml((string) ($c['nom_famille'] ?? '—')) ?></td>
-                            <td style="text-align:right;">
-                                <a href="<?= $this->url('centrale', ['action' => 'edit', 'id' => $c['id_centrale']]) ?>">Modifier</a>
-                                &nbsp;·&nbsp;
-                                <a href="<?= $this->url('centrale', ['action' => 'delete', 'id' => $c['id_centrale']]) ?>"
-                                   onclick="return confirm('Supprimer cette centrale ?');">Supprimer</a>
-                            </td>
+
+                            <th>
+                                N°
+                            </th>
+
+                            <th>
+                                Type d'équipement
+                            </th>
+
+                            <th>
+                                Famille
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
                         </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                    <?php foreach ($centrales as $centrale): ?>
+
+                        <?php
+
+                        $idCentrale = (int) (
+                            $centrale['id_centrale'] ?? 0
+                        );
+
+                        $typeCentrale = trim(
+                            (string) (
+                                $centrale['type_centrale'] ?? ''
+                            )
+                        );
+
+                        $famille = trim(
+                            (string) (
+                                $centrale['nom_famille'] ?? ''
+                            )
+                        );
+
+                        ?>
+
+                        <tr>
+
+                            <!-- N° -->
+
+                            <td>
+
+                                <span class="table-id">
+                                    <?= $idCentrale ?>
+                                </span>
+
+                            </td>
+
+
+                            <!-- TYPE -->
+
+                            <td>
+
+                                <div class="table-main-value">
+
+                                    <?= $this->escapeHtml(
+                                        $typeCentrale !== ''
+                                            ? $typeCentrale
+                                            : 'Non renseigné'
+                                    ) ?>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- FAMILLE -->
+
+                            <td>
+
+                                <?php if ($famille !== ''): ?>
+
+                                    <span class="badge badge-info">
+
+                                        <?= $this->escapeHtml(
+                                            $famille
+                                        ) ?>
+
+                                    </span>
+
+                                <?php else: ?>
+
+                                    <span class="table-muted">
+                                        Non renseignée
+                                    </span>
+
+                                <?php endif; ?>
+
+                            </td>
+
+
+                            <!-- ACTIONS -->
+
+                            <td>
+
+                                <div class="action-buttons">
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'centrale',
+                                            [
+                                                'action' => 'edit',
+                                                'id'     => $idCentrale,
+                                            ]
+                                        ) ?>"
+                                        class="action-btn"
+                                        title="Modifier"
+                                        aria-label="Modifier"
+                                    >
+                                        ✎
+                                    </a>
+
+                                    <a
+                                        href="<?= $this->url(
+                                            'centrale',
+                                            [
+                                                'action' => 'delete',
+                                                'id'     => $idCentrale,
+                                            ]
+                                        ) ?>"
+                                        class="action-btn action-btn-delete"
+                                        title="Supprimer"
+                                        aria-label="Supprimer"
+                                        onclick="return confirm(
+                                            'Supprimer cette centrale ?'
+                                        );"
+                                    >
+                                        🗑
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
                     <?php endforeach; ?>
+
                     </tbody>
+
                 </table>
+
             </div>
+
         <?php endif; ?>
+
     </div>
+
 </div>

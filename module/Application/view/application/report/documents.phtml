@@ -1,0 +1,347 @@
+<?php
+
+$this->headTitle('Documents - Rapports - IBS Pulse');
+
+$rapportUrl = $this->url('rapport', [
+    'action' => 'index',
+]);
+
+$parcUrl = $this->url('rapport', [
+    'action' => 'parc',
+]);
+
+$maintenanceUrl = $this->url('rapport', [
+    'action' => 'maintenance',
+]);
+?>
+
+<div class="report-page">
+
+    <div class="report-header">
+
+        <div class="report-header-left">
+
+            <div class="report-breadcrumb">
+
+                <a href="<?= $rapportUrl ?>">
+                    Rapports
+                </a>
+
+                <span>/</span>
+
+                <span>Documents</span>
+
+            </div>
+
+            <div class="report-kicker">
+                CENTRE DOCUMENTAIRE
+            </div>
+
+            <h1 class="report-title">
+                Documents
+            </h1>
+
+            <p class="report-subtitle">
+                Accédez aux informations pouvant servir
+                à la préparation et à la consultation
+                des rapports du parc biomédical.
+            </p>
+
+        </div>
+
+        <div class="report-header-action">
+
+            <a
+                href="<?= $rapportUrl ?>"
+                class="report-back-button"
+            >
+                ← Retour aux rapports
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="report-context-bar">
+
+        <div class="report-context-icon">
+            ▤
+        </div>
+
+        <div class="report-context-content">
+
+            <strong>
+                Centre documentaire
+            </strong>
+
+            <span>
+                Retrouvez les différentes sources
+                d'information du système.
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <section class="report-section">
+
+        <div class="report-section-heading">
+
+            <div>
+
+                <span class="report-section-kicker">
+                    SOURCES D'INFORMATION
+                </span>
+
+                <h2>
+                    Rapports disponibles
+                </h2>
+
+                <p>
+                    Sélectionnez une catégorie pour consulter
+                    les informations correspondantes.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="report-family-grid">
+
+            <!-- PARC -->
+
+            <a
+                href="<?= $parcUrl ?>"
+                class="report-family-card"
+            >
+
+                <div class="report-family-card-top">
+
+                    <span class="report-family-number">
+                        01
+                    </span>
+
+                    <span class="report-family-arrow">
+                        →
+                    </span>
+
+                </div>
+
+                <div class="report-family-icon">
+                    ▦
+                </div>
+
+                <div class="report-family-content">
+
+                    <h3>
+                        Inventaire du parc
+                    </h3>
+
+                    <p>
+                        Familles, centrales, sites et
+                        équipements.
+                    </p>
+
+                </div>
+
+                <div class="report-family-footer">
+
+                    <span>
+                        Consulter le parc
+                    </span>
+
+                    <span class="report-family-footer-arrow">
+                        →
+                    </span>
+
+                </div>
+
+            </a>
+
+
+            <!-- MAINTENANCE -->
+
+            <a
+                href="<?= $maintenanceUrl ?>"
+                class="report-family-card"
+            >
+
+                <div class="report-family-card-top">
+
+                    <span class="report-family-number">
+                        02
+                    </span>
+
+                    <span class="report-family-arrow">
+                        →
+                    </span>
+
+                </div>
+
+                <div class="report-family-icon">
+                    ⚒
+                </div>
+
+                <div class="report-family-content">
+
+                    <h3>
+                        Maintenance
+                    </h3>
+
+                    <p>
+                        Historique des interventions,
+                        diagnostics et opérations.
+                    </p>
+
+                </div>
+
+                <div class="report-family-footer">
+
+                    <span>
+                        Consulter la maintenance
+                    </span>
+
+                    <span class="report-family-footer-arrow">
+                        →
+                    </span>
+
+                </div>
+
+            </a>
+
+
+            <!-- IMPLANTATION -->
+
+            <a
+                href="<?= $this->url('rapport', [
+                    'action' => 'implantation',
+                ]) ?>"
+                class="report-family-card"
+            >
+
+                <div class="report-family-card-top">
+
+                    <span class="report-family-number">
+                        03
+                    </span>
+
+                    <span class="report-family-arrow">
+                        →
+                    </span>
+
+                </div>
+
+                <div class="report-family-icon">
+                    🌍
+                </div>
+
+                <div class="report-family-content">
+
+                    <h3>
+                        Implantation
+                    </h3>
+
+                    <p>
+                        Pays, villes, sites et organisation
+                        géographique.
+                    </p>
+
+                </div>
+
+                <div class="report-family-footer">
+
+                    <span>
+                        Explorer l'implantation
+                    </span>
+
+                    <span class="report-family-footer-arrow">
+                        →
+                    </span>
+
+                </div>
+
+            </a>
+
+
+            <!-- FICHE TECHNIQUE -->
+
+            <a
+                href="<?= $parcUrl ?>"
+                class="report-family-card"
+            >
+
+                <div class="report-family-card-top">
+
+                    <span class="report-family-number">
+                        04
+                    </span>
+
+                    <span class="report-family-arrow">
+                        →
+                    </span>
+
+                </div>
+
+                <div class="report-family-icon">
+                    ⚙
+                </div>
+
+                <div class="report-family-content">
+
+                    <h3>
+                        Fiches techniques
+                    </h3>
+
+                    <p>
+                        Informations techniques et
+                        caractéristiques des équipements.
+                    </p>
+
+                </div>
+
+                <div class="report-family-footer">
+
+                    <span>
+                        Explorer les équipements
+                    </span>
+
+                    <span class="report-family-footer-arrow">
+                        →
+                    </span>
+
+                </div>
+
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <section class="report-exploration-help">
+
+        <div class="report-exploration-help-icon">
+            ⓘ
+        </div>
+
+        <div class="report-exploration-help-content">
+
+            <strong>
+                Évolution de cette section
+            </strong>
+
+            <p>
+                Cette rubrique pourra ensuite accueillir
+                l'export PDF, les rapports par période,
+                les rapports de maintenance et les fiches
+                techniques imprimables.
+            </p>
+
+        </div>
+
+    </section>
+
+</div>

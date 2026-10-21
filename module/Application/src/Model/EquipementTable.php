@@ -23,7 +23,9 @@ class EquipementTable
     {
         $sql = new Sql($this->db);
 
-        $select = $sql->select(['e' => 'equipement']);
+        $select = $sql->select([
+            'e' => 'equipement',
+        ]);
 
         $select->columns([
             'id_equipement',
@@ -33,6 +35,7 @@ class EquipementTable
             'marque',
             'modele',
             'date_mise_en_service',
+            'heure_fonctionnement',
             'periodicite',
             'date_prochaine_maintenance',
             'id_site',
@@ -62,13 +65,27 @@ class EquipementTable
             'c.id_centrale = e.id_centrale',
             [
                 'type_centrale',
+                'id_famille',
             ],
             $select::JOIN_LEFT
         );
 
-        $select->order('e.id_equipement DESC');
+        $select->join(
+            ['f' => 'famille'],
+            'f.id_famille = c.id_famille',
+            [
+                'nom_famille',
+            ],
+            $select::JOIN_LEFT
+        );
 
-        $statement = $sql->prepareStatementForSqlObject($select);
+        $select->order(
+            'e.id_equipement DESC'
+        );
+
+        $statement = $sql->prepareStatementForSqlObject(
+            $select
+        );
 
         $result = $statement->execute();
 
@@ -86,9 +103,15 @@ class EquipementTable
      */
     public function getById(int $id): ?array
     {
+        if ($id <= 0) {
+            return null;
+        }
+
         $sql = new Sql($this->db);
 
-        $select = $sql->select(['e' => 'equipement']);
+        $select = $sql->select([
+            'e' => 'equipement',
+        ]);
 
         $select->columns([
             'id_equipement',
@@ -98,6 +121,7 @@ class EquipementTable
             'marque',
             'modele',
             'date_mise_en_service',
+            'heure_fonctionnement',
             'periodicite',
             'date_prochaine_maintenance',
             'id_site',
@@ -119,6 +143,27 @@ class EquipementTable
             [
                 'nom_site',
                 'adresse',
+                'telephone',
+                'id_ville',
+            ],
+            $select::JOIN_LEFT
+        );
+
+        $select->join(
+            ['v' => 'ville'],
+            'v.id_ville = s.id_ville',
+            [
+                'nom_ville',
+                'id_pays',
+            ],
+            $select::JOIN_LEFT
+        );
+
+        $select->join(
+            ['p' => 'pays'],
+            'p.id_pays = v.id_pays',
+            [
+                'nom_pays',
             ],
             $select::JOIN_LEFT
         );
@@ -128,6 +173,16 @@ class EquipementTable
             'c.id_centrale = e.id_centrale',
             [
                 'type_centrale',
+                'id_famille',
+            ],
+            $select::JOIN_LEFT
+        );
+
+        $select->join(
+            ['f' => 'famille'],
+            'f.id_famille = c.id_famille',
+            [
+                'nom_famille',
             ],
             $select::JOIN_LEFT
         );
@@ -136,7 +191,9 @@ class EquipementTable
             'e.id_equipement' => $id,
         ]);
 
-        $statement = $sql->prepareStatementForSqlObject($select);
+        $statement = $sql->prepareStatementForSqlObject(
+            $select
+        );
 
         $result = $statement->execute();
 
@@ -159,6 +216,7 @@ class EquipementTable
         ?string $marque,
         ?string $modele,
         ?string $dateMiseEnService,
+        int $heureFonctionnement,
         ?string $periodicite,
         ?string $dateProchaineMaintenance,
         ?int $idSite,
@@ -166,22 +224,48 @@ class EquipementTable
     ): void {
         $sql = new Sql($this->db);
 
-        $insert = $sql->insert('equipement');
+        $insert = $sql->insert(
+            'equipement'
+        );
 
         $insert->values([
-            'id_type_equipement' => $idTypeEquipement,
-            'designation' => $designation,
-            'numero_serie' => $numeroSerie,
-            'marque' => $marque,
-            'modele' => $modele,
-            'date_mise_en_service' => $dateMiseEnService,
-            'periodicite' => $periodicite,
-            'date_prochaine_maintenance' => $dateProchaineMaintenance,
-            'id_site' => $idSite,
-            'id_centrale' => $idCentrale,
+            'id_type_equipement' =>
+                $idTypeEquipement,
+
+            'designation' =>
+                $designation,
+
+            'numero_serie' =>
+                $numeroSerie,
+
+            'marque' =>
+                $marque,
+
+            'modele' =>
+                $modele,
+
+            'date_mise_en_service' =>
+                $dateMiseEnService,
+
+            'heure_fonctionnement' =>
+                max(0, $heureFonctionnement),
+
+            'periodicite' =>
+                $periodicite,
+
+            'date_prochaine_maintenance' =>
+                $dateProchaineMaintenance,
+
+            'id_site' =>
+                $idSite,
+
+            'id_centrale' =>
+                $idCentrale,
         ]);
 
-        $statement = $sql->prepareStatementForSqlObject($insert);
+        $statement = $sql->prepareStatementForSqlObject(
+            $insert
+        );
 
         $statement->execute();
     }
@@ -197,33 +281,64 @@ class EquipementTable
         ?string $marque,
         ?string $modele,
         ?string $dateMiseEnService,
+        int $heureFonctionnement,
         ?string $periodicite,
         ?string $dateProchaineMaintenance,
         ?int $idSite,
         ?int $idCentrale
     ): void {
+        if ($id <= 0) {
+            return;
+        }
+
         $sql = new Sql($this->db);
 
-        $update = $sql->update('equipement');
+        $update = $sql->update(
+            'equipement'
+        );
 
         $update->set([
-            'id_type_equipement' => $idTypeEquipement,
-            'designation' => $designation,
-            'numero_serie' => $numeroSerie,
-            'marque' => $marque,
-            'modele' => $modele,
-            'date_mise_en_service' => $dateMiseEnService,
-            'periodicite' => $periodicite,
-            'date_prochaine_maintenance' => $dateProchaineMaintenance,
-            'id_site' => $idSite,
-            'id_centrale' => $idCentrale,
+            'id_type_equipement' =>
+                $idTypeEquipement,
+
+            'designation' =>
+                $designation,
+
+            'numero_serie' =>
+                $numeroSerie,
+
+            'marque' =>
+                $marque,
+
+            'modele' =>
+                $modele,
+
+            'date_mise_en_service' =>
+                $dateMiseEnService,
+
+            'heure_fonctionnement' =>
+                max(0, $heureFonctionnement),
+
+            'periodicite' =>
+                $periodicite,
+
+            'date_prochaine_maintenance' =>
+                $dateProchaineMaintenance,
+
+            'id_site' =>
+                $idSite,
+
+            'id_centrale' =>
+                $idCentrale,
         ]);
 
         $update->where([
             'id_equipement' => $id,
         ]);
 
-        $statement = $sql->prepareStatementForSqlObject($update);
+        $statement = $sql->prepareStatementForSqlObject(
+            $update
+        );
 
         $statement->execute();
     }
@@ -233,15 +348,23 @@ class EquipementTable
      */
     public function delete(int $id): void
     {
+        if ($id <= 0) {
+            return;
+        }
+
         $sql = new Sql($this->db);
 
-        $delete = $sql->delete('equipement');
+        $delete = $sql->delete(
+            'equipement'
+        );
 
         $delete->where([
             'id_equipement' => $id,
         ]);
 
-        $statement = $sql->prepareStatementForSqlObject($delete);
+        $statement = $sql->prepareStatementForSqlObject(
+            $delete
+        );
 
         $statement->execute();
     }

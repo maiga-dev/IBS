@@ -1,12 +1,30 @@
-<?php
-/** @var Laminas\View\Renderer\PhpRenderer $this */
-?>
 <div class="dashboard">
+
     <div class="dashboard-panel">
+
         <div class="empty-dashboard">
-            <div class="empty-dashboard-icon">✕</div>
-            <strong><?= $this->escapeHtml((string) ($message ?? 'Introuvable.')) ?></strong>
-            <p><a href="<?= $this->url('maintenance') ?>">← Retour à la liste des sessions</a></p>
+
+            <div class="empty-dashboard-icon">
+                !
+            </div>
+
+            <strong>
+                Maintenance introuvable
+            </strong>
+
+            <p>
+                La session demandée n'existe pas ou n'est plus disponible.
+            </p>
+
+            <a
+                href="<?= $this->url('maintenance') ?>"
+                class="btn-ibs"
+            >
+                Retour aux maintenances
+            </a>
+
         </div>
+
     </div>
+
 </div>
